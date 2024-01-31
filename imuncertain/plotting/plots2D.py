@@ -16,6 +16,8 @@ def plot_samples(distribution, num_samples, **kwargs):
     if isinstance(distribution, dist.distribution):
         distribution = [distribution]
     for d in distribution:
+        if d.dim != 2:
+            raise Exception('Wrong dimension of distribution')
         samples = d.sample(num_samples)
         plt.scatter(x=samples[:,0], y=samples[:,1])
     if 'xlabel' in kwargs:
@@ -31,6 +33,8 @@ def plot_pdf_contour(distribution, resolution=(128,128), range_x=(0,1), range_y=
     contour_colors = generate_spectrum_colors(distribution[0].dim)
     print(contour_colors)
     for i, d in enumerate(distribution):
+        if d.dim != 2:
+            raise Exception('Wrong dimension of distribution')
         x = np.linspace(range_x[0], range_x[1], resolution[0])
         y = np.linspace(range_y[0], range_y[1], resolution[1])
         xv, yv = np.meshgrid(x, y)
