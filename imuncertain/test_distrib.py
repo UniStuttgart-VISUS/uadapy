@@ -34,7 +34,7 @@ def test_distrib_class():
         st.fisk(1.0),
         st.foldcauchy(1.0),
         st.foldnorm(1.0),
-        # some skipped, need to be added later
+        # many skipped, need to be added later
         st.norm(),
         st.t(1.0),
         st.uniform(1.0, 2.0)
@@ -45,24 +45,29 @@ def test_distrib_class():
     mat = np.eye(n)
     model_nD = {
         st.multivariate_normal(mean=vec, cov=mat),
-        st.matrix_normal(mean=vec),
         st.dirichlet(alpha=vec),
         st.dirichlet_multinomial(alpha=vec, n=4),
-        st.wishart(df=vec, scale=mat),
-        st.invwishart(df=vec, scale=mat),
+        st.wishart(df=n, scale=mat),
+        st.invwishart(df=n, scale=mat),
         st.multinomial(8, vec),
         st.multivariate_t(loc=vec, shape=mat),
-        st.multivariate_hypergeom(m=vec, n=4),
+        st.multivariate_hypergeom(m=[1 for i in range(n)], n=4),
         st.uniform_direction(dim=n),
-        st.vonmises_fisher(mu=np.normalize(vec), kappa=1.0)
+        st.vonmises_fisher(mu=vec/np.linalg.norm(vec), kappa=1.0)
     }
 
     model_nxnD = {
+        st.matrix_normal(mean=mat),
         st.special_ortho_group(dim=n),
         st.ortho_group(dim=n),
         st.unitary_group(dim=n),
-        st.random_correlation(eigs=vec),
+        st.random_correlation(eigs=vec)
     }
+
+
+
+if __name__ == '__main__':
+    test_distrib_class()
 
 
     
