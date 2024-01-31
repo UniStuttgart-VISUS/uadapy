@@ -101,7 +101,7 @@ class InteractiveNormal:
         # print('display x is: {0}; display y is: {1}'.format(event.x,event.y))
         tinv = self.ax.transData
         # print('data x is: {0}; data y is: {1}'.format(xy[0],xy[1]))
-        xyt = tinv.transform(self.points.T)
+        xyt = tinv.transform(self.points)
         xt, yt = xyt[:, 0], xyt[:, 1]
         d = np.hypot(xt - event.x, yt - event.y)
         indseq, = np.nonzero(d == d.min())
@@ -116,22 +116,27 @@ class InteractiveNormal:
         new_point = new_value
         new_point_length = np.linalg.norm(new_point)
         points = self.points.copy()
-        points[:, point_index] = new_point
+        points[point_index] = new_point
 
-        old_other_point_length = np.linalg.norm(points[:, 1 - point_index])
+        old_other_point_length = np.linalg.norm(points[1 - point_index])
 
         other_point = (-1 + (2 * point_index)) * np.array([new_point[1], -new_point[0]])
         other_point_length = np.linalg.norm(other_point)
-        points[:, 1 - point_index] = other_point / other_point_length
-        points[:, 1 - point_index] *= old_other_point_length
+        points[1 - point_index] = other_point / other_point_length
+        points[1 - point_index] *= old_other_point_length
 
         new_eigenvalues = np.zeros(2, dtype=float)
         new_eigenvalues[point_index] = new_point_length
         new_eigenvalues[1 - point_index] = old_other_point_length
         new_eigenvalues = new_eigenvalues ** 2
 
-        points_norm = points / np.array([np.linalg.norm(points[:, 0]), np.linalg.norm(points[:, 1])])
+        points_norm = points.copy()
+        points_norm[0] = points_norm[0] / np.linalg.norm(points_norm[0])
+        points_norm[1] = points_norm[1] / np.linalg.norm(points_norm[1]) # np.linalg.norm(points[1])])
 
-        cov = points_norm @ (np.eye(2) * new_eigenvalues) @ points_norm.T
+        print("points_norm: ", points_norm)
+        print("dd:", points_norm[0].T @ points_norm[1])
+
+        cov = points_norm.T @ (np.eye(2) * new_eigenvalues) @ points_norm
         self.cov = cov
         self.points = points

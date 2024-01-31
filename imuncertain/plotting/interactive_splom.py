@@ -93,6 +93,7 @@ class InteractiveSplom:
         if new_current_subplot is self.current_pressed_subplot:
             if new_current_subplot is not None:
                 point_index = new_current_subplot.get_ind_under_point(event)
+                print(point_index, np.array([event.xdata, event.ydata]))
                 if point_index is not None:
                     new_current_subplot.adjust_points(point_index, np.array([event.xdata, event.ydata]))
                     new_current_subplot.update()
@@ -107,7 +108,7 @@ def main():
     dim = 3
     mean = np.zeros(dim)
     cov = np.eye(dim, dim)
-    isplom = InteractiveSplom(mean, cov)
+    isplom = InteractiveSplom(mean, cov, epsilon=10)
     isplom.show()
     plt.show()
 
