@@ -23,7 +23,7 @@ class distribution:
         if isinstance(model, np.ndarray) and name == "Normal":
             mean = np.mean(model, axis=0)
             cov = np.cov(model, rowvar=False)
-            self.model = sp.stats.multivariate_normal(mean, cov)
+            self.model = stats.multivariate_normal(mean, cov)
         else:
             self.model = model
         mean = self.mean()
@@ -32,7 +32,7 @@ class distribution:
         else:
             self.dim = 1
         self.kde = None
-        if isinstance(model, np.ndarray):
+        if isinstance(self.model, np.ndarray):
             self.kde = stats.gaussian_kde(self.model)
 
     def sample(self, n: int, random_state : int = None) -> np.ndarray:
