@@ -44,6 +44,8 @@ class InteractiveSplom:
                     self.subplots[row_i, col_i] = None
                     continue
 
+                ax.axis('equal')
+
                 mean_ij = self.mean[[row_i, col_i]]
                 cov_ij = np.array([[self.cov[col_i, col_i], self.cov[col_i, row_i]],
                                    [self.cov[row_i, col_i], self.cov[row_i, row_i]]])
@@ -61,6 +63,14 @@ class InteractiveSplom:
             if subplot is not None and subplot.ax is event.inaxes:
                 return subplot
         return None
+
+    def get_current_subplot_idx(self, current_subplot):
+        for row_i, row in enumerate(self.subplots):
+            for col_i, subplot in enumerate(row):
+                if subplot is current_subplot:
+                    return row_i, col_i
+
+        return None, None
 
     def button_press_callback(self, event):
         'whenever a mouse button is pressed'
@@ -82,6 +92,27 @@ class InteractiveSplom:
             return
         self.current_pressed_subplot = None
 
+    def update_mean_cov(self):
+        for row_i, row in enumerate(self.subplots):
+            row_i += 1
+            for col_i, ax in enumerate(row):
+                if col_i >= row_i:
+                    continue
+
+                mean_ij = self.mean[[row_i, col_i]]
+                cov_ij = np.array([[self.cov[col_i, col_i], self.cov[col_i, row_i]],
+                                   [self.cov[row_i, col_i], self.cov[row_i, row_i]]])
+                self.subplots[row_i-1, col_i].mean = mean_ij
+                self.subplots[row_i-1, col_i].cov = cov_ij
+                self.subplots[row_i-1, col_i].init_points()
+
+    def update_plots(self, row_i_, col_i_):
+        for i in range(len(self.subplots)):
+            if self.subplots[i, col_i_] is not None:
+                self.subplots[i, col_i_].update()
+            if self.subplots[row_i_, i] is not None:
+                self.subplots[row_i_, i].update()
+
     def motion_notify_callback(self, event):
         'on mouse movement'
         if event.inaxes is None:
@@ -96,7 +127,21 @@ class InteractiveSplom:
                 print(point_index, np.array([event.xdata, event.ydata]))
                 if point_index is not None:
                     new_current_subplot.adjust_points(point_index, np.array([event.xdata, event.ydata]))
-                    new_current_subplot.update()
+
+                    row_i, col_i = self.get_current_subplot_idx(new_current_subplot)
+                    assert row_i is not None and col_i is not None
+
+                    self.mean[row_i] = new_current_subplot.mean[0]
+                    self.mean[col_i] = new_current_subplot.mean[1]
+#
+                    self.cov[row_i, row_i] = new_current_subplot.cov[0, 0]
+                    self.cov[row_i, col_i] = new_current_subplot.cov[0, 1]
+                    self.cov[col_i, row_i] = new_current_subplot.cov[1, 0]
+                    self.cov[col_i, col_i] = new_current_subplot.cov[1, 1]
+#
+                    self.update_mean_cov()
+
+                    self.update_plots(row_i, col_i)
         else:
             self.current_pressed_subplot = None
 

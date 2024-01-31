@@ -95,6 +95,8 @@ class InteractiveNormal:
         self.ax.set_ylim([-extends, extends])
         self.ax.get_figure().canvas.draw_idle()
 
+        self.ax.axis('equal')
+
     def get_ind_under_point(self, event):
         'get the index of the vertex under point if within epsilon tolerance'
         # display coords
@@ -132,10 +134,10 @@ class InteractiveNormal:
 
         points_norm = points.copy()
         points_norm[0] = points_norm[0] / np.linalg.norm(points_norm[0])
-        points_norm[1] = points_norm[1] / np.linalg.norm(points_norm[1]) # np.linalg.norm(points[1])])
+        points_norm[1] = points_norm[1] / np.linalg.norm(points_norm[1])  # np.linalg.norm(points[1])])
 
-        print("points_norm: ", points_norm)
-        print("dd:", points_norm[0].T @ points_norm[1])
+        # print("points_norm: ", points_norm)
+        # print("dd:", points_norm[0].T @ points_norm[1])
 
         cov = points_norm.T @ (np.eye(2) * new_eigenvalues) @ points_norm
         self.cov = cov
