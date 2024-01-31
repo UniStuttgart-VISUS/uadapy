@@ -75,37 +75,30 @@ class InteractiveNormal:
 
     def init_points(self):
         eigenvalues, eigenvectors = np.linalg.eig(self.cov)
-
-        # indices = eigenvalues.argsort()[::-1]
-        # eigenvalues = eigenvalues[indices]
-        # eigenvectors = eigenvectors.T[indices].T
-        # print("evl", eigenvalues)
-        # print("o", self.points)
-
         self.points = (np.sign(eigenvalues) * np.sqrt(np.abs(eigenvalues)) * eigenvectors).T
 
-        # self.points = np.concatenate([self.points, -self.points])
-
-        # print("a", self.points)
-
-    def update(self):
+    def update(self, plot_int: bool = False):
         self.ax.clear()
+
+        # clear
+        self.ax.set_yticklabels([])
+        self.ax.set_xticklabels([])
+        self.ax.set_xticks([])
+        self.ax.set_yticks([])
 
         # plot ellipse
         confidence_ellipse(self.mean, self.cov, self.ax, self.n_std)
 
         # plot lines of eigenvectors
-        self.ax.plot([self.mean[0], self.points[0, 0]], [self.mean[1], self.points[0, 1]])
-        self.ax.plot([self.mean[0], self.points[1, 0]], [self.mean[1], self.points[1, 1]])
+        if plot_int:
+            self.ax.plot([self.mean[0], self.points[0, 0]], [self.mean[1], self.points[0, 1]])
+            self.ax.plot([self.mean[0], self.points[1, 0]], [self.mean[1], self.points[1, 1]])
 
-        # self.ax.plot([self.mean[0], self.points[2, 0]], [self.mean[1], self.points[2, 1]])
-        # self.ax.plot([self.mean[0], self.points[3, 0]], [self.mean[1], self.points[3, 1]])
+            # plot points of eigenvectors
+            self.ax.scatter(self.points[:, 0], self.points[:, 1])
 
-        # plot points of eigenvectors
-        self.ax.scatter(self.points[:, 0], self.points[:, 1])
-
-        # plot mean center
-        self.ax.scatter(self.mean[0], self.mean[1], c="black")
+            # plot mean center
+            self.ax.scatter(self.mean[0], self.mean[1], c="black")
 
         extends = self.extends  # 2 * np.abs(points).max()
 
@@ -116,10 +109,7 @@ class InteractiveNormal:
 
     def get_ind_under_point(self, event):
         'get the index of the vertex under point if within epsilon tolerance'
-        # display coords
-        # print('display x is: {0}; display y is: {1}'.format(event.x,event.y))
         tinv = self.ax.transData
-        # print('data x is: {0}; data y is: {1}'.format(xy[0],xy[1]))
         xyt = tinv.transform(self.points)
         xt, yt = xyt[:, 0], xyt[:, 1]
         d = np.hypot(xt - event.x, yt - event.y)
@@ -154,10 +144,7 @@ class InteractiveNormal:
 
         points_norm = points.copy()
         points_norm[0] = points_norm[0] / np.linalg.norm(points_norm[0])
-        points_norm[1] = points_norm[1] / np.linalg.norm(points_norm[1])  # np.linalg.norm(points[1])])
-
-        # print("points_norm: ", points_norm)
-        # print("dd:", points_norm[0].T @ points_norm[1])
+        points_norm[1] = points_norm[1] / np.linalg.norm(points_norm[1])
 
         cov = points_norm.T @ (np.eye(2) * new_eigenvalues) @ points_norm
         self.cov = cov

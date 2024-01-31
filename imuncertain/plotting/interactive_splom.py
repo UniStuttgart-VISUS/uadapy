@@ -39,6 +39,8 @@ class InteractiveSplom:
             for col_i, ax in enumerate(row):
                 if col_i >= row_i:
                     self.subplots[row_i, col_i] = None
+
+                    ax.axis("off")
                     continue
 
                 mean_ij = self.mean[[row_i, col_i]]
@@ -47,10 +49,12 @@ class InteractiveSplom:
                 self.subplots[row_i-1, col_i] = InteractiveNormal(mean_ij, cov_ij, ax, self.n_std,
                                                                   self.extends, self.epsilon)
 
+
         fig.canvas.mpl_connect('button_press_event', self.button_press_callback)
         fig.canvas.mpl_connect('button_release_event', self.button_release_callback)
         fig.canvas.mpl_connect('motion_notify_event', self.motion_notify_callback)
 
+        self.update_all_plots()
         self.current_pressed_subplot = None
 
     def get_current_subplot(self, event):
@@ -78,14 +82,12 @@ class InteractiveSplom:
 
         self.current_pressed_subplot = subplot
 
-        # print(pind)
-        # pind = self.get_ind_under_point(event)
-
     def button_release_callback(self, event):
         'whenever a mouse button is released'
         if event.button != 1:
             return
         self.current_pressed_subplot = None
+        self.update_all_plots()
 
     def update_mean_cov(self):
         for row_i, row in enumerate(self.axes):
@@ -106,9 +108,16 @@ class InteractiveSplom:
     def update_plots(self, row_i_, col_i_):
         for i in range(len(self.subplots)):
             if self.subplots[i, col_i_] is not None:
-                self.subplots[i, col_i_].update()
+                self.subplots[i, col_i_].update(i == row_i_)
             if self.subplots[row_i_, i] is not None:
+                if i == col_i_:
+                    continue
                 self.subplots[row_i_, i].update()
+
+    def update_all_plots(self):
+        for subplot in self.subplots.flat:
+            if subplot is not None:
+                subplot.update(True)
 
     def motion_notify_callback(self, event):
         'on mouse movement'
@@ -121,7 +130,6 @@ class InteractiveSplom:
         if new_current_subplot is self.current_pressed_subplot:
             if new_current_subplot is not None:
                 point_index = new_current_subplot.get_ind_under_point(event)
-                # print(point_index, np.array([event.xdata, event.ydata]))
                 if point_index is not None:
                     new_current_subplot.adjust_points(point_index, np.array([event.xdata, event.ydata]))
 
@@ -143,6 +151,7 @@ class InteractiveSplom:
                     self.update_plots(row_i-1, col_i)
         else:
             self.current_pressed_subplot = None
+            self.update_all_plots()
 
     def show(self):
         self.fig.show()
@@ -152,8 +161,7 @@ def main():
     dim = 7
     mean = np.zeros(dim)
     cov = np.eye(dim, dim)
-    # cov = np.array([[1.51, 1.21, 0], [1.21, 1.55, 0], [0, 0, 1]])
-    isplom = InteractiveSplom(mean, cov, epsilon=20)
+    isplom = InteractiveSplom(mean, cov, epsilon=20, extends=5)
     isplom.show()
     plt.show()
 
