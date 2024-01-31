@@ -57,8 +57,10 @@ class distribution:
             if callable(self.model.mean):
                 return self.model.mean()
             return self.model.mean
+        if hasattr(self.model, 'loc'):
+            return self.model.loc
         else:
-            print("Mean not implemented yet!")
+            print(f"Mean not implemented yet! {self.model.__class__.__name__}")
 
     def cov(self) -> np.ndarray | float:
         if isinstance(self.model, np.ndarray):

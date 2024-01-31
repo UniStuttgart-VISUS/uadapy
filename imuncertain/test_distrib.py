@@ -1,7 +1,7 @@
 import numpy as np
 import scipy as sp
 import scipy.stats as st
-import distribution
+import distribution as ds
 
 
 
@@ -63,6 +63,13 @@ def test_distrib_class():
         st.unitary_group(dim=n),
         st.random_correlation(eigs=vec)
     }
+
+    # initialize distribution object for each of the scipy distribs (univariate)
+    for scipi_distrib in model_1D:
+        distrib = ds.distribution(scipi_distrib)
+    # initialize distribution object for each of the scipy distribs (multivariate)
+    for scipi_distrib in model_nD:
+        distrib = ds.distribution(scipi_distrib)
 
 
 
