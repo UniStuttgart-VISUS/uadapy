@@ -77,9 +77,13 @@ class distribution:
             return stats.skew(self.model)
         if hasattr(self.model, 'stats') and callable(self.model.stats):
             return self.model.stats(moments='s')
+        if isinstance(self.model, stats.multivariate_normal):
+            return 0
 
     def kurt(self) -> np.ndarray | float:
         if isinstance(self.model, np.ndarray):
             return stats.kurtosis(self.model)
         if hasattr(self.model, 'stats') and callable(self.model.stats):
             return self.model.stats(moments='k')
+        if isinstance(self.model, stats.multivariate_normal):
+            return 0
