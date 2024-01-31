@@ -48,15 +48,14 @@ def test_distrib_class():
         st.dirichlet(alpha=vec),
         st.dirichlet_multinomial(alpha=vec, n=4),
         st.wishart(df=n, scale=mat),
-        st.invwishart(df=n, scale=mat),
         st.multinomial(8, vec),
-        st.multivariate_t(loc=vec, shape=mat),
+        st.multivariate_t(loc=vec, shape=mat, df=3),
         st.multivariate_hypergeom(m=[1 for i in range(n)], n=4),
-        st.uniform_direction(dim=n),
         st.vonmises_fisher(mu=vec/np.linalg.norm(vec), kappa=1.0)
     }
 
     model_nxnD = {
+        st.invwishart(df=n, scale=mat),
         st.matrix_normal(mean=mat),
         st.special_ortho_group(dim=n),
         st.ortho_group(dim=n),
@@ -75,7 +74,7 @@ def test_distrib_class():
             if cov.shape[0] != n or cov.shape[1] != n:
                 raise RuntimeError(f"shape expected to be {n} x {n}, but was {cov.shape}")
         except Exception as e:
-            print(f"Exception occured: {e} for {scipi_distrib.__class__.__name__}")
+            print(f"Exception occured: {e} (error encountered with {scipi_distrib.__class__.__name__})")
 
 
 

@@ -1,6 +1,7 @@
 import numpy as np
-#import scipy as sp
+import scipy as sp
 from scipy import stats
+from scipy.stats import _multivariate as mv
 
 
 class distribution:
@@ -79,6 +80,8 @@ class distribution:
             if callable(self.model.var):
                 return self.model.var()
             return self.model.var
+        if isinstance(self.model, mv.multivariate_t_frozen):
+            return self.model.shape * (self.model.df / (self.model.df - 2))
         raise AttributeError(f"Covariance not implemented yet! {self.model.__class__.__name__}")
 
 
@@ -87,7 +90,7 @@ class distribution:
             return stats.skew(self.model)
         if hasattr(self.model, 'stats') and callable(self.model.stats):
             return self.model.stats(moments='s')
-        if isinstance(self.model, stats.multivariate_normal):
+        if isinstance(self.model, multivariate_t_frozen):
             return 0
 
     def kurt(self) -> np.ndarray | float:
