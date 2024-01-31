@@ -18,7 +18,7 @@ def plot_samples(distributions, num_samples, **kwargs):
     # Create matrix
     numvars = distributions[0].dim
     fig, axes = plt.subplots(nrows=numvars, ncols=numvars)
-    contour_colors = utils.generate_spectrum_colors(distributions[0].dim)
+    contour_colors = utils.generate_spectrum_colors(len(distributions))
     for ax in axes.flat:
         # Hide all ticks and labels
         ax.xaxis.set_visible(False)
@@ -56,7 +56,7 @@ def plot_contour(distributions, resolution=(128, 128), ranges=None, **kwargs):
     """
     if isinstance(distributions, dist.distribution):
         distributions = [distributions]
-    contour_colors = utils.generate_spectrum_colors(distributions[0].dim)
+    contour_colors = utils.generate_spectrum_colors(len(distributions))
     # Create matrix
     numvars = distributions[0].dim
     if ranges is None:
@@ -118,7 +118,7 @@ def plot_contour(distributions, resolution=(128, 128), ranges=None, **kwargs):
 def plot_contour_samples(distributions, num_samples, resolution=(128, 128), ranges=None, **kwargs):
     if isinstance(distributions, dist.distribution):
         distributions = [distributions]
-    contour_colors = utils.generate_spectrum_colors(distributions[0].dim)
+    contour_colors = utils.generate_spectrum_colors(len(distributions))
     # Create matrix
     numvars = distributions[0].dim
     if ranges is None:
@@ -138,11 +138,24 @@ def plot_contour_samples(distributions, num_samples, resolution=(128, 128), rang
         for i in range(d.dim):
             x = np.linspace(ranges[i][0], ranges[i][1], resolution[0])
             dims = (*dims, x)
-        grid = np.meshgrid(*dims)
-        coordinates = np.stack(grid, axis=-1)
-        print("test")
-        print(coordinates.shape)
-        pdf = d.pdf(coordinates)
+        print(":..")
+        print(tuple(range(1, numvars+1)) + (0,))
+        #print(dims)
+        coordinates = np.array(np.meshgrid(*dims)).transpose(tuple(range(1, numvars+1)) + (0,))#[...,::-1]
+        # grid = np.meshgrid(*dims)
+        # print(np.array(grid).shape)
+        # coordinates = np.stack(tuple(grid), axis=-1)
+        # print("test")
+        # print(coordinates.shape)
+        test = coordinates.reshape((-1, coordinates.shape[-1]))
+        print(test[0])
+        pdf = d.pdf(coordinates.reshape((-1, coordinates.shape[-1])))
+        print("pdf shape")
+        print(pdf.shape)
+        #print(pdf[128])
+        #print(d.pdf([5,-5]))
+        pdf = pdf.reshape(coordinates.shape[:-1])
+        pdf = pdf.transpose((1,0)+tuple(range(2,numvars)))
         print(pdf.shape)
         for i, j in zip(*np.triu_indices_from(axes, k=1)):
             for x, y in [(i, j), (j, i)]:
@@ -162,6 +175,8 @@ def plot_contour_samples(distributions, num_samples, resolution=(128, 128), rang
         for i in range(numvars):
             indices = list(np.arange(d.dim))
             indices.remove(i)
+            print("Indices")
+            print(indices)
             axes[i,i].plot(dims[i], np.sum(pdf, axis=tuple(indices)), color=color)
             axes[i,i].xaxis.set_visible(True)
             axes[i,i].yaxis.set_visible(True)
@@ -174,9 +189,4 @@ def plot_contour_samples(distributions, num_samples, resolution=(128, 128), rang
         #     axes[j,-i].xaxis.set_visible(True)
         #     axes[i,j].yaxis.set_visible(True)
     fig.tight_layout()
-    plt.show()
-
-    plt.imshow(coordinates[:,:,0])
-    plt.show()
-    plt.imshow(coordinates[:,:,1])
     plt.show()
