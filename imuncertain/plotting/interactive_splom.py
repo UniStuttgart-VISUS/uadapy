@@ -4,13 +4,9 @@ from imuncertain.plotting.distribution_plot import InteractiveNormal
 
 matplotlib.use("TkAgg")
 
-
 import numpy as np
 
-from matplotlib.widgets import Button
 import matplotlib.pyplot as plt
-from matplotlib.patches import Ellipse
-import matplotlib.transforms as transforms
 
 
 class InteractiveSplom:
@@ -104,7 +100,8 @@ class InteractiveSplom:
 
                 self.subplots[row_i-1, col_i].mean = mean_ij
                 self.subplots[row_i-1, col_i].cov = cov_ij
-                self.subplots[row_i-1, col_i].init_points()
+                if self.current_pressed_subplot is not self.subplots[row_i-1, col_i]:
+                    self.subplots[row_i-1, col_i].init_points()
 
     def update_plots(self, row_i_, col_i_):
         for i in range(len(self.subplots)):
@@ -124,7 +121,7 @@ class InteractiveSplom:
         if new_current_subplot is self.current_pressed_subplot:
             if new_current_subplot is not None:
                 point_index = new_current_subplot.get_ind_under_point(event)
-                print(point_index, np.array([event.xdata, event.ydata]))
+                # print(point_index, np.array([event.xdata, event.ydata]))
                 if point_index is not None:
                     new_current_subplot.adjust_points(point_index, np.array([event.xdata, event.ydata]))
 
@@ -135,7 +132,7 @@ class InteractiveSplom:
 
                     self.mean[row_i] = new_current_subplot.mean[0]
                     self.mean[col_i] = new_current_subplot.mean[1]
-#
+
                     self.cov[col_i, col_i] = new_current_subplot.cov[0, 0]
                     self.cov[col_i, row_i] = new_current_subplot.cov[0, 1]
                     self.cov[row_i, col_i] = new_current_subplot.cov[1, 0]

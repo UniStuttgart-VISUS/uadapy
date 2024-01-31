@@ -71,6 +71,8 @@ class InteractiveNormal:
         self.init_points()
         self.update()
 
+        self.last_grabbed_point = None
+
     def init_points(self):
         eigenvalues, eigenvectors = np.linalg.eig(self.cov)
 
@@ -84,7 +86,7 @@ class InteractiveNormal:
 
         # self.points = np.concatenate([self.points, -self.points])
 
-        print("a", self.points)
+        # print("a", self.points)
 
     def update(self):
         self.ax.clear()
@@ -112,8 +114,6 @@ class InteractiveNormal:
         self.ax.set_ylim([-extends, extends])
         self.ax.get_figure().canvas.draw_idle()
 
-
-
     def get_ind_under_point(self, event):
         'get the index of the vertex under point if within epsilon tolerance'
         # display coords
@@ -132,6 +132,8 @@ class InteractiveNormal:
         return ind
 
     def adjust_points(self, point_index: int, new_value: np.ndarray):
+        self.last_grabbed_point = point_index
+
         point_index = point_index % 2
         new_point = new_value
         new_point_length = np.linalg.norm(new_point)
