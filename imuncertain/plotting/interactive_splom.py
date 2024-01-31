@@ -140,7 +140,7 @@ class InteractiveSplom:
                     self.cov[col_i, row_i] = new_current_subplot.cov[0, 1]
                     self.cov[row_i, col_i] = new_current_subplot.cov[1, 0]
                     self.cov[row_i, row_i] = new_current_subplot.cov[1, 1]
-#
+
                     self.update_mean_cov()
 
                     self.update_plots(row_i-1, col_i)
@@ -152,10 +152,10 @@ class InteractiveSplom:
 
 
 def main():
-    dim = 3
+    dim = 7
     mean = np.zeros(dim)
     cov = np.eye(dim, dim)
-    cov = np.array([[1.51, 1.21, 0], [1.21, 1.55, 0], [0, 0, 1]])
+    # cov = np.array([[1.51, 1.21, 0], [1.21, 1.55, 0], [0, 0, 1]])
     isplom = InteractiveSplom(mean, cov, epsilon=20)
     isplom.show()
     plt.show()

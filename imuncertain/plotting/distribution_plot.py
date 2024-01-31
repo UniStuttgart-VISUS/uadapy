@@ -71,28 +71,18 @@ class InteractiveNormal:
         self.init_points()
         self.update()
 
-
     def init_points(self):
         eigenvalues, eigenvectors = np.linalg.eig(self.cov)
 
         # indices = eigenvalues.argsort()[::-1]
         # eigenvalues = eigenvalues[indices]
         # eigenvectors = eigenvectors.T[indices].T
-        print("evl", eigenvalues)
-        print("o", self.points)
+        # print("evl", eigenvalues)
+        # print("o", self.points)
 
-        if self.eigenvectors is None:
-            self.eigenvectors = eigenvectors
-            self.points = (np.sign(eigenvalues) * np.sqrt(np.abs(eigenvalues)) * eigenvectors).T
-        else:
-            if self.eigenvectors[:, 0].T @ eigenvectors[:, 0] < 0:
-                indices = np.array([1, 0])
-                eigenvalues = eigenvalues[indices]
-                eigenvectors = eigenvectors.T[indices].T
-
-        self.eigenvectors = eigenvectors
         self.points = (np.sign(eigenvalues) * np.sqrt(np.abs(eigenvalues)) * eigenvectors).T
 
+        # self.points = np.concatenate([self.points, -self.points])
 
         print("a", self.points)
 
@@ -105,6 +95,9 @@ class InteractiveNormal:
         # plot lines of eigenvectors
         self.ax.plot([self.mean[0], self.points[0, 0]], [self.mean[1], self.points[0, 1]])
         self.ax.plot([self.mean[0], self.points[1, 0]], [self.mean[1], self.points[1, 1]])
+
+        # self.ax.plot([self.mean[0], self.points[2, 0]], [self.mean[1], self.points[2, 1]])
+        # self.ax.plot([self.mean[0], self.points[3, 0]], [self.mean[1], self.points[3, 1]])
 
         # plot points of eigenvectors
         self.ax.scatter(self.points[:, 0], self.points[:, 1])
@@ -139,6 +132,7 @@ class InteractiveNormal:
         return ind
 
     def adjust_points(self, point_index: int, new_value: np.ndarray):
+        point_index = point_index % 2
         new_point = new_value
         new_point_length = np.linalg.norm(new_point)
         points = self.points.copy()
