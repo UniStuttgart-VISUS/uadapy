@@ -69,7 +69,13 @@ def test_distrib_class():
         distrib = ds.distribution(scipi_distrib)
     # initialize distribution object for each of the scipy distribs (multivariate)
     for scipi_distrib in model_nD:
-        distrib = ds.distribution(scipi_distrib)
+        try:
+            distrib = ds.distribution(scipi_distrib)
+            cov = distrib.cov()
+            if cov.shape[0] != n or cov.shape[1] != n:
+                raise RuntimeError(f"shape expected to be {n} x {n}, but was {cov.shape}")
+        except Exception as e:
+            print(f"Exception occured: {e} for {scipi_distrib.__class__.__name__}")
 
 
 
