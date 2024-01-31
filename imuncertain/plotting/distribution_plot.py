@@ -67,13 +67,33 @@ class InteractiveNormal:
 
         # init points
         self.points = None
+        self.eigenvectors = None
         self.init_points()
         self.update()
 
+
     def init_points(self):
         eigenvalues, eigenvectors = np.linalg.eig(self.cov)
+
+        # indices = eigenvalues.argsort()[::-1]
+        # eigenvalues = eigenvalues[indices]
+        # eigenvectors = eigenvectors.T[indices].T
+        print("evl", eigenvalues)
         print("o", self.points)
-        self.points = np.sign(eigenvalues) * np.sqrt(np.abs(eigenvalues)) * eigenvectors
+
+        if self.eigenvectors is None:
+            self.eigenvectors = eigenvectors
+            self.points = (np.sign(eigenvalues) * np.sqrt(np.abs(eigenvalues)) * eigenvectors).T
+        else:
+            if self.eigenvectors[:, 0].T @ eigenvectors[:, 0] < 0:
+                indices = np.array([1, 0])
+                eigenvalues = eigenvalues[indices]
+                eigenvectors = eigenvectors.T[indices].T
+
+        self.eigenvectors = eigenvectors
+        self.points = (np.sign(eigenvalues) * np.sqrt(np.abs(eigenvalues)) * eigenvectors).T
+
+
         print("a", self.points)
 
     def update(self):
