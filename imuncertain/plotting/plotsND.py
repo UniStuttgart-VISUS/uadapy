@@ -60,7 +60,15 @@ def plot_contour(distributions, resolution=(128, 128), ranges=None, **kwargs):
     # Create matrix
     numvars = distributions[0].dim
     if ranges is None:
-        ranges = [(0,1)]*numvars
+        min_val = np.zeros(distributions[0].mean().shape)+1000
+        max_val = np.zeros(distributions[0].mean().shape)-1000
+        cov_max = np.zeros(distributions[0].mean().shape)
+        for d in distributions:
+            min_val=np.min(np.array([d.mean(), min_val]), axis=0)
+            max_val=np.max(np.array([d.mean(), max_val]), axis=0)
+            cov_max = np.max(np.array([np.diagonal(d.cov()), cov_max]), axis=0)
+        cov_max = np.sqrt(cov_max)
+        ranges = [(mi-3*co, ma+3*co) for mi,ma, co in zip(min_val, max_val, cov_max)]
     fig, axes = plt.subplots(nrows=numvars, ncols=numvars)
     for i, ax in enumerate(axes.flat):
         # Hide all ticks and labels
@@ -123,7 +131,15 @@ def plot_contour_samples(distributions, num_samples, resolution=(128, 128), rang
     # Create matrix
     numvars = distributions[0].dim
     if ranges is None:
-        ranges = [(0,1)]*numvars
+        min_val = np.zeros(distributions[0].mean().shape)+1000
+        max_val = np.zeros(distributions[0].mean().shape)-1000
+        cov_max = np.zeros(distributions[0].mean().shape)
+        for d in distributions:
+            min_val=np.min(np.array([d.mean(), min_val]), axis=0)
+            max_val=np.max(np.array([d.mean(), max_val]), axis=0)
+            cov_max = np.max(np.array([np.diagonal(d.cov()), cov_max]), axis=0)
+        cov_max = np.sqrt(cov_max)
+        ranges = [(mi-3*co, ma+3*co) for mi,ma, co in zip(min_val, max_val, cov_max)]
     fig, axes = plt.subplots(nrows=numvars, ncols=numvars)
     for i, ax in enumerate(axes.flat):
         # Hide all ticks and labels
