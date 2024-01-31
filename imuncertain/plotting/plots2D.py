@@ -28,6 +28,16 @@ def plot_samples(distribution, num_samples, **kwargs):
 
 
 def plot_pdf_contour(distribution, resolution=(128,128), range_x=(0,1), range_y=(0,1), **kwargs):
+    """
+    :param distribution: Distributions to plot
+    :param resolution: The resolution for the pdf
+    :param range_x: The range for the x-axis
+    :param range_y: The range for the y-axis
+    :param kwargs: Optional other arguments to pass:
+        xlabel for label of x-axis
+        ylabel for label of y-axis
+    :return:
+    """
     if isinstance(distribution, dist.distribution):
         distribution = [distribution]
     contour_colors = generate_spectrum_colors(distribution[0].dim)
@@ -42,6 +52,10 @@ def plot_pdf_contour(distribution, resolution=(128,128), range_x=(0,1), range_y=
         pdf = d.pdf(coordinates)
         color = contour_colors[i]
         plt.contour(xv, yv, pdf, colors = [color])
+    if 'xlabel' in kwargs:
+        plt.xlabel(kwargs['xlabel'])
+    if 'ylabel' in kwargs:
+        plt.ylabel(kwargs['ylabel'])
     plt.show()
 
 # HELPER FUNCTIONS
