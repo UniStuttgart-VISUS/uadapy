@@ -48,10 +48,10 @@ def plot_samples(distributions, num_samples, **kwargs):
 
 def plot_contour(distributions, resolution=(128, 128), ranges=None, **kwargs):
     """
-    Plot samples from the multivariate distribution as a SPLOM
-    :param distribution: The multivariate distributions
-    :param num_samples: Number of samples to draw
-    :param kwargs: Optional other arguments to pass:
+    Visualizes a multidimensional distribution in a matrix of contour plot
+    :param distributions: Distributions to plot
+    :param resolution: The resolution for the pdf
+    :param ranges: Array of ranges for all dimensions
     :return:
     """
     if isinstance(distributions, dist.distribution):
@@ -108,6 +108,15 @@ def plot_contour(distributions, resolution=(128, 128), ranges=None, **kwargs):
     plt.show()
 
 def plot_contour_samples(distributions, num_samples, resolution=(128, 128), ranges=None, **kwargs):
+    """
+    Visualizes a multidimensional distribution in a matrix visualization where the
+    upper diagonal contains contour plots and the lower diagonal normal scatterplots
+    :param distributions: Distributions to plot
+    :param num_samples: Number of samples for the scatterplot
+    :param resolution: The resolution for the pdf
+    :param ranges: Array of ranges for all dimensions
+    :return:
+    """
     if isinstance(distributions, dist.distribution):
         distributions = [distributions]
     contour_colors = utils.generate_spectrum_colors(len(distributions))
