@@ -35,6 +35,7 @@ class InteractiveSplom:
 
         self.fig = fig
 
+        self.axes = axes
         self.subplots = np.empty(axes.shape, dtype=object)
 
         for row_i, row in enumerate(axes):
@@ -43,8 +44,6 @@ class InteractiveSplom:
                 if col_i >= row_i:
                     self.subplots[row_i, col_i] = None
                     continue
-
-                ax.axis('equal')
 
                 mean_ij = self.mean[[row_i, col_i]]
                 cov_ij = np.array([[self.cov[col_i, col_i], self.cov[col_i, row_i]],
@@ -93,7 +92,7 @@ class InteractiveSplom:
         self.current_pressed_subplot = None
 
     def update_mean_cov(self):
-        for row_i, row in enumerate(self.subplots):
+        for row_i, row in enumerate(self.axes):
             row_i += 1
             for col_i, ax in enumerate(row):
                 if col_i >= row_i:
@@ -102,6 +101,7 @@ class InteractiveSplom:
                 mean_ij = self.mean[[row_i, col_i]]
                 cov_ij = np.array([[self.cov[col_i, col_i], self.cov[col_i, row_i]],
                                    [self.cov[row_i, col_i], self.cov[row_i, row_i]]])
+
                 self.subplots[row_i-1, col_i].mean = mean_ij
                 self.subplots[row_i-1, col_i].cov = cov_ij
                 self.subplots[row_i-1, col_i].init_points()
@@ -131,17 +131,19 @@ class InteractiveSplom:
                     row_i, col_i = self.get_current_subplot_idx(new_current_subplot)
                     assert row_i is not None and col_i is not None
 
-                    self.mean[row_i] = new_current_subplot.mean[0]
-                    self.mean[col_i] = new_current_subplot.mean[1]
+                    row_i += 1
+
+                    # self.mean[row_i] = new_current_subplot.mean[0]
+                    # self.mean[col_i] = new_current_subplot.mean[1]
 #
-                    self.cov[row_i, row_i] = new_current_subplot.cov[0, 0]
-                    self.cov[row_i, col_i] = new_current_subplot.cov[0, 1]
-                    self.cov[col_i, row_i] = new_current_subplot.cov[1, 0]
-                    self.cov[col_i, col_i] = new_current_subplot.cov[1, 1]
+                    self.cov[col_i, col_i] = new_current_subplot.cov[0, 0]
+                    self.cov[col_i, row_i] = new_current_subplot.cov[0, 1]
+                    self.cov[row_i, col_i] = new_current_subplot.cov[1, 0]
+                    self.cov[row_i, row_i] = new_current_subplot.cov[1, 1]
 #
                     self.update_mean_cov()
 
-                    self.update_plots(row_i, col_i)
+                    self.update_plots(row_i-1, col_i)
         else:
             self.current_pressed_subplot = None
 

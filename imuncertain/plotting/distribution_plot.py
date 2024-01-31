@@ -66,12 +66,15 @@ class InteractiveNormal:
         self.epsilon = epsilon
 
         # init points
-        self.points = self.init_points()
+        self.points = None
+        self.init_points()
         self.update()
 
-    def init_points(self) -> np.ndarray:
+    def init_points(self):
         eigenvalues, eigenvectors = np.linalg.eig(self.cov)
-        return np.sign(eigenvalues) * np.sqrt(np.abs(eigenvalues)) * eigenvectors
+        print("o", self.points)
+        self.points = np.sign(eigenvalues) * np.sqrt(np.abs(eigenvalues)) * eigenvectors
+        print("a", self.points)
 
     def update(self):
         self.ax.clear()
@@ -91,11 +94,12 @@ class InteractiveNormal:
 
         extends = self.extends  # 2 * np.abs(points).max()
 
+        self.ax.axis('equal')
         self.ax.set_xlim([-extends, extends])
         self.ax.set_ylim([-extends, extends])
         self.ax.get_figure().canvas.draw_idle()
 
-        self.ax.axis('equal')
+
 
     def get_ind_under_point(self, event):
         'get the index of the vertex under point if within epsilon tolerance'
