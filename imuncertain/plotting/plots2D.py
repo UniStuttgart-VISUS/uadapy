@@ -25,7 +25,7 @@ def plot_samples(distribution, num_samples, **kwargs):
     plt.show()
 
 
-def plot_contour(distributions, resolution=(128, 128), ranges=None, **kwargs):
+def plot_contour(distributions, resolution=128, ranges=None, **kwargs):
     if isinstance(distributions, dist.distribution):
         distributions = [distributions]
     contour_colors = generate_spectrum_colors(len(distributions))
@@ -42,8 +42,8 @@ def plot_contour(distributions, resolution=(128, 128), ranges=None, **kwargs):
     range_x = ranges[0]
     range_y = ranges[1]
     for i, d in enumerate(distributions):
-        x = np.linspace(range_x[0], range_x[1], resolution[0])
-        y = np.linspace(range_y[0], range_y[1], resolution[1])
+        x = np.linspace(range_x[0], range_x[1], resolution)
+        y = np.linspace(range_y[0], range_y[1], resolution)
         xv, yv = np.meshgrid(x, y)
         coordinates = np.stack((xv, yv), axis=-1)
         pdf = d.pdf(coordinates)

@@ -33,7 +33,7 @@ class distribution:
             self.dim = 1
         self.kde = None
         if isinstance(self.model, np.ndarray):
-            self.kde = stats.gaussian_kde(self.model)
+            self.kde = stats.gaussian_kde(self.model.T)
 
     def sample(self, n: int, random_state : int = None) -> np.ndarray:
         if isinstance(self.model, np.ndarray):
@@ -45,7 +45,7 @@ class distribution:
 
     def pdf(self, x: np.ndarray | float) -> np.ndarray | float:
         if isinstance(self.model, np.ndarray):
-            return self.kde.pdf(x)
+            return self.kde.pdf(x.T)
         if not hasattr(self.model, 'pdf'):
             raise AttributeError(f"The model has no pdf.{self.model.__class__.__name__}")
         else:
@@ -67,7 +67,7 @@ class distribution:
 
     def cov(self) -> np.ndarray | float:
         if isinstance(self.model, np.ndarray):
-            return np.cov(self.model)
+            return np.cov(self.model.T)
         if hasattr(self.model, 'cov'):
             if callable(self.model.cov):
                 return self.model.cov()
