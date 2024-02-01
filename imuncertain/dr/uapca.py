@@ -20,8 +20,8 @@ def uapca(distributions, dims: int):
         for (m, c) in zip(means_pca, covs_pca):
             dist_pca.append(ua.distribution.distribution(multivariate_normal(m, c)))
         return dist_pca
-    except:
-        raise Exception('Something went wrong. Did you input normal distributions?')
+    except Exception as e:
+        raise Exception(f'Something went wrong. Did you input normal distributions? Exception:{e}')
 
 
 
