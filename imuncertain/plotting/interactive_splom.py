@@ -43,12 +43,22 @@ class InteractiveSplom:
                     ax.axis("off")
                     continue
 
+                x_label = ""
+                y_label = ""
+
+                if row_i-1 == len(self.subplots) - 1:
+                    x_label = f"dim={col_i}"
+
+                if col_i == 0:
+                    y_label = f"dim={row_i}"
+
                 mean_ij = self.mean[[row_i, col_i]]
                 cov_ij = np.array([[self.cov[col_i, col_i], self.cov[col_i, row_i]],
                                    [self.cov[row_i, col_i], self.cov[row_i, row_i]]])
                 self.subplots[row_i-1, col_i] = InteractiveNormal(mean_ij, cov_ij, ax, self.n_std,
-                                                                  self.extends, self.epsilon)
-
+                                                                  self.extends, self.epsilon,
+                                                                  y_label=y_label,
+                                                                  x_label=x_label)
 
         fig.canvas.mpl_connect('button_press_event', self.button_press_callback)
         fig.canvas.mpl_connect('button_release_event', self.button_release_callback)
@@ -106,13 +116,26 @@ class InteractiveSplom:
                     self.subplots[row_i-1, col_i].init_points()
 
     def update_plots(self, row_i_, col_i_):
+        updated = []
         for i in range(len(self.subplots)):
-            if self.subplots[i, col_i_] is not None:
+            if self.subplots[i, col_i_] is not None and (i, col_i_) not in updated:
                 self.subplots[i, col_i_].update(i == row_i_)
-            if self.subplots[row_i_, i] is not None:
+                updated.append((i, col_i_))
+            if self.subplots[row_i_, i] is not None and (row_i_, i) not in updated:
                 if i == col_i_:
                     continue
                 self.subplots[row_i_, i].update()
+                updated.append((row_i_, i))
+
+            if row_i_ < len(self.subplots) - 1:
+                if self.subplots[i, row_i_+1] is not None and (i, row_i_+1) not in updated:
+                    self.subplots[i, row_i_+1].update()
+                    updated.append((i, row_i_+1))
+
+            if col_i_ > 0:
+                if self.subplots[col_i_-1, i] is not None and (col_i_-1, i) not in updated:
+                    self.subplots[col_i_-1, i].update()
+                    updated.append((col_i_-1, i))
 
     def update_all_plots(self):
         for subplot in self.subplots.flat:
@@ -158,7 +181,7 @@ class InteractiveSplom:
 
 
 def main():
-    dim = 7
+    dim = 3
     mean = np.zeros(dim)
     cov = np.eye(dim, dim)
     isplom = InteractiveSplom(mean, cov, epsilon=20, extends=5)

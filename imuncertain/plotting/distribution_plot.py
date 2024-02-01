@@ -57,13 +57,15 @@ def confidence_ellipse(mean: np.ndarray, cov: np.ndarray, ax: plt.Axes, n_std: f
 
 class InteractiveNormal:
     def __init__(self, mean: np.ndarray, cov: np.ndarray, ax: plt.Axes, n_std: float = 1.0, extends: float = 10,
-                 epsilon: float = 10):
+                 epsilon: float = 10, x_label: str = "", y_label: str = ""):
         self.mean = mean
         self.cov = cov
         self.ax = ax
         self.n_std = n_std
         self.extends = extends
         self.epsilon = epsilon
+        self.x_label = x_label
+        self.y_label = y_label
 
         # init points
         self.points = None
@@ -80,11 +82,16 @@ class InteractiveNormal:
     def update(self, plot_int: bool = False):
         self.ax.clear()
 
+        self.ax.autoscale(False)
+
         # clear
-        self.ax.set_yticklabels([])
-        self.ax.set_xticklabels([])
-        self.ax.set_xticks([])
-        self.ax.set_yticks([])
+        # self.ax.set_yticklabels([])
+        # self.ax.set_xticklabels([])
+        # self.ax.set_xticks([])
+        # self.ax.set_yticks([])
+
+        self.ax.set_xlabel(self.x_label)
+        self.ax.set_ylabel(self.y_label)
 
         # plot ellipse
         confidence_ellipse(self.mean, self.cov, self.ax, self.n_std)
