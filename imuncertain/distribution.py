@@ -1,6 +1,7 @@
 import numpy as np
-#import scipy as sp
+import scipy as sp
 from scipy import stats
+from scipy.stats import _multivariate as mv
 
 
 class distribution:
@@ -22,7 +23,7 @@ class distribution:
         if isinstance(model, np.ndarray) and name == "Normal":
             mean = np.mean(model, axis=0)
             cov = np.cov(model, rowvar=False)
-            self.model = sp.stats.multivariate_normal(mean, cov)
+            self.model = stats.multivariate_normal(mean, cov)
         else:
             self.model = model
         mean = self.mean()
@@ -31,7 +32,7 @@ class distribution:
         else:
             self.dim = 1
         self.kde = None
-        if isinstance(model, np.ndarray):
+        if isinstance(self.model, np.ndarray):
             self.kde = stats.gaussian_kde(self.model)
 
     def sample(self, n: int, random_state : int = None) -> np.ndarray:
@@ -46,7 +47,7 @@ class distribution:
         if isinstance(self.model, np.ndarray):
             return self.kde.pdf(x)
         if not hasattr(self.model, 'pdf'):
-            print("The model has no pdf.")
+            raise AttributeError(f"The model has no pdf.{self.model.__class__.__name__}")
         else:
             return self.model.pdf(x)
 
@@ -59,19 +60,29 @@ class distribution:
             return self.model.mean
         if hasattr(self.model, 'loc'):
             return self.model.loc
+        if hasattr(self.model, 'mu'):
+            return self.model.mu
         else:
-            print(f"Mean not implemented yet! {self.model.__class__.__name__}")
+           raise AttributeError(f"Mean not implemented yet! {self.model.__class__.__name__}")
 
     def cov(self) -> np.ndarray | float:
         if isinstance(self.model, np.ndarray):
             return np.cov(self.model)
         if hasattr(self.model, 'cov'):
+            if callable(self.model.cov):
+                return self.model.cov()
             return self.model.cov
         if hasattr(self.model, 'covariance'):
+            if callable(self.model.covariance):
+                return self.model.covariance
             return self.model.covariance
-        if hasattr(self.model, 'var') and callable(self.model.var):
-            return self.model.var()
-        print("Covariance not implemented yet!")
+        if hasattr(self.model, 'var'):
+            if callable(self.model.var):
+                return self.model.var()
+            return self.model.var
+        if isinstance(self.model, mv.multivariate_t_frozen):
+            return self.model.shape * (self.model.df / (self.model.df - 2))
+        raise AttributeError(f"Covariance not implemented yet! {self.model.__class__.__name__}")
 
 
     def skew(self) -> np.ndarray | float:
@@ -79,7 +90,7 @@ class distribution:
             return stats.skew(self.model)
         if hasattr(self.model, 'stats') and callable(self.model.stats):
             return self.model.stats(moments='s')
-        if isinstance(self.model, stats.multivariate_normal):
+        if isinstance(self.model, multivariate_t_frozen):
             return 0
 
     def kurt(self) -> np.ndarray | float:
