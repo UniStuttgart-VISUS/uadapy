@@ -112,8 +112,10 @@ class InteractiveSplom:
 
                 self.subplots[row_i-1, col_i].mean = mean_ij
                 self.subplots[row_i-1, col_i].cov = cov_ij
+
                 if self.current_pressed_subplot is not self.subplots[row_i-1, col_i]:
                     self.subplots[row_i-1, col_i].init_points()
+                    # self.subplots[row_i - 1, col_i].adjust_points(0, self.subplots[row_i - 1, col_i].points[0])
 
     def update_plots(self, row_i_, col_i_):
         updated = []
@@ -184,9 +186,23 @@ def main():
     dim = 3
     mean = np.zeros(dim)
     cov = np.eye(dim, dim)
-    isplom = InteractiveSplom(mean, cov, epsilon=20, extends=5)
+
+    cov = np.array( [[ 37.50808979, -23.36711604,  11.44519161],
+ [-23.36711604 , 31.69240203,   7.57659005],
+ [ 11.44519161,   7.57659005 , 12.35746807]])
+
+    from imuncertain.data import load_iris_normal
+
+    dist = load_iris_normal()[0]
+
+    isplom = InteractiveSplom(dist.mean(), dist.cov(), epsilon=20, extends=2)
+    # isplom = InteractiveSplom(mean, cov, epsilon=20, extends=20)
     isplom.show()
     plt.show()
+
+    # print("old cov:\n", dist.cov())
+    new_cov = isplom.cov
+    print("new cov:\n", new_cov)
 
 
 if __name__ == '__main__':

@@ -77,12 +77,12 @@ class InteractiveNormal:
 
     def init_points(self):
         eigenvalues, eigenvectors = np.linalg.eig(self.cov)
-        self.points = (np.sign(eigenvalues) * np.sqrt(np.abs(eigenvalues)) * eigenvectors).T
+        self.points = self.mean + (np.sign(eigenvalues) * np.sqrt(np.abs(eigenvalues)) * eigenvectors).T
 
     def update(self, plot_int: bool = False):
         self.ax.clear()
 
-        self.ax.autoscale(False)
+        # self.ax.autoscale(False)
 
         # clear
         # self.ax.set_yticklabels([])
@@ -94,6 +94,7 @@ class InteractiveNormal:
         self.ax.set_ylabel(self.y_label)
 
         # plot ellipse
+        # confidence_ellipse(self.mean, self.cov, self.ax, self.n_std)
         confidence_ellipse(self.mean, self.cov, self.ax, self.n_std)
 
         # plot lines of eigenvectors
@@ -110,8 +111,8 @@ class InteractiveNormal:
         extends = self.extends  # 2 * np.abs(points).max()
 
         self.ax.axis('equal')
-        self.ax.set_xlim([-extends, extends])
-        self.ax.set_ylim([-extends, extends])
+        #self.ax.set_xlim([self.mean[0] - extends, self.mean[0] + extends])
+        #self.ax.set_ylim([-self.mean[1] + extends, self.mean[0] + extends])
         self.ax.get_figure().canvas.draw_idle()
 
     def get_ind_under_point(self, event):
@@ -131,10 +132,9 @@ class InteractiveNormal:
     def adjust_points(self, point_index: int, new_value: np.ndarray):
         self.last_grabbed_point = point_index
 
-        point_index = point_index % 2
-        new_point = new_value
+        new_point = new_value - self.mean
         new_point_length = np.linalg.norm(new_point)
-        points = self.points.copy()
+        points = self.points.copy() - self.mean
         points[point_index] = new_point
 
         old_other_point_length = np.linalg.norm(points[1 - point_index])
@@ -155,4 +155,4 @@ class InteractiveNormal:
 
         cov = points_norm.T @ (np.eye(2) * new_eigenvalues) @ points_norm
         self.cov = cov
-        self.points = points
+        self.points = self.mean + points
