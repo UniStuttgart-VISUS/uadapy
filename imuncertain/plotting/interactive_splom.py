@@ -5,8 +5,63 @@ from imuncertain.plotting.distribution_plot import InteractiveNormal
 matplotlib.use("TkAgg")
 
 import numpy as np
-
 import matplotlib.pyplot as plt
+
+
+def compute_scaling_at_axis(axis: np.ndarray, a: np.ndarray, b: np.ndarray) -> float:
+    # return the scaling factor s for a = s * b along the specified axis
+
+    # angle of axis
+    angle = compute_angle(axis, np.array([1, 0]))
+
+    R = make_2d_rotation_matrix(angle)
+
+    # rotate a and b to be aligned with x-axis
+    ar = R @ a
+    br = R @ b
+
+    # print("a:", np.rad2deg(angle), axis, R, a, b, ar, br)
+
+    # x-value is length on axis
+    an = ar[0]
+    bn = br[0]
+
+    if bn < 1e-16 or an < 1e-16:
+        return 1.0
+
+    return an / bn
+
+
+def compute_scaling(a: np.ndarray, b: np.ndarray) -> float:
+    # return the scaling factor s for a = s * b
+
+    # x-value is length on axis
+    an = np.linalg.norm(a)
+    bn = np.linalg.norm(b)
+
+    if bn < 1e-16 or an < 1e-16:
+        return 1.0
+
+    return an / bn
+
+
+
+def compute_angle(a: np.ndarray, b: np.ndarray) -> float:
+    dot = np.dot(a, b)
+    det = np.cross(a, b)
+    angle = np.arctan2(det, dot)
+    # print(np.rad2deg(angle))
+    return angle
+
+
+def make_2d_rotation_matrix(angle: float):
+    cos_angle = np.cos(angle)
+    sin_angle = np.sin(angle)
+
+    # rotation matrix
+    R = np.array([[cos_angle, -sin_angle],
+                  [sin_angle, cos_angle]])
+    return R
 
 
 class InteractiveSplom:
@@ -56,7 +111,7 @@ class InteractiveSplom:
                 cov_ij = np.array([[self.cov[col_i, col_i], self.cov[col_i, row_i]],
                                    [self.cov[row_i, col_i], self.cov[row_i, row_i]]])
                 self.subplots[row_i-1, col_i] = InteractiveNormal(mean_ij, cov_ij, ax, self.n_std,
-                                                                  self.extends, self.epsilon,
+                                                                  extends=self.extends, epsilon=self.epsilon,
                                                                   y_label=y_label,
                                                                   x_label=x_label)
 
@@ -66,8 +121,10 @@ class InteractiveSplom:
 
         self.update_all_plots()
         self.current_pressed_subplot = None
+        self.last_local_mouse_pos = np.zeros((2, ), dtype=float)
+        self.currently_selected_point = None
 
-    def get_current_subplot(self, event):
+    def get_current_subplot(self, event) -> InteractiveNormal:
         for subplot in self.subplots.flat:
             if subplot is not None and subplot.ax is event.inaxes:
                 return subplot
@@ -91,12 +148,17 @@ class InteractiveSplom:
         subplot = self.get_current_subplot(event)
 
         self.current_pressed_subplot = subplot
+        self.last_local_mouse_pos = np.array([event.xdata, event.ydata])
+        point_idx = subplot.get_ind_under_point(event)
+        self.currently_selected_point = point_idx
 
     def button_release_callback(self, event):
         'whenever a mouse button is released'
         if event.button != 1:
             return
         self.current_pressed_subplot = None
+        self.last_local_mouse_pos = np.zeros((2,), dtype=float)
+        self.currently_selected_point = None
         self.update_all_plots()
 
     def update_mean_cov(self):
@@ -113,7 +175,7 @@ class InteractiveSplom:
                 self.subplots[row_i-1, col_i].mean = mean_ij
                 self.subplots[row_i-1, col_i].cov = cov_ij
 
-                if self.current_pressed_subplot is not self.subplots[row_i-1, col_i]:
+                if self.current_pressed_subplot is not self.subplots[row_i-1, col_i] or True:
                     self.subplots[row_i-1, col_i].init_points()
                     # self.subplots[row_i - 1, col_i].adjust_points(0, self.subplots[row_i - 1, col_i].points[0])
 
@@ -154,48 +216,74 @@ class InteractiveSplom:
         new_current_subplot = self.get_current_subplot(event)
         if new_current_subplot is self.current_pressed_subplot:
             if new_current_subplot is not None:
-                point_index = new_current_subplot.get_ind_under_point(event)
-                if point_index is not None:
-                    new_current_subplot.adjust_points(point_index, np.array([event.xdata, event.ydata]))
+                row_i, col_i = self.get_current_subplot_idx(new_current_subplot)
+                assert row_i is not None and col_i is not None
 
-                    row_i, col_i = self.get_current_subplot_idx(new_current_subplot)
-                    assert row_i is not None and col_i is not None
-
-                    row_i += 1
+                row_i += 1
+                if self.currently_selected_point is None:
+                    angle = compute_angle(self.last_local_mouse_pos - new_current_subplot.mean,
+                                               np.array([event.xdata, event.ydata]) - new_current_subplot.mean)
+                    R_sub_ = make_2d_rotation_matrix(angle)
+                    # print(R_sub_)
 
                     self.mean[row_i] = new_current_subplot.mean[0]
                     self.mean[col_i] = new_current_subplot.mean[1]
 
-                    self.cov[col_i, col_i] = new_current_subplot.cov[0, 0]
-                    self.cov[col_i, row_i] = new_current_subplot.cov[0, 1]
-                    self.cov[row_i, col_i] = new_current_subplot.cov[1, 0]
-                    self.cov[row_i, row_i] = new_current_subplot.cov[1, 1]
+                    # apply rotation of everything
+                    R_ = np.eye(len(self.cov), dtype=float)
+                    R_[col_i, col_i] = R_sub_[0, 0]
+                    R_[col_i, row_i] = R_sub_[0, 1]
+                    R_[row_i, col_i] = R_sub_[1, 0]
+                    R_[row_i, row_i] = R_sub_[1, 1]
 
-                    self.update_mean_cov()
+                    self.cov = R_ @ self.cov @ R_.T
+                else:
+                    scaling_factor = compute_scaling_at_axis(
+                        self.current_pressed_subplot.points[self.currently_selected_point] -
+                        self.current_pressed_subplot.mean,
+                        self.current_pressed_subplot.points[self.currently_selected_point] -
+                        self.current_pressed_subplot.mean,
+                        np.array([event.xdata, event.ydata]) - new_current_subplot.mean)
 
-                    self.update_plots(row_i-1, col_i)
+                    # print("scale:", scaling_factor)
+
+                    S = np.eye(2, dtype=float)
+                    S[self.currently_selected_point % 2, self.currently_selected_point % 2] = 1 / scaling_factor
+                    S_ = np.sqrt(S)
+
+                    S__ = np.eye(len(self.cov), dtype=float)
+                    S__[col_i, col_i] = S_[0, 0]
+                    S__[col_i, row_i] = S_[0, 1]
+                    S__[row_i, col_i] = S_[1, 0]
+                    S__[row_i, row_i] = S_[1, 1]
+
+                    self.cov = S__ @ self.cov @ S__.T
+
+                self.cov[np.abs(self.cov) < 1e-16] = 0.0
+                self.update_mean_cov()
+                self.update_plots(row_i - 1, col_i)
+
         else:
             self.current_pressed_subplot = None
+            self.last_local_mouse_pos = np.zeros((2,), dtype=float)
             self.update_all_plots()
+
+        self.last_local_mouse_pos = np.array([event.xdata, event.ydata])
 
     def show(self):
         self.fig.show()
 
 
 def main():
-    dim = 3
-    mean = np.zeros(dim)
-    cov = np.eye(dim, dim)
-
-    cov = np.array( [[ 37.50808979, -23.36711604,  11.44519161],
- [-23.36711604 , 31.69240203,   7.57659005],
- [ 11.44519161,   7.57659005 , 12.35746807]])
+    # dim = 7
+    # mean = np.zeros(dim)
+    # cov = np.eye(dim, dim)
 
     from imuncertain.data import load_iris_normal
 
     dist = load_iris_normal()[0]
 
-    isplom = InteractiveSplom(dist.mean(), dist.cov(), epsilon=20, extends=2)
+    isplom = InteractiveSplom(dist.mean(), dist.cov(), epsilon=20, extends=1)
     # isplom = InteractiveSplom(mean, cov, epsilon=20, extends=20)
     isplom.show()
     plt.show()
