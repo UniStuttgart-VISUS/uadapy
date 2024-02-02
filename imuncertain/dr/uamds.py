@@ -54,7 +54,7 @@ def precalculate_constants(normal_distr_spec: np.ndarray) -> tuple:
     return constants
 
 
-@numba.njit()
+@numba.njit(cache=True)
 def stress_ij(i: int, j: int, normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray, 
         #pre,
         mu,
@@ -216,7 +216,7 @@ def stress_ij(i: int, j: int, normal_distr_spec: np.ndarray, uamds_transforms: n
 
 
 # with copy
-@numba.njit()
+@numba.njit(cache=True)
 def gradient_ij(i: int, j: int, normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray,
                 S, norm2_mui_sub_muj, mui_sub_muj_TUi, mui_sub_muj_TUj, Z) -> tuple:
     d_hi = normal_distr_spec.shape[1]
@@ -305,7 +305,7 @@ def stress(normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray, precalc_
     return sum
 
 
-@numba.njit(parallel=True)
+@numba.njit(parallel=True, cache=True)
 def gradient_numba(normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray, S, norm2_mui_sub_muj,
                    mui_sub_muj_TUi, mui_sub_muj_TUj, Z, n, d_hi):
     # compute the gradients of all affine transforms
