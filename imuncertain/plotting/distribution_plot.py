@@ -127,7 +127,7 @@ class InteractiveNormal:
 
 
         self.ax.set_xlim([self.mean[0] - extends, self.mean[0] + extends])
-        self.ax.set_ylim([-self.mean[1] + extends, self.mean[0] + extends])
+        self.ax.set_ylim([self.mean[1] - extends, self.mean[0] + extends])
 
         self.ax.axis('equal')
         # self.ax.autoscale(False)

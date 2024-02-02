@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def compute_scaling_at_axis(axis: np.ndarray, a: np.ndarray, b: np.ndarray) -> float:
+def compute_scaling_factor_at_axis(axis: np.ndarray, a: np.ndarray, b: np.ndarray) -> float:
     # return the scaling factor s for a = s * b along the specified axis
 
     # angle of axis
@@ -30,6 +30,36 @@ def compute_scaling_at_axis(axis: np.ndarray, a: np.ndarray, b: np.ndarray) -> f
         return 1.0
 
     return an / bn
+
+
+def compute_rotation_scaling_matrix__along_axis(axis: np.ndarray, a: np.ndarray, b: np.ndarray):
+    """
+    Returns a rotation_scale matrix that transforms a
+        vector/matrix by the scale factor s for a = s * b along the specified axis.
+    """
+    # angle of axis
+    angle = compute_angle(axis, np.array([1, 0]))
+
+    R = make_2d_rotation_matrix(angle)  # rotates axis to x-axis
+
+    # rotate a and b to be aligned with x-axis
+    ar = R @ a
+    br = R @ b
+
+    # print("a:", np.rad2deg(angle), axis, R, a, b, ar, br)
+
+    # x-value is length on axis
+    an = ar[0]
+    bn = br[0]
+
+    if bn < 1e-16 or an < 1e-16:
+        scale_factor = 1.0
+    else:
+        scale_factor = an / bn
+
+    S = np.array([[np.sqrt(scale_factor), 0.0], [0.0, 1.0]])
+
+    return S @ R
 
 
 def compute_scaling(a: np.ndarray, b: np.ndarray) -> float:
@@ -238,26 +268,30 @@ class InteractiveSplom:
 
                     self.cov = R_ @ self.cov @ R_.T
                 else:
-                    scaling_factor = compute_scaling_at_axis(
-                        self.current_pressed_subplot.points[self.currently_selected_point] -
-                        self.current_pressed_subplot.mean,
-                        self.current_pressed_subplot.points[self.currently_selected_point] -
-                        self.current_pressed_subplot.mean,
-                        np.array([event.xdata, event.ydata]) - new_current_subplot.mean)
+                    # scaling_factor = compute_scaling_factor_at_axis(
+                    #     self.current_pressed_subplot.points[self.currently_selected_point] -
+                    #     self.current_pressed_subplot.mean,
+                    #     self.current_pressed_subplot.points[self.currently_selected_point] -
+                    #     self.current_pressed_subplot.mean,
+                    #     np.array([event.xdata, event.ydata]) - new_current_subplot.mean)
 
                     # print("scale:", scaling_factor)
 
-                    S = np.eye(2, dtype=float)
-                    S[self.currently_selected_point % 2, self.currently_selected_point % 2] = 1 / scaling_factor
-                    S_ = np.sqrt(S)
+                    # RS = compute_rotation_scaling_matrix__along_axis(
+                    #      self.current_pressed_subplot.points[self.currently_selected_point] -
+                    #      self.current_pressed_subplot.mean,
+                    #      self.current_pressed_subplot.points[self.currently_selected_point] -
+                    #      self.current_pressed_subplot.mean,
+                    #      np.array([event.xdata, event.ydata]) - new_current_subplot.mean)
 
-                    S__ = np.eye(len(self.cov), dtype=float)
-                    S__[col_i, col_i] = S_[0, 0]
-                    S__[col_i, row_i] = S_[0, 1]
-                    S__[row_i, col_i] = S_[1, 0]
-                    S__[row_i, row_i] = S_[1, 1]
+                    # # get rotation of ev subspace
+                    # S__ = np.eye(len(self.cov), dtype=float)
+                    # S__[col_i, col_i] = RS[0, 0]
+                    # S__[col_i, row_i] = RS[0, 1]
+                    # S__[row_i, col_i] = RS[1, 0]
+                    # S__[row_i, row_i] = RS[1, 1]
 
-                    self.cov = S__ @ self.cov @ S__.T
+                    # self.cov = S__ @ self.cov @ S__.T
 
                 self.cov[np.abs(self.cov) < 1e-16] = 0.0
                 self.update_mean_cov()
