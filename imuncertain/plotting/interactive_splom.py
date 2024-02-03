@@ -268,30 +268,29 @@ class InteractiveSplom:
 
                     self.cov = R_ @ self.cov @ R_.T
                 else:
-                    # scaling_factor = compute_scaling_factor_at_axis(
-                    #     self.current_pressed_subplot.points[self.currently_selected_point] -
-                    #     self.current_pressed_subplot.mean,
-                    #     self.current_pressed_subplot.points[self.currently_selected_point] -
-                    #     self.current_pressed_subplot.mean,
-                    #     np.array([event.xdata, event.ydata]) - new_current_subplot.mean)
+                    scaling_factor = compute_scaling_factor_at_axis(
+                        self.current_pressed_subplot.points[self.currently_selected_point] -
+                        self.current_pressed_subplot.mean,
+                        self.current_pressed_subplot.points[self.currently_selected_point] -
+                        self.current_pressed_subplot.mean,
+                        np.array([event.xdata, event.ydata]) - new_current_subplot.mean)
 
-                    # print("scale:", scaling_factor)
+                    ev = (self.current_pressed_subplot.points[self.currently_selected_point] -
+                          self.current_pressed_subplot.mean)
 
-                    # RS = compute_rotation_scaling_matrix__along_axis(
-                    #      self.current_pressed_subplot.points[self.currently_selected_point] -
-                    #      self.current_pressed_subplot.mean,
-                    #      self.current_pressed_subplot.points[self.currently_selected_point] -
-                    #      self.current_pressed_subplot.mean,
-                    #      np.array([event.xdata, event.ydata]) - new_current_subplot.mean)
+                    angle = compute_angle(ev, np.array([1.0, 0.0]))
+                    R = make_2d_rotation_matrix(angle)
 
-                    # # get rotation of ev subspace
-                    # S__ = np.eye(len(self.cov), dtype=float)
-                    # S__[col_i, col_i] = RS[0, 0]
-                    # S__[col_i, row_i] = RS[0, 1]
-                    # S__[row_i, col_i] = RS[1, 0]
-                    # S__[row_i, row_i] = RS[1, 1]
+                    R_ = np.eye(len(self.cov))
+                    R_[col_i, col_i] = R[0, 0]
+                    R_[col_i, row_i] = R[0, 1]
+                    R_[row_i, col_i] = R[1, 0]
+                    R_[row_i, row_i] = R[1, 1]
 
-                    # self.cov = S__ @ self.cov @ S__.T
+                    S = np.eye(len(self.cov))
+                    S[col_i, col_i] = 1 / np.sqrt(scaling_factor)
+
+                    self.cov = (R_.T @ S @ R_) @ self.cov @ (R_.T @ S @ R_).T
 
                 self.cov[np.abs(self.cov) < 1e-16] = 0.0
                 self.update_mean_cov()
@@ -317,7 +316,7 @@ def main():
 
     dist = load_iris_normal()[0]
 
-    isplom = InteractiveSplom(dist.mean(), dist.cov(), epsilon=20, extends=1)
+    isplom = InteractiveSplom(dist.mean(), dist.cov(), epsilon=20, extends=10)
     # isplom = InteractiveSplom(mean, cov, epsilon=20, extends=20)
     isplom.show()
     plt.show()
