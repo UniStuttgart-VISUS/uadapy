@@ -2,8 +2,8 @@ import itertools
 
 import matplotlib.pyplot as plt
 import numpy as np
-import imuncertain.distribution as dist
-import imuncertain.plotting.utils as utils
+import uadapy.distribution as dist
+import uadapy.plotting.utils as utils
 
 def plot_samples(distributions, num_samples, **kwargs):
     """

@@ -1,6 +1,6 @@
-import imuncertain.data as data
-import imuncertain.dr.uamds as uamds
-import imuncertain.plotting.plots2D as plots2D
+import uadapy.data as data
+import uadapy.dr.uamds as uamds
+import uadapy.plotting.plots2D as plots2D
 
 
 

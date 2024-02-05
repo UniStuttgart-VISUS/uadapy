@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import imuncertain.distribution as dist
+import uadapy.distribution as dist
 
 def plot_samples(distribution, num_samples, **kwargs):
     """

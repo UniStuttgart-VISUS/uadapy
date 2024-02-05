@@ -2,7 +2,7 @@ import numba
 import numpy as np
 from scipy.spatial import distance_matrix
 from scipy.optimize import minimize
-import imuncertain as ua
+import uadapy as ua
 from scipy.stats import multivariate_normal
 
 

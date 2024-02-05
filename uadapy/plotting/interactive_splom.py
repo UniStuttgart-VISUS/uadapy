@@ -1,6 +1,6 @@
 import matplotlib
 
-from imuncertain.plotting.distribution_plot import InteractiveNormal
+from uadapy.plotting.distribution_plot import InteractiveNormal
 
 matplotlib.use("TkAgg")
 
@@ -312,7 +312,7 @@ def main():
     # mean = np.zeros(dim)
     # cov = np.eye(dim, dim)
 
-    from imuncertain.data import load_iris_normal
+    from uadapy.data import load_iris_normal
 
     dist = load_iris_normal()[0]
 
