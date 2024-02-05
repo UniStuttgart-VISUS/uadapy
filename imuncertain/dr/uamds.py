@@ -215,25 +215,98 @@ def stress_ij(i: int, j: int, normal_distr_spec: np.ndarray, uamds_transforms: n
 #     return dBi.T, dBj.T, dci, dcj
 
 
-# with copy
+# # with copy
+# @numba.njit(cache=True)
+# def gradient_ij(i: int, j: int, normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray,
+#                 S, norm2_mui_sub_muj, mui_sub_muj_TUi, mui_sub_muj_TUj, Z) -> tuple:
+#     d_hi = normal_distr_spec.shape[1]
+#     # d_lo = uamds_transforms.shape[1]
+#     n = normal_distr_spec.shape[0] // (d_hi + 1)
+#     # get some objects for i
+#     Si = S[i].copy()
+#     # mui = mu[i]
+#     ci = uamds_transforms[i, :]
+#     Bi = uamds_transforms[n+i*d_hi : n+(i+1)*d_hi, :].T.copy()
+#     BiSi = Bi @ Si
+#
+#     # get some objects for j
+#     Sj = S[j].copy()
+#     # muj = mu[j]
+#     cj = uamds_transforms[j, :]
+#     Bj = uamds_transforms[n+j*d_hi:n+(j+1)*d_hi, :].T.copy()
+#     BjSj = Bj @ Sj
+#
+#     # mui_sub_muj = mui - muj
+#     ci_sub_cj = ci - cj
+#
+#     # compute term 1 :
+#     Zij = Z[i][j].copy()
+#     BiT = Bi.T.copy()
+#     BjT = Bj.T.copy()
+#     part1i = (BiSi @ BiT @ BiSi) - (BiSi @ Si)
+#     part1j = (BjSj @ BjT @ BjSj) - (BjSj @ Sj)
+#     part2i = (BjSj @ BjT @ BiSi) - (BjSj @ Zij.T @ Si)
+#     part2j = (BiSi @ BiT @ BjSj) - (BiSi @ Zij   @ Sj)
+#     dBi = (part1i + part2i) * 8
+#     dBj = (part1j + part2j) * 8
+#
+#     # compute term 2 :
+#     dci = np.zeros(ci.shape)
+#     dcj = np.zeros(cj.shape)
+#     if i != j:
+#         # gradient part for B matrices
+#         part3i = (np.outer(ci_sub_cj, (ci_sub_cj @ Bi)) - np.outer(ci_sub_cj, mui_sub_muj_TUi[i][j])) @ Si
+#         part3j = (np.outer(ci_sub_cj, (ci_sub_cj @ Bj)) - np.outer(ci_sub_cj, mui_sub_muj_TUj[i][j])) @ Sj
+#         dBi += 2*part3i
+#         dBj += 2*part3j
+#         # gradient part for c vectors
+#         part4i = (mui_sub_muj_TUi[i][j] - (ci_sub_cj @ Bi)) @ BiSi.T
+#         part4j = (mui_sub_muj_TUj[i][j] - (ci_sub_cj @ Bj)) @ BjSj.T
+#         part4 = -2*(part4i+part4j)
+#         dci += part4
+#         dcj -= part4
+#
+#     # compute term 3 :
+#     norm1 = norm2_mui_sub_muj[i][j]
+#     norm2 = np.dot(ci_sub_cj, ci_sub_cj)
+#     part1 = norm1-norm2
+#     part2 = part3 = 0.0
+#     for k in range(d_hi):
+#         sigma_i = Si[k, k]
+#         sigma_j = Sj[k, k]
+#         bik = Bi[:, k].copy()
+#         bjk = Bj[:, k].copy()
+#         part2 += (1 - np.dot(bik, bik)) * sigma_i
+#         part3 += (1 - np.dot(bjk, bjk)) * sigma_j
+#     term3 = -4 * (part1 + part2 + part3)
+#     dBi += BiSi * term3
+#     dBj += BjSj * term3
+#
+#     if i != j:
+#         dci += ci_sub_cj * term3
+#         dcj -= ci_sub_cj * term3
+#
+#     return dBi.T, dBj.T, dci, dcj
+
+
 @numba.njit(cache=True)
-def gradient_ij(i: int, j: int, normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray,
-                S, norm2_mui_sub_muj, mui_sub_muj_TUi, mui_sub_muj_TUj, Z) -> tuple:
+def gradient_ij_optimized(i: int, j: int, normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray,
+                          S, norm2_mui_sub_muj, mui_sub_muj_TUi, mui_sub_muj_TUj, Z, BiSi, Bi, Si, BiT, part1i) -> tuple:
     d_hi = normal_distr_spec.shape[1]
     # d_lo = uamds_transforms.shape[1]
     n = normal_distr_spec.shape[0] // (d_hi + 1)
     # get some objects for i
-    Si = S[i].copy()
+    #Si = S[i].copy()
     # mui = mu[i]
     ci = uamds_transforms[i, :]
-    Bi = uamds_transforms[n+i*d_hi : n+(i+1)*d_hi, :].T.copy()
-    BiSi = Bi @ Si
+    #Bi = uamds_transforms[n + i * d_hi: n + (i + 1) * d_hi, :].T.copy()
+    #BiSi = Bi @ Si
 
     # get some objects for j
     Sj = S[j].copy()
     # muj = mu[j]
     cj = uamds_transforms[j, :]
-    Bj = uamds_transforms[n+j*d_hi:n+(j+1)*d_hi, :].T.copy()
+    Bj = uamds_transforms[n + j * d_hi:n + (j + 1) * d_hi, :].T.copy()
     BjSj = Bj @ Sj
 
     # mui_sub_muj = mui - muj
@@ -241,12 +314,12 @@ def gradient_ij(i: int, j: int, normal_distr_spec: np.ndarray, uamds_transforms:
 
     # compute term 1 :
     Zij = Z[i][j].copy()
-    BiT = Bi.T.copy()
+    #BiT = Bi.T.copy()
     BjT = Bj.T.copy()
-    part1i = (BiSi @ BiT @ BiSi) - (BiSi @ Si)
+    #part1i = (BiSi @ BiT @ BiSi) - (BiSi @ Si)
     part1j = (BjSj @ BjT @ BjSj) - (BjSj @ Sj)
     part2i = (BjSj @ BjT @ BiSi) - (BjSj @ Zij.T @ Si)
-    part2j = (BiSi @ BiT @ BjSj) - (BiSi @ Zij   @ Sj)
+    part2j = (BiSi @ BiT @ BjSj) - (BiSi @ Zij @ Sj)
     dBi = (part1i + part2i) * 8
     dBj = (part1j + part2j) * 8
 
@@ -257,19 +330,19 @@ def gradient_ij(i: int, j: int, normal_distr_spec: np.ndarray, uamds_transforms:
         # gradient part for B matrices
         part3i = (np.outer(ci_sub_cj, (ci_sub_cj @ Bi)) - np.outer(ci_sub_cj, mui_sub_muj_TUi[i][j])) @ Si
         part3j = (np.outer(ci_sub_cj, (ci_sub_cj @ Bj)) - np.outer(ci_sub_cj, mui_sub_muj_TUj[i][j])) @ Sj
-        dBi += 2*part3i
-        dBj += 2*part3j
+        dBi += 2 * part3i
+        dBj += 2 * part3j
         # gradient part for c vectors
         part4i = (mui_sub_muj_TUi[i][j] - (ci_sub_cj @ Bi)) @ BiSi.T
         part4j = (mui_sub_muj_TUj[i][j] - (ci_sub_cj @ Bj)) @ BjSj.T
-        part4 = -2*(part4i+part4j)
+        part4 = -2 * (part4i + part4j)
         dci += part4
         dcj -= part4
 
     # compute term 3 :
     norm1 = norm2_mui_sub_muj[i][j]
     norm2 = np.dot(ci_sub_cj, ci_sub_cj)
-    part1 = norm1-norm2
+    part1 = norm1 - norm2
     part2 = part3 = 0.0
     for k in range(d_hi):
         sigma_i = Si[k, k]
@@ -287,7 +360,6 @@ def gradient_ij(i: int, j: int, normal_distr_spec: np.ndarray, uamds_transforms:
         dcj -= ci_sub_cj * term3
 
     return dBi.T, dBj.T, dci, dcj
-
 
 
 def stress(normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray, precalc_constants: tuple=None) -> float:
@@ -323,6 +395,32 @@ def gradient_numba(normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray, 
     return grad
 
 
+@numba.njit(parallel=False, cache=True)
+def gradient_numba_optimized(normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray, S, norm2_mui_sub_muj,
+                             mui_sub_muj_TUi, mui_sub_muj_TUj, Z, n, d_hi):
+    # compute the gradients of all affine transforms
+    grad = np.zeros(uamds_transforms.shape)
+    for i in numba.prange(n):
+
+        Si = S[i].copy()
+        # mui = mu[i]
+        Bi = uamds_transforms[n + i * d_hi: n + (i + 1) * d_hi, :].T.copy()
+        BiSi = Bi @ Si
+        BiT = Bi.T.copy()
+        part1i = (BiSi @ BiT @ BiSi) - (BiSi @ Si)
+
+        for j in numba.prange(i, n):
+            dBi, dBj, dci, dcj = gradient_ij_optimized(i, j, normal_distr_spec, uamds_transforms, S, norm2_mui_sub_muj,
+                                             mui_sub_muj_TUi, mui_sub_muj_TUj, Z, BiSi, Bi, Si, BiT, part1i)
+            # c gradients on top part of matrix
+            grad[i, :] += dci
+            grad[j, :] += dcj
+            # B gradients below c part of matrix
+            grad[n + i * d_hi:n + (i + 1) * d_hi, :] += dBi
+            grad[n + j * d_hi:n + (j + 1) * d_hi, :] += dBj
+    return grad
+
+
 def gradient(normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray, precalc_constants: tuple) -> np.ndarray:
     # print("grad")
     d_hi = normal_distr_spec.shape[1]
@@ -337,7 +435,7 @@ def gradient(normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray, precal
 
     # print(S.shape, norm2_mui_sub_muj.shape, mui_sub_muj_TUi.shape, mui_sub_muj_TUj.shape, Z.shape)
 
-    return gradient_numba(normal_distr_spec, uamds_transforms, S, norm2_mui_sub_muj,
+    return gradient_numba_optimized(normal_distr_spec, uamds_transforms, S, norm2_mui_sub_muj,
                    mui_sub_muj_TUi, mui_sub_muj_TUj, Z, n, d_hi)
 
 
@@ -345,18 +443,41 @@ def iterate_simple_gradient_descent(
         normal_distr_spec: np.ndarray,
         uamds_transforms_init: np.ndarray,
         precalc_constants: tuple = None,
-        num_iter: int = 10,
-        a: float = 0.0001
+        num_iter: int = 100,
+        a: float = 0.0001,
+        b1: float = 0.9,
+        b2: float = 0.999,
+        e: float = 10e-8,
+        mass=0.9,
+        optimizer="default"
 ) -> np.ndarray:
-
     if precalc_constants is None:
         precalc_constants = precalculate_constants(normal_distr_spec)
 
-    # gradient descent
-    uamds_transforms = uamds_transforms_init
-    for i in range(num_iter):
-        grad = gradient(normal_distr_spec, uamds_transforms, precalc_constants)
-        uamds_transforms -= grad * a
+    match optimizer:
+        case "adam":
+            m = np.zeros_like(uamds_transforms_init)
+            v = np.zeros_like(uamds_transforms_init)
+            for i in range(num_iter):
+                grad = gradient(normal_distr_spec, uamds_transforms, precalc_constants)
+                m = (1 - b1) * grad + b1 * m  # first  moment estimate.
+                v = (1 - b2) * (grad ** 2) + b2 * v  # second moment estimate.
+                mhat = m / (1 - b1 ** (i + 1))  # bias correction.
+                vhat = v / (1 - b2 ** (i + 1))
+                uamds_transforms = uamds_transforms - a * mhat / (np.sqrt(vhat) + e)
+
+        case "momentum":
+            velocity = np.zeros_like(uamds_transforms_init)
+            for i in range(num_iter):
+                grad = gradient(normal_distr_spec, uamds_transforms, precalc_constants)
+                velocity = mass * velocity + (1.0 - mass) * grad
+                uamds_transforms = uamds_transforms - a * velocity
+
+        case _:
+            for i in range(num_iter):
+                grad = gradient(normal_distr_spec, uamds_transforms, precalc_constants)
+                uamds_transforms = uamds_transforms - a * grad
+
     return uamds_transforms
 
 
