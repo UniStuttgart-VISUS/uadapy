@@ -484,7 +484,8 @@ def iterate_simple_gradient_descent(
 def iterate_scipy(
         normal_distr_spec: np.ndarray,
         uamds_transforms_init: np.ndarray,
-        precalc_constants: tuple = None
+        precalc_constants: tuple = None,
+        method: str = "BFGS"
 ) -> np.ndarray:
     if precalc_constants is None:
         precalc_constants = precalculate_constants(normal_distr_spec)
@@ -502,7 +503,7 @@ def iterate_scipy(
         return grad.flatten()
 
     #err = scipy.optimize.check_grad(fx, dfx, uamds_transforms.reshape(uamds_transforms.size))
-    solution = minimize(fx, uamds_transforms_init.flatten(), method='BFGS', jac=dfx)
+    solution = minimize(fx, uamds_transforms_init.flatten(), method=method, jac=dfx)
     return solution.x.reshape(x_shape)
 
 
