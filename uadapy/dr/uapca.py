@@ -1,5 +1,5 @@
 import numpy as np
-import imuncertain as ua
+import uadapy as ua
 from scipy.stats import multivariate_normal
 
 def uapca(distributions, dims: int):

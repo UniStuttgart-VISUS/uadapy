@@ -1,6 +1,6 @@
 from sklearn import datasets
 import numpy as np
-import imuncertain.distribution as ua
+import uadapy.distribution as ua
 
 def load_iris_normal():
     """
