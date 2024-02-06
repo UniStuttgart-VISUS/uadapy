@@ -301,6 +301,8 @@ class InteractiveSplom:
             self.last_local_mouse_pos = np.zeros((2,), dtype=float)
             self.update_all_plots()
 
+        self.fig.canvas.draw_idle()
+
         self.last_local_mouse_pos = np.array([event.xdata, event.ydata])
 
     def show(self):
@@ -316,7 +318,7 @@ def main():
 
     dist = load_iris_normal()[0]
 
-    isplom = InteractiveSplom(dist.mean(), dist.cov(), epsilon=20, extends=10)
+    isplom = InteractiveSplom(dist.mean(), dist.cov(), epsilon=20, extends=0.1)
     # isplom = InteractiveSplom(mean, cov, epsilon=20, extends=20)
     isplom.show()
     plt.show()

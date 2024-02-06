@@ -125,16 +125,17 @@ class InteractiveNormal:
 
         extends = self.extends  # 2 * np.abs(points).max()
 
-
-        self.ax.set_xlim([self.mean[0] - extends, self.mean[0] + extends])
-        self.ax.set_ylim([self.mean[1] - extends, self.mean[0] + extends])
-
         self.ax.axis('equal')
+        self.ax.set_ylim(self.mean[1] - extends, self.mean[1] + extends)
+        self.ax.set_xlim(self.mean[0] - extends, self.mean[0] + extends)
+
+
+
         # self.ax.autoscale(False)
 
         # self.ax.set_title(f"{[self.mean[0] - extends, self.mean[0] + extends]}, {[-self.mean[1] + extends, self.mean[0] + extends]}")
 
-        self.ax.get_figure().canvas.draw_idle()
+        # self.ax.get_figure().canvas.draw_idle()
 
     def get_ind_under_point(self, event):
         'get the index of the vertex under point if within epsilon tolerance'
