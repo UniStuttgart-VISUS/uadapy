@@ -35,9 +35,9 @@ class distribution:
         if isinstance(self.model, np.ndarray):
             self.kde = stats.gaussian_kde(self.model.T)
 
-    def sample(self, n: int, random_state : int = None) -> np.ndarray:
+    def sample(self, n: int, random_state: int = None) -> np.ndarray:
         if isinstance(self.model, np.ndarray):
-            return self.kde.resample(n)
+            return self.kde.resample(n).T
         if hasattr(self.model, 'rvs') and callable(self.model.rvs):
             return self.model.rvs(size=n, random_state=random_state)
         if hasattr(self.model, 'resample') and callable(self.model.resample):
