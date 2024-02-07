@@ -46,7 +46,9 @@ def plot_contour(distributions, resolution=128, ranges=None, **kwargs):
         y = np.linspace(range_y[0], range_y[1], resolution)
         xv, yv = np.meshgrid(x, y)
         coordinates = np.stack((xv, yv), axis=-1)
+        coordinates = coordinates.reshape((-1, 2))
         pdf = d.pdf(coordinates)
+        pdf = pdf.reshape(xv.shape)
         color = contour_colors[i]
         plt.contour(xv, yv, pdf, colors = [color])
     plt.show()
