@@ -55,19 +55,18 @@ def precalculate_constants(normal_distr_spec: np.ndarray) -> tuple:
 
 
 @numba.njit(cache=True)
-def stress_ij(i: int, j: int, normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray, 
-        #pre,
-        mu,
-        cov,
-        U,
-        S,
-        Ssqrt,
-        norm2_mui_sub_muj,
-        Ssqrti_UiTUj_Ssqrtj,
-        mui_sub_muj_TUi,
-        mui_sub_muj_TUj,
-        Zij
-) -> float:
+def _stress_ij(i: int, j: int, normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray,
+               mu,
+               cov,
+               U,
+               S,
+               Ssqrt,
+               norm2_mui_sub_muj,
+               Ssqrti_UiTUj_Ssqrtj,
+               mui_sub_muj_TUi,
+               mui_sub_muj_TUj,
+               Zij
+               ) -> float:
     d_hi = normal_distr_spec.shape[1]
     d_lo = uamds_transforms.shape[1]
     n = normal_distr_spec.shape[0] // (d_hi + 1)
@@ -290,8 +289,8 @@ def stress_ij(i: int, j: int, normal_distr_spec: np.ndarray, uamds_transforms: n
 
 
 @numba.njit(cache=True)
-def gradient_ij_optimized(i: int, j: int, normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray,
-                          S, norm2_mui_sub_muj, mui_sub_muj_TUi, mui_sub_muj_TUj, Z, BiSi, Bi, Si, BiT, part1i) -> tuple:
+def _gradient_ij_optimized(i: int, j: int, normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray,
+                           S, norm2_mui_sub_muj, mui_sub_muj_TUi, mui_sub_muj_TUj, Z, BiSi, Bi, Si, BiT, part1i) -> tuple:
     d_hi = normal_distr_spec.shape[1]
     # d_lo = uamds_transforms.shape[1]
     n = normal_distr_spec.shape[0] // (d_hi + 1)
@@ -363,41 +362,27 @@ def gradient_ij_optimized(i: int, j: int, normal_distr_spec: np.ndarray, uamds_t
 
 
 def stress(normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray, precalc_constants: tuple=None) -> float:
-    d_hi = normal_distr_spec.shape[1]
-    d_lo = uamds_transforms.shape[1]
-    n = normal_distr_spec.shape[0]//(d_hi+1)  # array of (d_hi x d_hi) cov matrices and (1 x d_hi) means
-
     if precalc_constants is None:
         precalc_constants = precalculate_constants(normal_distr_spec)
-
-    sum = 0
-    for i in range(n):
-        for j in range(i, n):
-            sum += stress_ij(i, j, normal_distr_spec, uamds_transforms, *precalc_constants)
-    return sum
+    return _stress_numba(normal_distr_spec, uamds_transforms, precalc_constants)
 
 
 @numba.njit(parallel=True, cache=True)
-def gradient_numba(normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray, S, norm2_mui_sub_muj,
-                   mui_sub_muj_TUi, mui_sub_muj_TUj, Z, n, d_hi):
-    # compute the gradients of all affine transforms
-    grad = np.zeros(uamds_transforms.shape)
+def _stress_numba(normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray, precalc_constants: tuple) -> float:
+    d_hi = normal_distr_spec.shape[1]
+    d_lo = uamds_transforms.shape[1]
+    n = normal_distr_spec.shape[0] // (d_hi + 1)  # array of (d_hi x d_hi) cov matrices and (1 x d_hi) means
+
+    sum = 0
     for i in numba.prange(n):
         for j in numba.prange(i, n):
-            dBi, dBj, dci, dcj = gradient_ij(i, j, normal_distr_spec, uamds_transforms, S, norm2_mui_sub_muj,
-                                             mui_sub_muj_TUi, mui_sub_muj_TUj, Z)
-            # c gradients on top part of matrix
-            grad[i, :] += dci
-            grad[j, :] += dcj
-            # B gradients below c part of matrix
-            grad[n + i * d_hi:n + (i + 1) * d_hi, :] += dBi
-            grad[n + j * d_hi:n + (j + 1) * d_hi, :] += dBj
-    return grad
+            sum += _stress_ij(i, j, normal_distr_spec, uamds_transforms, *precalc_constants)
+    return sum
 
 
 @numba.njit(parallel=False, cache=True)
-def gradient_numba_optimized(normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray, S, norm2_mui_sub_muj,
-                             mui_sub_muj_TUi, mui_sub_muj_TUj, Z, n, d_hi):
+def _gradient_numba_optimized(normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray, S, norm2_mui_sub_muj,
+                              mui_sub_muj_TUi, mui_sub_muj_TUj, Z, n, d_hi):
     # compute the gradients of all affine transforms
     grad = np.zeros(uamds_transforms.shape)
     for i in numba.prange(n):
@@ -410,8 +395,8 @@ def gradient_numba_optimized(normal_distr_spec: np.ndarray, uamds_transforms: np
         part1i = (BiSi @ BiT @ BiSi) - (BiSi @ Si)
 
         for j in numba.prange(i, n):
-            dBi, dBj, dci, dcj = gradient_ij_optimized(i, j, normal_distr_spec, uamds_transforms, S, norm2_mui_sub_muj,
-                                             mui_sub_muj_TUi, mui_sub_muj_TUj, Z, BiSi, Bi, Si, BiT, part1i)
+            dBi, dBj, dci, dcj = _gradient_ij_optimized(i, j, normal_distr_spec, uamds_transforms, S, norm2_mui_sub_muj,
+                                                        mui_sub_muj_TUi, mui_sub_muj_TUj, Z, BiSi, Bi, Si, BiT, part1i)
             # c gradients on top part of matrix
             grad[i, :] += dci
             grad[j, :] += dcj
@@ -433,10 +418,8 @@ def gradient(normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray, precal
     mui_sub_muj_TUj = precalc_constants[8]
     Z = precalc_constants[9]
 
-    # print(S.shape, norm2_mui_sub_muj.shape, mui_sub_muj_TUi.shape, mui_sub_muj_TUj.shape, Z.shape)
-
-    return gradient_numba_optimized(normal_distr_spec, uamds_transforms, S, norm2_mui_sub_muj,
-                   mui_sub_muj_TUi, mui_sub_muj_TUj, Z, n, d_hi)
+    return _gradient_numba_optimized(normal_distr_spec, uamds_transforms, S, norm2_mui_sub_muj,
+                                     mui_sub_muj_TUi, mui_sub_muj_TUj, Z, n, d_hi)
 
 
 def iterate_simple_gradient_descent(
@@ -448,7 +431,7 @@ def iterate_simple_gradient_descent(
         b1: float = 0.9,
         b2: float = 0.999,
         e: float = 10e-8,
-        mass=0.9,
+        mass=0.8,
         optimizer="default"
 ) -> np.ndarray:
     if precalc_constants is None:
@@ -502,11 +485,8 @@ def iterate_scipy(
         grad = gradient(normal_distr_spec, x.reshape(x_shape), pre)
         return grad.flatten()
 
-    #err = scipy.optimize.check_grad(fx, dfx, uamds_transforms.reshape(uamds_transforms.size))
     solution = minimize(fx, uamds_transforms_init.flatten(), method=method, jac=dfx)
     return solution.x.reshape(x_shape)
-
-
 
 
 def perform_projection(normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray) -> np.ndarray:
@@ -527,8 +507,29 @@ def perform_projection(normal_distr_spec: np.ndarray, uamds_transforms: np.ndarr
     return mk_normal_distr_spec(mus, covs)
 
 
-
 def apply_uamds(means: list[np.ndarray], covs: list[np.ndarray], target_dim=2) -> dict[str, list[np.ndarray] | float]:
+    """
+    Applies UAMDS to the specified normal distributions (given as means and covariance matrices).
+    Parameters
+    ----------
+    means : list
+        list of vectors that resemble the means of the normal distributions
+    covs : list
+        list of matrices that resemble the covariances of the normal distributions
+    target_dim : int
+        the dimensionality of the projection space, 2 by default
+
+    Returns
+    -------
+    dict
+        dictionary containing the results:
+        ::
+            ['means']: list of projected means
+            ['covs']: list of projected covariances
+            ['translations']: list of low-dimensional translation vectors for affine transform of high-dimensional means
+            ['projection']: list of projection matrices for affine transform of high-dimensional means and covs
+            ['stress']: remaining stress of the projection
+    """
     normal_distr_spec = mk_normal_distr_spec(means, covs)
     d_hi = normal_distr_spec.shape[1]
     n = normal_distr_spec.shape[0] // (d_hi + 1)
@@ -549,7 +550,13 @@ def apply_uamds(means: list[np.ndarray], covs: list[np.ndarray], target_dim=2) -
     translations = [translations[i, :] for i in range(n)]
     projection_matrices = affine_transforms[n:,:]
     projection_matrices = [projection_matrices[i*d_hi:(i+1)*d_hi, :] for i in range(n)]
-    return {'means': means_lo, 'covs':covs_lo, 'translations': translations, 'projections': projection_matrices, 'stress': s}
+    return {
+        'means': means_lo,
+        'covs': covs_lo,
+        'translations': translations,
+        'projections': projection_matrices,
+        'stress': s
+    }
 
 
 
@@ -581,6 +588,20 @@ def uamds(distributions, dims: int):
 ####################################
 
 def get_means_covs(normal_distr_spec: np.ndarray) -> tuple[list[np.ndarray], list[np.ndarray]]:
+    """
+    Separates the mean vectors and covariance matrices from the stacked normal distributions specification format.
+
+    Parameters
+    ----------
+    normal_distr_spec : np.ndarray
+        Normal distributions specification. Matrix starting with n row vectors (means) followed by
+        n square matrices (covariances).
+
+    Returns
+    -------
+    tuple[list[np.ndarray], list[np.ndarray]]
+        a list of mean vectors and a list of covariance matrices
+    """
     d_hi = normal_distr_spec.shape[1]
     n = normal_distr_spec.shape[0] // (d_hi + 1)
     means = []
@@ -592,12 +613,52 @@ def get_means_covs(normal_distr_spec: np.ndarray) -> tuple[list[np.ndarray], lis
 
 
 def mk_normal_distr_spec(means: list[np.ndarray], covs: list[np.ndarray]) -> np.ndarray:
+    """
+    Creates a normal distributions specification matrix for the provided means and covariance matrices.
+    This is a matrix starting with n row vectors (means) followed by n square matrices (covariances).
+
+    Parameters
+    ----------
+    means : list[np.ndarray]
+        list of mean vectors
+    covs : list[list[np.ndarray]]
+        list of covariance matrices
+
+    Returns
+    -------
+    np.ndarray
+        normal distributions specification, n means followed by n covariance matrices
+    """
     mean_block = np.vstack(means)
     cov_block = np.vstack(covs)
     return np.vstack([mean_block, cov_block])
 
 
 def convert_xform_uamds_to_affine(normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray) -> np.ndarray:
+    """
+    Converts the internally used and optimized transformations into generally applicable affine transformations.
+    UAMDS optimizes an affine transform per distribution, each consisting of a projection matrix and translation vector.
+    However, the transforms are reformulated with respect to their distribution to allow for more efficient computations
+    of the stress and gradient. These are called the uamds_transforms and each of them live in their own coordinate
+    system. What this method returns are these transformatioins, but all with respect to the same coordinate system.
+
+    Parameters
+    ----------
+    normal_distr_spec : np.ndarray
+        normal distributions specification (means followed by covariance matrices)
+    uamds_transforms : np.ndarray
+        uamds transformations for each distribution (low-dim means followed by local projection matrices B_i)
+
+    Returns
+    -------
+    np.ndarray
+        affine transforms for each distribution. This is a matrix starting with n translation vectors followed by
+        n projection matrices. An affine transform is a function of the form f(x)=x*P+t where x is a high-dimensional
+        point, P is a projection matrix into low-dimensional space, and t is a low-dimensional translation.
+        ::
+            affine_transforms[:n,:] is the block of translation vectors
+            affine_transforms[n:,:] is the block of projection matrices
+    """
     d_hi = normal_distr_spec.shape[1]
     # d_lo = uamds_transforms.shape[1]
     n = normal_distr_spec.shape[0] // (d_hi + 1)
