@@ -452,7 +452,7 @@ def iterate_simple_gradient_descent(
 ) -> np.ndarray:
     if precalc_constants is None:
         precalc_constants = precalculate_constants(normal_distr_spec)
-
+    uamds_transforms = uamds_transforms_init
     match optimizer:
         case "adam":
             m = np.zeros_like(uamds_transforms_init)
@@ -587,8 +587,8 @@ def uamds(distributions, dims: int):
     :return: List of distributions in low-dimensional space
     """
     try:
-        means = np.array([d.mean() for d in distributions])
-        covs = np.array([d.cov() for d in distributions])
+        means = [d.mean() for d in distributions]
+        covs = [d.cov() for d in distributions]
         result = apply_uamds(means, covs, dims)
         distribs_lo = []
         for (m, c) in zip(result['means'], result['covs']):
