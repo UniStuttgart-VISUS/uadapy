@@ -7,6 +7,22 @@ from scipy.stats import multivariate_normal
 
 
 def precalculate_constants(normal_distr_spec: np.ndarray) -> tuple:
+    """
+    Computes constant expressions used in the stress and gradient calculations.
+    These constants are specific properties of the individual distributions, e.g. the SVDs of the covariance matrices,
+    or relationships beetween the distributions, such as the pairwise squared distances between the distribution means
+    (similar to the dissimilarity matrix in regular MDS).
+
+    Parameters
+    ----------
+    normal_distr_spec : np.ndarray
+        normal distributions specification (block of means followed by block of covariance matrices)
+
+    Returns
+    -------
+    tuple
+        a tuple containing the computed constant expressions
+    """
     d_hi = normal_distr_spec.shape[1]
     n = normal_distr_spec.shape[0] // (d_hi+1)  # array of (d_hi x d_hi) cov matrices and (1 x d_hi) means
 
@@ -640,7 +656,7 @@ def convert_xform_uamds_to_affine(normal_distr_spec: np.ndarray, uamds_transform
     UAMDS optimizes an affine transform per distribution, each consisting of a projection matrix and translation vector.
     However, the transforms are reformulated with respect to their distribution to allow for more efficient computations
     of the stress and gradient. These are called the uamds_transforms and each of them live in their own coordinate
-    system. What this method returns are these transformatioins, but all with respect to the same coordinate system.
+    system. What this method returns are these transformations, but all with respect to the same coordinate system.
 
     Parameters
     ----------
@@ -679,6 +695,26 @@ def convert_xform_uamds_to_affine(normal_distr_spec: np.ndarray, uamds_transform
         
 
 def convert_xform_affine_to_uamds(normal_distr_spec: np.ndarray, affine_transforms: np.ndarray) -> np.ndarray:
+    """
+    Does the opposite of convert_xform_uamds_to_affine.
+
+    Parameters
+    ----------
+    normal_distr_spec : np.ndarray
+        normal distributions specification (means followed by covariance matrices)
+    affine_transforms : np.ndarray
+        affine transformations for each distribution (low-dim translations followed by projection matrices)
+
+    Returns
+    -------
+    np.ndarray
+        uamds transforms for each distribution. This is a matrix starting with n low-dimensional mean vectors followed by
+        n distribution specific projection matrices B_i. The distribution specific projection matrix is the result
+        of transforming it by the basis of the covariance matrix (cov=U*S*U' -> B = U'*P).
+        ::
+            uamds_transforms[:n,:] is the block of mean vectors
+            uamds_transforms[n:,:] is the block of local projection matrices
+    """
     d_hi = normal_distr_spec.shape[1]
     # d_lo = affine_transforms.shape[1]
     n = normal_distr_spec.shape[0] // (d_hi + 1)
