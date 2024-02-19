@@ -3,7 +3,7 @@ This module contains functions that implement the uncertainty aware multidimensi
 This is a dimensionality reduction algorithm for sets of normally distributed random vectors (i.e. multivariate
 normal distributions). See the corresponding paper at https://doi.org/10.1109/TVCG.2022.3209420.
 
-Copyright: (c) 2024 David Haegele, Patrick Paetzold, Ruben Bauer
+Copyright: (c) 2024 David Haegele, Patrick Paetzold, Ruben Bauer, Marina Evers
 
 License: MIT
 """
@@ -436,6 +436,7 @@ def minimize_scipy(
 def perform_projection(normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray) -> np.ndarray:
     """
     Projects the distributions specified in normal_distr_spec using the provided uamds_transforms.
+
     Parameters
     ----------
     normal_distr_spec : np.ndarray
@@ -470,6 +471,7 @@ def perform_projection(normal_distr_spec: np.ndarray, uamds_transforms: np.ndarr
 def apply_uamds(means: list[np.ndarray], covs: list[np.ndarray], target_dim=2) -> dict[str, list[np.ndarray] | float]:
     """
     Applies UAMDS to the specified normal distributions (given as means and covariance matrices).
+
     Parameters
     ----------
     means : list
@@ -519,15 +521,24 @@ def apply_uamds(means: list[np.ndarray], covs: list[np.ndarray], target_dim=2) -
     }
 
 
-def uamds(distributions, dims: int):
+def uamds(distributions: list, dims: int=2):
     """
-    Applies UAMDS algorithm to the distribution and returns the distribution
-    in lower-dimensional space. It assumes a normal distributions. If you apply
-    other distributions that provide mean and covariance, these values would be used
-    to approximate a normal distribution
-    :param distributions: List of input distributions
-    :param dims: Target dimension
-    :return: List of distributions in low-dimensional space
+    Applies the UAMDS algorithm to the provided distributions and returns the projected distributions
+    in lower-dimensional space. It assumes multivariate normal distributions.
+    If you supply other distributions that provide mean and covariance, these values would be used
+    to approximate a normal distribution.
+
+    Parameters
+    ----------
+    distributions : list
+        list of input distributions (distribution objects offering mean() and cov() methods)
+    dims : int
+        target dimensionality, 2 by default.
+
+    Returns
+    -------
+    list
+        List of distributions living in projection space (i.e. of provided dimensionality)
     """
     try:
         means = [d.mean() for d in distributions]
