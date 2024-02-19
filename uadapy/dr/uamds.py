@@ -1,3 +1,13 @@
+"""
+This module contains functions that implement the uncertainty aware multidimensional scaling (UAMDS) algorithm.
+This is a dimensionality reduction algorithm for sets of normally distributed random vectors (i.e. multivariate
+normal distributions). See the corresponding paper at https://doi.org/10.1109/TVCG.2022.3209420.
+
+Copyright: (c) 2024 David Haegele, Patrick Paetzold, Ruben Bauer
+
+License: MIT
+"""
+
 import numba
 import numpy as np
 from scipy.spatial import distance_matrix
@@ -529,7 +539,6 @@ def uamds(distributions, dims: int):
         return distribs_lo
     except Exception as e:
         raise Exception(f'Something went wrong. Did you input normal distributions? Exception:{e}')
-
 
 
 ####################################
