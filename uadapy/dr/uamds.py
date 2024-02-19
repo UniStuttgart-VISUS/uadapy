@@ -159,151 +159,6 @@ def _stress_ij(i: int, j: int, normal_distr_spec: np.ndarray, uamds_transforms: 
     return term1+term2+term3
 
 
-# @numba.njit()
-# def gradient_ij_nocopy(i: int, j: int, normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray,
-#                 S, norm2_mui_sub_muj, mui_sub_muj_TUi, mui_sub_muj_TUj, Z) -> tuple:
-#     d_hi = normal_distr_spec.shape[1]
-#     # d_lo = uamds_transforms.shape[1]
-#     n = normal_distr_spec.shape[0] // (d_hi + 1)
-#     # get some objects for i
-#     Si = S[i]
-#     # mui = mu[i]
-#     ci = uamds_transforms[i, :]
-#     Bi = uamds_transforms[n+i*d_hi : n+(i+1)*d_hi, :].T
-#     BiSi = Bi @ Si
-
-#     # get some objects for j
-#     Sj = S[j]
-#     # muj = mu[j]
-#     cj = uamds_transforms[j, :]
-#     Bj = uamds_transforms[n+j*d_hi:n+(j+1)*d_hi, :].T
-#     BjSj = Bj @ Sj
-
-#     # mui_sub_muj = mui - muj
-#     ci_sub_cj = ci - cj
-
-#     # compute term 1 :
-#     Zij = Z[i][j]
-#     part1i = (BiSi @ Bi.T @ BiSi) - (BiSi @ Si)
-#     part1j = (BjSj @ Bj.T @ BjSj) - (BjSj @ Sj)
-#     part2i = (BjSj @ Bj.T @ BiSi) - (BjSj @ Zij.T @ Si)
-#     part2j = (BiSi @ Bi.T @ BjSj) - (BiSi @ Zij   @ Sj)
-#     dBi = (part1i + part2i) * 8
-#     dBj = (part1j + part2j) * 8
-
-#     # compute term 2 :
-#     dci = np.zeros(ci.shape)
-#     dcj = np.zeros(cj.shape)
-#     if i != j:
-#         # gradient part for B matrices
-#         part3i = (np.outer(ci_sub_cj, (ci_sub_cj @ Bi)) - np.outer(ci_sub_cj, mui_sub_muj_TUi[i][j])) @ Si
-#         part3j = (np.outer(ci_sub_cj, (ci_sub_cj @ Bj)) - np.outer(ci_sub_cj, mui_sub_muj_TUj[i][j])) @ Sj
-#         dBi += 2*part3i
-#         dBj += 2*part3j
-#         # gradient part for c vectors
-#         part4i = (mui_sub_muj_TUi[i][j] - (ci_sub_cj @ Bi)) @ BiSi.T
-#         part4j = (mui_sub_muj_TUj[i][j] - (ci_sub_cj @ Bj)) @ BjSj.T
-#         part4 = -2*(part4i+part4j)
-#         dci += part4
-#         dcj -= part4
-
-#     # compute term 3 :
-#     norm1 = norm2_mui_sub_muj[i][j]
-#     norm2 = np.dot(ci_sub_cj, ci_sub_cj)
-#     part1 = norm1-norm2
-#     part2 = part3 = 0.0
-#     for k in range(d_hi):
-#         sigma_i = Si[k, k]
-#         sigma_j = Sj[k, k]
-#         bik = Bi[:, k]
-#         bjk = Bj[:, k]
-#         part2 += (1 - np.dot(bik, bik)) * sigma_i
-#         part3 += (1 - np.dot(bjk, bjk)) * sigma_j
-#     term3 = -4 * (part1 + part2 + part3)
-#     dBi += BiSi * term3
-#     dBj += BjSj * term3
-
-#     if i != j:
-#         dci += ci_sub_cj * term3
-#         dcj -= ci_sub_cj * term3
-
-#     return dBi.T, dBj.T, dci, dcj
-
-
-# # with copy
-# @numba.njit(cache=True)
-# def gradient_ij(i: int, j: int, normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray,
-#                 S, norm2_mui_sub_muj, mui_sub_muj_TUi, mui_sub_muj_TUj, Z) -> tuple:
-#     d_hi = normal_distr_spec.shape[1]
-#     # d_lo = uamds_transforms.shape[1]
-#     n = normal_distr_spec.shape[0] // (d_hi + 1)
-#     # get some objects for i
-#     Si = S[i].copy()
-#     # mui = mu[i]
-#     ci = uamds_transforms[i, :]
-#     Bi = uamds_transforms[n+i*d_hi : n+(i+1)*d_hi, :].T.copy()
-#     BiSi = Bi @ Si
-#
-#     # get some objects for j
-#     Sj = S[j].copy()
-#     # muj = mu[j]
-#     cj = uamds_transforms[j, :]
-#     Bj = uamds_transforms[n+j*d_hi:n+(j+1)*d_hi, :].T.copy()
-#     BjSj = Bj @ Sj
-#
-#     # mui_sub_muj = mui - muj
-#     ci_sub_cj = ci - cj
-#
-#     # compute term 1 :
-#     Zij = Z[i][j].copy()
-#     BiT = Bi.T.copy()
-#     BjT = Bj.T.copy()
-#     part1i = (BiSi @ BiT @ BiSi) - (BiSi @ Si)
-#     part1j = (BjSj @ BjT @ BjSj) - (BjSj @ Sj)
-#     part2i = (BjSj @ BjT @ BiSi) - (BjSj @ Zij.T @ Si)
-#     part2j = (BiSi @ BiT @ BjSj) - (BiSi @ Zij   @ Sj)
-#     dBi = (part1i + part2i) * 8
-#     dBj = (part1j + part2j) * 8
-#
-#     # compute term 2 :
-#     dci = np.zeros(ci.shape)
-#     dcj = np.zeros(cj.shape)
-#     if i != j:
-#         # gradient part for B matrices
-#         part3i = (np.outer(ci_sub_cj, (ci_sub_cj @ Bi)) - np.outer(ci_sub_cj, mui_sub_muj_TUi[i][j])) @ Si
-#         part3j = (np.outer(ci_sub_cj, (ci_sub_cj @ Bj)) - np.outer(ci_sub_cj, mui_sub_muj_TUj[i][j])) @ Sj
-#         dBi += 2*part3i
-#         dBj += 2*part3j
-#         # gradient part for c vectors
-#         part4i = (mui_sub_muj_TUi[i][j] - (ci_sub_cj @ Bi)) @ BiSi.T
-#         part4j = (mui_sub_muj_TUj[i][j] - (ci_sub_cj @ Bj)) @ BjSj.T
-#         part4 = -2*(part4i+part4j)
-#         dci += part4
-#         dcj -= part4
-#
-#     # compute term 3 :
-#     norm1 = norm2_mui_sub_muj[i][j]
-#     norm2 = np.dot(ci_sub_cj, ci_sub_cj)
-#     part1 = norm1-norm2
-#     part2 = part3 = 0.0
-#     for k in range(d_hi):
-#         sigma_i = Si[k, k]
-#         sigma_j = Sj[k, k]
-#         bik = Bi[:, k].copy()
-#         bjk = Bj[:, k].copy()
-#         part2 += (1 - np.dot(bik, bik)) * sigma_i
-#         part3 += (1 - np.dot(bjk, bjk)) * sigma_j
-#     term3 = -4 * (part1 + part2 + part3)
-#     dBi += BiSi * term3
-#     dBj += BjSj * term3
-#
-#     if i != j:
-#         dci += ci_sub_cj * term3
-#         dcj -= ci_sub_cj * term3
-#
-#     return dBi.T, dBj.T, dci, dcj
-
-
 @numba.njit(cache=True)
 def _gradient_ij_optimized(i: int, j: int, normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray,
                            S, norm2_mui_sub_muj, mui_sub_muj_TUi, mui_sub_muj_TUj, Z, BiSi, Bi, Si, BiT, part1i) -> tuple:
@@ -444,12 +299,50 @@ def iterate_simple_gradient_descent(
         precalc_constants: tuple = None,
         num_iter: int = 100,
         a: float = 0.0001,
+        optimizer="plain",
         b1: float = 0.9,
         b2: float = 0.999,
         e: float = 10e-8,
-        mass=0.8,
-        optimizer="default"
+        mass=0.8
 ) -> np.ndarray:
+    """
+    Performs gradient descent on the UAMDS stress to find an optimal projection.
+    This uses a fixed number of iterations after which the method returns.
+    There are 3 different gradient descent schemes to choose from.
+    Alternatively, the method minimize_scipy(...) can be used to minimize the stress, which runs until convergence is
+    reached.
+
+    Parameters
+    ----------
+    normal_distr_spec : np.ndarray
+        Normal distributions specification. Matrix starting with n row vectors (means) followed by
+        n square matrices (covariances).
+    uamds_transforms_init : np.ndarray
+        uamds transformations for each distribution (low-dim means followed by local projection matrices B_i)
+    precalc_constants : tuple
+        a tuple containing the pre-computed constant expressions of the stress and gradient.
+        Can be None and will be computed by precalculate_constants(normal_distr_spec)
+    num_iter : int
+        number of iterations to perform. The required number of iterations varies with the used descent scheme.
+    a : float
+        step size (learning rate). Depends on the size of the optimization problem and used descent scheme.
+        Adam and momentum can usually employ larger learning rates than plain gradient descent.
+    optimizer : str
+        one of 'adam', 'momentum', 'plain'.
+    b1 : float
+        only used with 'adam', exponential decay rate for the 1st moment estimates.
+    b2 : float
+        only used with 'adam', exponential decay rate for the 2nd moment estimates
+    mass : flaot
+        only used with 'momentum', mass parameter in ]0, 1[. When heavy, the descent direction changes only slightly by
+        the current gradient in each iteration.
+
+    Returns
+    -------
+    np.ndarray
+        the optimized uamds transforms. The method convert_xform_uamds_to_affine(normal_distr_spec, uamds_transforms)
+        can be used to obtain the corresponding affine transformations.
+    """
     if precalc_constants is None:
         precalc_constants = precalculate_constants(normal_distr_spec)
     uamds_transforms = uamds_transforms_init
@@ -480,19 +373,43 @@ def iterate_simple_gradient_descent(
     return uamds_transforms
 
 
-def iterate_scipy(
+def minimize_scipy(
         normal_distr_spec: np.ndarray,
         uamds_transforms_init: np.ndarray,
         precalc_constants: tuple = None,
         method: str = "BFGS"
 ) -> np.ndarray:
+    """
+    Minimizes the UAMDS stress using scipy.optimize.
+    This will run until scipy's optimization routine is returning, i.e., until convergence is reached.
+    Alternatively, the method iterate_simple_gradient_descent(...) can be used to perform a fixed number of
+    gradient descent iterations.
+
+    Parameters
+    ----------
+    normal_distr_spec : np.ndarray
+        Normal distributions specification. Matrix starting with n row vectors (means) followed by
+        n square matrices (covariances).
+    uamds_transforms_init : np.ndarray
+        uamds transformations for each distribution (low-dim means followed by local projection matrices B_i)
+    precalc_constants : tuple
+        a tuple containing the pre-computed constant expressions of the stress and gradient.
+        Can be None and will be computed by precalculate_constants(normal_distr_spec)
+    method : str
+        an unconstrained scipy optimization method, 'BFGS' by default.
+
+    Returns
+    -------
+    np.ndarray
+        the optimal uamds transforms. The method convert_xform_uamds_to_affine(normal_distr_spec, uamds_transforms) can
+        be used to obtain the corresponding affine transformations.
+    """
     if precalc_constants is None:
         precalc_constants = precalculate_constants(normal_distr_spec)
     pre = precalc_constants
 
-    # gradient descent
+    # minimization problem
     x_shape = uamds_transforms_init.shape
-    n_elems = uamds_transforms_init.size
 
     def fx(x: np.ndarray):
         return stress(normal_distr_spec, x.reshape(x_shape), pre)
@@ -501,11 +418,28 @@ def iterate_scipy(
         grad = gradient(normal_distr_spec, x.reshape(x_shape), pre)
         return grad.flatten()
 
+    # minimization
     solution = minimize(fx, uamds_transforms_init.flatten(), method=method, jac=dfx)
     return solution.x.reshape(x_shape)
 
 
 def perform_projection(normal_distr_spec: np.ndarray, uamds_transforms: np.ndarray) -> np.ndarray:
+    """
+    Projects the distributions specified in normal_distr_spec using the provided uamds_transforms.
+    Parameters
+    ----------
+    normal_distr_spec : np.ndarray
+        Normal distributions specification. Matrix starting with n row vectors (means) followed by
+        n square matrices (covariances).
+    uamds_transforms : np.ndarray
+        uamds transformations for each distribution (low-dim means followed by local projection matrices B_i)
+
+    Returns
+    -------
+    np.ndarray
+        projected normal distributions in the normal distribution specification format (block of means followed by
+        block of covariance matrices).
+    """
     d_hi = normal_distr_spec.shape[1]
     # d_lo = uamds_transforms.shape[1]
     n = normal_distr_spec.shape[0] // (d_hi + 1)
@@ -556,7 +490,7 @@ def apply_uamds(means: list[np.ndarray], covs: list[np.ndarray], target_dim=2) -
     uamds_transforms[:n,:] *= (avg_dist_hi/avg_dist_lo)
     # compute UAMDS
     pre = precalculate_constants(normal_distr_spec)
-    uamds_transforms = iterate_scipy(normal_distr_spec, uamds_transforms, pre)
+    uamds_transforms = minimize_scipy(normal_distr_spec, uamds_transforms, pre)
     s = stress(normal_distr_spec, uamds_transforms, pre)
     # perform projection
     normal_distribs_lo = perform_projection(normal_distr_spec, uamds_transforms)
@@ -573,7 +507,6 @@ def apply_uamds(means: list[np.ndarray], covs: list[np.ndarray], target_dim=2) -
         'projections': projection_matrices,
         'stress': s
     }
-
 
 
 def uamds(distributions, dims: int):
@@ -602,6 +535,7 @@ def uamds(distributions, dims: int):
 ####################################
 # utility methods ##################
 ####################################
+
 
 def get_means_covs(normal_distr_spec: np.ndarray) -> tuple[list[np.ndarray], list[np.ndarray]]:
     """

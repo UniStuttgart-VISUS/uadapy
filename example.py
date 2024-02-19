@@ -19,5 +19,5 @@ def example_kde():
 
 
 if __name__ == '__main__':
-    #example_uamds()
-    example_kde()
+    example_uamds()
+   # example_kde()
