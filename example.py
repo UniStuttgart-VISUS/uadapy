@@ -23,8 +23,9 @@ def example_uamds_boxplot():
     distribs_lo = uamds.uamds(distribs_hi, dims=4)
     labels = ['setosa','versicolor','virginica']
     titles = ['sepal length','sepal width','petal length','petal width']
-    fig, axs = plt.subplots(2, 1)
-    fig, axs = boxplot.plot_boxplot(distribs_lo, 10000, fig, axs, labels, titles, vert=True, colorblind_safe=False)
+    colors = ['red','green', 'blue']
+    fig, axs = plt.subplots(2, 2)
+    fig, axs = boxplot.plot_boxplot(distribs_lo, 10000, fig, axs, labels, titles, colors, vert=True, colorblind_safe=False)
     fig.tight_layout()
     plt.show()
 

@@ -4,7 +4,7 @@ from math import ceil, sqrt
 import numpy as np
 import glasbey as gb
 
-def plot_boxplot(distributions, num_samples, fig=None, axs=None, labels=None, titles=None, **kwargs):
+def plot_boxplot(distributions, num_samples, fig=None, axs=None, labels=None, titles=None, colors=None, **kwargs):
     """
     Plot box plots for samples drawn from given distributions.
 
@@ -22,6 +22,8 @@ def plot_boxplot(distributions, num_samples, fig=None, axs=None, labels=None, ti
         Labels for each distribution.
     titles : list or None, optional
         Titles for each subplot.
+    colors : list or None, optional
+        List of colors to use for each distribution. If None, Glasbey colors will be used.
     **kwargs : additional keyword arguments
         Additional optional plotting arguments.
         - vert : bool, optional
@@ -81,7 +83,14 @@ def plot_boxplot(distributions, num_samples, fig=None, axs=None, labels=None, ti
         samples.append(d.sample(num_samples))
 
     # Generate Glasbey colors
-    palette = gb.create_palette(palette_size=len(samples), colorblind_safe=colorblind_safe)
+    if colors is None:
+        palette = gb.create_palette(palette_size=len(samples), colorblind_safe=colorblind_safe)
+    else:
+        # If colors are provided but fewer than the number of samples, add more colors from Glasbey palette
+        if len(colors) < len(samples):
+            additional_colors = gb.create_palette(palette_size=len(samples) - len(colors), colorblind_safe=colorblind_safe)
+            colors.extend(additional_colors)
+        palette = colors
 
     for i, ax_row in enumerate(axs):
         for j, ax in enumerate(ax_row):
