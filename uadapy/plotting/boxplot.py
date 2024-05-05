@@ -100,7 +100,7 @@ def plot_boxplot(distributions, num_samples, fig=None, axs=None, labels=None, ti
                     boxprops = dict(facecolor=palette[k % len(palette)], edgecolor='black')
                     whiskerprops = dict(color='black', linestyle='--')
                     capprops = dict(color='black')
-                    ax.boxplot(sample[index], positions=[k], patch_artist=True, boxprops=boxprops,
+                    ax.boxplot(sample[:, index], positions=[k], patch_artist=True, boxprops=boxprops,
                                showfliers=False, whiskerprops=whiskerprops, capprops=capprops,
                                showmeans=True, meanline=True, meanprops=dict(color="black", linestyle='-'),
                                medianprops=dict(linewidth=0), vert=vertical)
