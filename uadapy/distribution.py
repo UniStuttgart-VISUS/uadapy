@@ -37,7 +37,7 @@ class distribution:
 
     def sample(self, n: int, random_state: int = None) -> np.ndarray:
         if isinstance(self.model, np.ndarray):
-            return self.kde.resample(n).T
+            return self.kde.resample(n, random_state).T
         if hasattr(self.model, 'rvs') and callable(self.model.rvs):
             return self.model.rvs(size=n, random_state=random_state)
         if hasattr(self.model, 'resample') and callable(self.model.resample):
