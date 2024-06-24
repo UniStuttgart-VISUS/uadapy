@@ -4,6 +4,19 @@ import matplotlib.pyplot as plt
 from math import ceil, sqrt
 import glasbey as gb
 import seaborn as sns
+from matplotlib.patches import Ellipse
+
+
+def calculate_freedman_diaconis_bins(data):
+    q25, q75 = np.percentile(data, [25, 75])
+    iqr = q75 - q25
+    bin_width = 2 * iqr / np.cbrt(len(data))
+    num_bins = int((np.max(data) - np.min(data)) / bin_width)
+    return num_bins
+
+def calculate_offsets(count, max_count):
+    occupancy = (count/max_count)
+    return np.linspace(-0.45 * occupancy, 0.45 * occupancy, count)
 
 def calculate_dot_size(num_samples, scale_factor):
     if num_samples < 100:
@@ -108,7 +121,7 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
     num_samples : int
         Number of samples per distribution.
     plot_types : list
-        List of plot types to plot. Valid values are 'boxplot','violinplot', 'stripplot' and 'swarmplot'.
+        List of plot types to plot. Valid values are 'boxplot','violinplot', 'stripplot', 'swarmplot' and 'dotplot'.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
     fig : matplotlib.figure.Figure or None, optional
@@ -144,11 +157,17 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
     fig, axs, samples, palette, num_plots, num_cols = setup_plot(distributions, num_samples, seed, fig, axs, colors, **kwargs)
 
     num_attributes = np.shape(samples)[2]
+    if labels:
+        ticks = range(len(labels))
+    else:
+        ticks = range(len(samples))
 
     for i, ax_row in enumerate(axs):
         for j, ax in enumerate(ax_row):
             index = i * num_cols + j
             if index < num_plots and index < num_attributes:
+                y_min = 9999
+                y_max = -9999
                 for k, sample in enumerate(samples):
                     if 'boxplot' in plot_types:
                         boxprops = dict(facecolor=palette[k % len(palette)], edgecolor='black')
@@ -168,31 +187,66 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
                         parts['cmaxes'].remove()
                         parts['cmins'].remove()
                         parts['cmeans'].set_edgecolor('black')
-                    if 'stripplot' in plot_types or 'swarmplot' in plot_types: 
+                    if 'stripplot' in plot_types or 'swarmplot' in plot_types or 'dotplot' in plot_types: 
                         if 'dot_size' in kwargs:
                             dot_size = kwargs['dot_size']
-                        else:
-                            if 'stripplot' in plot_types:
-                                scale_factor = 1 + 0.5 * np.log10(num_samples/100)
-                            else :
-                                scale_factor = 1
-                            dot_size = calculate_dot_size(len(sample[:,index]), scale_factor)
                     if 'stripplot' in plot_types:
+                        if 'dot_size' not in kwargs:
+                            scale_factor = 1 + np.log10(num_samples/100)
+                            dot_size = calculate_dot_size(len(sample[:,index]), scale_factor)
                         if kwargs.get('vert',True):
-                            sns.stripplot(x=[k]*len(sample[:,index]), y=sample[:,index], color='black', size=dot_size * 1.5, jitter=0.25, ax=ax)
+                            sns.stripplot(x=[k]*len(sample[:,index]), y=sample[:,index], color=palette[k % len(palette)], size=dot_size, jitter=0.25, ax=ax)
                         else:
-                            sns.stripplot(x=sample[:,index], y=[k]*len(sample[:,index]), color='black', size=dot_size * 1.5, jitter=0.25, ax=ax, orient='h')
+                            sns.stripplot(x=sample[:,index], y=[k]*len(sample[:,index]), color=palette[k % len(palette)], size=dot_size, jitter=0.25, ax=ax, orient='h')
                     if 'swarmplot' in plot_types:
+                        if 'dot_size' not in kwargs:
+                            dot_size = calculate_dot_size(len(sample[:,index]), 1)
                         if kwargs.get('vert',True):
-                            sns.swarmplot(x=[k]*len(sample[:,index]), y=sample[:,index], color='black', size=dot_size, ax=ax)
+                            sns.swarmplot(x=[k]*len(sample[:,index]), y=sample[:,index], color=palette[k % len(palette)], size=dot_size, ax=ax)
                         else:
-                            sns.swarmplot(x=sample[:,index], y=[k]*len(sample[:,index]), color='black', size=dot_size, ax=ax, orient='h')
+                            sns.swarmplot(x=sample[:,index], y=[k]*len(sample[:,index]), color=palette[k % len(palette)], size=dot_size, ax=ax, orient='h')
+                    if 'dotplot' in plot_types:
+                        if 'dot_size' not in kwargs:
+                            dot_size = calculate_dot_size(len(sample[:,index]), 0.005)
+                        flat_sample = np.ravel(sample[:,index])
+                        ticks = [x + 0.5 for x in range(len(samples))]
+                        if y_min > np.min(flat_sample):
+                            y_min = np.min(flat_sample)
+                        if y_max < np.max(flat_sample):
+                            y_max = np.max(flat_sample)
+                        num_bins = calculate_freedman_diaconis_bins(flat_sample)
+                        bin_width = kwargs.get('bin_width', (np.max(flat_sample) - np.min(flat_sample)) / num_bins)
+                        bins = np.arange(np.min(flat_sample), np.max(flat_sample) + bin_width, bin_width)
+                        binned_data, bin_edges = np.histogram(flat_sample, bins=bins)
+                        max_count = np.max(binned_data)
+                        for bin_idx in range(len(binned_data)):
+                            count = binned_data[bin_idx]
+                            if count > 0:
+                                bin_center = (bin_edges[bin_idx] + bin_edges[bin_idx + 1]) / 2
+                                # Calculate symmetrical offsets
+                                if count == 1:
+                                    offsets = [0]  # Single dot in the center
+                                else:
+                                    offsets = calculate_offsets(count, max_count)
+                                for offset in offsets:
+                                    if kwargs.get('vert',True):
+                                        ellipse = Ellipse((ticks[k] + offset, bin_center), width=dot_size, height=dot_size, color=palette[k % len(palette)])
+                                    else:
+                                        ellipse = Ellipse((bin_center, ticks[k] + offset), width=dot_size, height=dot_size, color=palette[k % len(palette)])
+                                    ax.add_patch(ellipse)
+                if 'dotplot' in plot_types:
+                    if kwargs.get('vert',True):
+                        ax.set_xlim(0, len(samples))
+                        ax.set_ylim(y_min - 1, y_max + 1)
+                    else:
+                        ax.set_xlim(y_min - 1, y_max + 1)
+                        ax.set_ylim(0, len(samples))
                 if labels:
                     if kwargs.get('vert', True):
-                        ax.set_xticks(range(len(labels)))
+                        ax.set_xticks(ticks)
                         ax.set_xticklabels(labels, rotation=45, ha='right')
                     else:
-                        ax.set_yticks(range(len(labels)))
+                        ax.set_yticks(ticks)
                         ax.set_yticklabels(labels, rotation=45, ha='right')
                 if titles:
                     ax.set_title(titles[index] if titles and index < len(titles) else 'Distribution ' + str(index + 1))
