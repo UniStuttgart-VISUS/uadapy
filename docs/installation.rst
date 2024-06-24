@@ -1,7 +1,7 @@
 Installation
 ============
 Installation via pip
-------------------
+--------------------
 You can install the library by typing:
 .. code-block:: bash
 

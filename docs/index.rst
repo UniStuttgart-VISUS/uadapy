@@ -10,9 +10,9 @@ Welcome to UADAPy's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-      Changelog :doc:`./changelog.rst`
-      Installation :doc:`./installation.rst`
-      Examples :doc:`./examples.rst`
+      Changelog :doc:`changelog.rst`
+      Installation :doc:`installation.rst`
+      Examples :doc:`examples.rst`
 
 
 Indices and tables
