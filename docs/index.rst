@@ -1,24 +1,19 @@
-.. UADAPy documentation master file, created by
-   sphinx-quickstart on Fri May 10 17:26:12 2024.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to UADAPy's documentation!
-==================================
+==================================================
+UADAPy - Uncertainty-aware Data Analysis in Python
+==================================================
+UADAPy is a Python library to support an easy analysis of uncertain data. Here you find the most important information to get started.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
-      Changelog :doc:`changelog.rst`
-      Installation :doc:`installation.rst`
-      Examples :doc:`examples.rst`
-
+   Changelog :doc:`changelog.rst`
+   Installation :doc:`installation.rst`
+   Examples :doc:`examples.rst`
 
 Indices and tables
 ==================
 .. toctree::
    :maxdepth: 2
 
-* :ref:`genindex`
-* :ref:`modindex`
+   * :ref:`genindex`
+   * :ref:`modindex`
