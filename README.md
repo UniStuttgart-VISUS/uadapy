@@ -12,7 +12,7 @@ The library provides:
 ## Installation
 So far the library is very much work in progress, but you can already use it via pip:
 ```
-pip install git+https://github.com/hageldave/uadapy
+pip install git+https://github.com/UniStuttgart-VISUS/uadapy
 ```
 
 ## Documentation
