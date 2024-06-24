@@ -69,7 +69,7 @@ instance/
 .scrapy
 
 # Sphinx documentation
-#docs/_build/
+docs/_build/
 docs/_static/
 docs/_templates/
 
@@ -134,7 +134,7 @@ dmypy.json
 .idea
 
 # bokeh plots
-#*.html
+*.html
 
 # vscode
 .vscode

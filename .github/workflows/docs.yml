@@ -1,8 +1,9 @@
-name: docs
+name: Deploy Sphinx documentation to Pages
+# See: https://github.com/marketplace/actions/sphinx-to-github-pages
 on:
   push:
     branches:
-    - docs
+    - main
 
 jobs:
   pages:
