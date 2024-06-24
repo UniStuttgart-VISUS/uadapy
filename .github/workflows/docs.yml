@@ -29,6 +29,10 @@ jobs:
         run: |
           cd docs
           make html
+      - uses: actions/upload-artifact@v1
+        with:
+          name: DocumentationHTML
+          path: docs/_build/html/
       - name: Deploy
         if: success()
         uses: actions/deploy-pages@v2
