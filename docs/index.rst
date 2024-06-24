@@ -10,7 +10,7 @@ Welcome to UADAPy's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   Changelog <changelog.rst>
+   Changelog :doc:`./changelog.rst`
    Installation <installation.rst>
    Examples <examples.rst>
 

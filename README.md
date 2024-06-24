@@ -16,4 +16,4 @@ pip install git+https://github.com/UniStuttgart-VISUS/uadapy
 ```
 
 ## Documentation
-You can find the documentation here: 
+You can find the documentation here: https://unistuttgart-visus.github.io/uadapy/
