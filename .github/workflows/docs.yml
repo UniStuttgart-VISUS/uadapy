@@ -9,22 +9,30 @@ permissions:
   pages: write
 
 jobs:
-  # Single deploy job no building
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{steps.deployment.outputs.page_url}}
+  docs:
+    #environment:
+    #  name: github-pages
+    #  url: ${{steps.deployment.outputs.page_url}}
+    name: Docs
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v3
-      - name: Upload Artifact
-        uses: actions/upload-pages-artifact@v2
+      - name: Install Python
+        uses: actions/setup-python@v1
         with:
-          # upload entire directory
-          path: '.'
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v2
+          python-version: 3.8
+      - name: Install requirements
+        run: |
+          pip3 install sphinx-rtd-theme
+      - name: Build docs
+        run: |
+          cd docs
+          make html
+      - name: Deploy
+        if: success()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          publish_branch: gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/_build/html/
