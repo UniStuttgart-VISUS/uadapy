@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>uadapy.plotting package &mdash; UADAPy  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            UADAPy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">uadapy.plotting package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-uadapy.plotting.distribution_plot">uadapy.plotting.distribution_plot module</a><ul>
+<li><a class="reference internal" href="#uadapy.plotting.distribution_plot.InteractiveNormal"><code class="docutils literal notranslate"><span class="pre">InteractiveNormal</span></code></a><ul>
+<li><a class="reference internal" href="#uadapy.plotting.distribution_plot.InteractiveNormal.get_ind_under_point"><code class="docutils literal notranslate"><span class="pre">InteractiveNormal.get_ind_under_point()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.distribution_plot.InteractiveNormal.init_points"><code class="docutils literal notranslate"><span class="pre">InteractiveNormal.init_points()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.distribution_plot.InteractiveNormal.update"><code class="docutils literal notranslate"><span class="pre">InteractiveNormal.update()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#uadapy.plotting.distribution_plot.confidence_ellipse"><code class="docutils literal notranslate"><span class="pre">confidence_ellipse()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-uadapy.plotting.interactive_splom">uadapy.plotting.interactive_splom module</a><ul>
+<li><a class="reference internal" href="#uadapy.plotting.interactive_splom.InteractiveSplom"><code class="docutils literal notranslate"><span class="pre">InteractiveSplom</span></code></a><ul>
+<li><a class="reference internal" href="#uadapy.plotting.interactive_splom.InteractiveSplom.button_press_callback"><code class="docutils literal notranslate"><span class="pre">InteractiveSplom.button_press_callback()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.interactive_splom.InteractiveSplom.button_release_callback"><code class="docutils literal notranslate"><span class="pre">InteractiveSplom.button_release_callback()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.interactive_splom.InteractiveSplom.get_current_subplot"><code class="docutils literal notranslate"><span class="pre">InteractiveSplom.get_current_subplot()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.interactive_splom.InteractiveSplom.get_current_subplot_idx"><code class="docutils literal notranslate"><span class="pre">InteractiveSplom.get_current_subplot_idx()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.interactive_splom.InteractiveSplom.motion_notify_callback"><code class="docutils literal notranslate"><span class="pre">InteractiveSplom.motion_notify_callback()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.interactive_splom.InteractiveSplom.show"><code class="docutils literal notranslate"><span class="pre">InteractiveSplom.show()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.interactive_splom.InteractiveSplom.update_all_plots"><code class="docutils literal notranslate"><span class="pre">InteractiveSplom.update_all_plots()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.interactive_splom.InteractiveSplom.update_mean_cov"><code class="docutils literal notranslate"><span class="pre">InteractiveSplom.update_mean_cov()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.interactive_splom.InteractiveSplom.update_plots"><code class="docutils literal notranslate"><span class="pre">InteractiveSplom.update_plots()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#uadapy.plotting.interactive_splom.compute_angle"><code class="docutils literal notranslate"><span class="pre">compute_angle()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.interactive_splom.compute_rotation_scaling_matrix__along_axis"><code class="docutils literal notranslate"><span class="pre">compute_rotation_scaling_matrix__along_axis()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.interactive_splom.compute_scaling"><code class="docutils literal notranslate"><span class="pre">compute_scaling()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.interactive_splom.compute_scaling_factor_at_axis"><code class="docutils literal notranslate"><span class="pre">compute_scaling_factor_at_axis()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.interactive_splom.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.interactive_splom.make_2d_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">make_2d_rotation_matrix()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-uadapy.plotting.plots2D">uadapy.plotting.plots2D module</a><ul>
+<li><a class="reference internal" href="#uadapy.plotting.plots2D.generate_random_colors"><code class="docutils literal notranslate"><span class="pre">generate_random_colors()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.plots2D.generate_spectrum_colors"><code class="docutils literal notranslate"><span class="pre">generate_spectrum_colors()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.plots2D.plot_contour"><code class="docutils literal notranslate"><span class="pre">plot_contour()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.plots2D.plot_samples"><code class="docutils literal notranslate"><span class="pre">plot_samples()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-uadapy.plotting.plotsND">uadapy.plotting.plotsND module</a><ul>
+<li><a class="reference internal" href="#uadapy.plotting.plotsND.plot_contour"><code class="docutils literal notranslate"><span class="pre">plot_contour()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.plotsND.plot_contour_samples"><code class="docutils literal notranslate"><span class="pre">plot_contour_samples()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.plotsND.plot_samples"><code class="docutils literal notranslate"><span class="pre">plot_samples()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-uadapy.plotting.utils">uadapy.plotting.utils module</a><ul>
+<li><a class="reference internal" href="#uadapy.plotting.utils.generate_random_colors"><code class="docutils literal notranslate"><span class="pre">generate_random_colors()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.plotting.utils.generate_spectrum_colors"><code class="docutils literal notranslate"><span class="pre">generate_spectrum_colors()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-uadapy.plotting">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">UADAPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">uadapy.plotting package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/uadapy.plotting.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="uadapy-plotting-package">
+<h1>uadapy.plotting package<a class="headerlink" href="#uadapy-plotting-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-uadapy.plotting.distribution_plot">
+<span id="uadapy-plotting-distribution-plot-module"></span><h2>uadapy.plotting.distribution_plot module<a class="headerlink" href="#module-uadapy.plotting.distribution_plot" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="uadapy.plotting.distribution_plot.InteractiveNormal">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">uadapy.plotting.distribution_plot.</span></span><span class="sig-name descname"><span class="pre">InteractiveNormal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cov</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Axes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_std</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extends</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.distribution_plot.InteractiveNormal" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="uadapy.plotting.distribution_plot.InteractiveNormal.get_ind_under_point">
+<span class="sig-name descname"><span class="pre">get_ind_under_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.distribution_plot.InteractiveNormal.get_ind_under_point" title="Link to this definition"></a></dt>
+<dd><p>get the index of the vertex under point if within epsilon tolerance</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="uadapy.plotting.distribution_plot.InteractiveNormal.init_points">
+<span class="sig-name descname"><span class="pre">init_points</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.distribution_plot.InteractiveNormal.init_points" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="uadapy.plotting.distribution_plot.InteractiveNormal.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plot_int</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.distribution_plot.InteractiveNormal.update" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.plotting.distribution_plot.confidence_ellipse">
+<span class="sig-prename descclassname"><span class="pre">uadapy.plotting.distribution_plot.</span></span><span class="sig-name descname"><span class="pre">confidence_ellipse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cov</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Axes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_std</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">facecolor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'blue'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.distribution_plot.confidence_ellipse" title="Link to this definition"></a></dt>
+<dd><p>Create a plot of the covariance confidence ellipse of <em>x</em> and <em>y</em>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – The axes object to draw the ellipse into.</p></li>
+<li><p><strong>n_std</strong> (<em>float</em>) – The number of standard deviations to determine the ellipse’s radiuses.</p></li>
+<li><p><strong>**kwargs</strong> – Forwarded to <cite>~matplotlib.patches.Ellipse</cite></p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>matplotlib.patches.Ellipse</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-uadapy.plotting.interactive_splom">
+<span id="uadapy-plotting-interactive-splom-module"></span><h2>uadapy.plotting.interactive_splom module<a class="headerlink" href="#module-uadapy.plotting.interactive_splom" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="uadapy.plotting.interactive_splom.InteractiveSplom">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">uadapy.plotting.interactive_splom.</span></span><span class="sig-name descname"><span class="pre">InteractiveSplom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cov</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_std</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extends</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.interactive_splom.InteractiveSplom" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="uadapy.plotting.interactive_splom.InteractiveSplom.button_press_callback">
+<span class="sig-name descname"><span class="pre">button_press_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.interactive_splom.InteractiveSplom.button_press_callback" title="Link to this definition"></a></dt>
+<dd><p>whenever a mouse button is pressed</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="uadapy.plotting.interactive_splom.InteractiveSplom.button_release_callback">
+<span class="sig-name descname"><span class="pre">button_release_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.interactive_splom.InteractiveSplom.button_release_callback" title="Link to this definition"></a></dt>
+<dd><p>whenever a mouse button is released</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="uadapy.plotting.interactive_splom.InteractiveSplom.get_current_subplot">
+<span class="sig-name descname"><span class="pre">get_current_subplot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#uadapy.plotting.distribution_plot.InteractiveNormal" title="uadapy.plotting.distribution_plot.InteractiveNormal"><span class="pre">InteractiveNormal</span></a></span></span><a class="headerlink" href="#uadapy.plotting.interactive_splom.InteractiveSplom.get_current_subplot" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="uadapy.plotting.interactive_splom.InteractiveSplom.get_current_subplot_idx">
+<span class="sig-name descname"><span class="pre">get_current_subplot_idx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_subplot</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.interactive_splom.InteractiveSplom.get_current_subplot_idx" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="uadapy.plotting.interactive_splom.InteractiveSplom.motion_notify_callback">
+<span class="sig-name descname"><span class="pre">motion_notify_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.interactive_splom.InteractiveSplom.motion_notify_callback" title="Link to this definition"></a></dt>
+<dd><p>on mouse movement</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="uadapy.plotting.interactive_splom.InteractiveSplom.show">
+<span class="sig-name descname"><span class="pre">show</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.interactive_splom.InteractiveSplom.show" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="uadapy.plotting.interactive_splom.InteractiveSplom.update_all_plots">
+<span class="sig-name descname"><span class="pre">update_all_plots</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.interactive_splom.InteractiveSplom.update_all_plots" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="uadapy.plotting.interactive_splom.InteractiveSplom.update_mean_cov">
+<span class="sig-name descname"><span class="pre">update_mean_cov</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.interactive_splom.InteractiveSplom.update_mean_cov" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="uadapy.plotting.interactive_splom.InteractiveSplom.update_plots">
+<span class="sig-name descname"><span class="pre">update_plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row_i_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_i_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.interactive_splom.InteractiveSplom.update_plots" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.plotting.interactive_splom.compute_angle">
+<span class="sig-prename descclassname"><span class="pre">uadapy.plotting.interactive_splom.</span></span><span class="sig-name descname"><span class="pre">compute_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#uadapy.plotting.interactive_splom.compute_angle" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.plotting.interactive_splom.compute_rotation_scaling_matrix__along_axis">
+<span class="sig-prename descclassname"><span class="pre">uadapy.plotting.interactive_splom.</span></span><span class="sig-name descname"><span class="pre">compute_rotation_scaling_matrix__along_axis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.interactive_splom.compute_rotation_scaling_matrix__along_axis" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Returns a rotation_scale matrix that transforms a</dt><dd><p>vector/matrix by the scale factor s for a = s * b along the specified axis.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.plotting.interactive_splom.compute_scaling">
+<span class="sig-prename descclassname"><span class="pre">uadapy.plotting.interactive_splom.</span></span><span class="sig-name descname"><span class="pre">compute_scaling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#uadapy.plotting.interactive_splom.compute_scaling" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.plotting.interactive_splom.compute_scaling_factor_at_axis">
+<span class="sig-prename descclassname"><span class="pre">uadapy.plotting.interactive_splom.</span></span><span class="sig-name descname"><span class="pre">compute_scaling_factor_at_axis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#uadapy.plotting.interactive_splom.compute_scaling_factor_at_axis" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.plotting.interactive_splom.main">
+<span class="sig-prename descclassname"><span class="pre">uadapy.plotting.interactive_splom.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.interactive_splom.main" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.plotting.interactive_splom.make_2d_rotation_matrix">
+<span class="sig-prename descclassname"><span class="pre">uadapy.plotting.interactive_splom.</span></span><span class="sig-name descname"><span class="pre">make_2d_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">angle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.interactive_splom.make_2d_rotation_matrix" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-uadapy.plotting.plots2D">
+<span id="uadapy-plotting-plots2d-module"></span><h2>uadapy.plotting.plots2D module<a class="headerlink" href="#module-uadapy.plotting.plots2D" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.plotting.plots2D.generate_random_colors">
+<span class="sig-prename descclassname"><span class="pre">uadapy.plotting.plots2D.</span></span><span class="sig-name descname"><span class="pre">generate_random_colors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.plots2D.generate_random_colors" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.plotting.plots2D.generate_spectrum_colors">
+<span class="sig-prename descclassname"><span class="pre">uadapy.plotting.plots2D.</span></span><span class="sig-name descname"><span class="pre">generate_spectrum_colors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.plots2D.generate_spectrum_colors" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.plotting.plots2D.plot_contour">
+<span class="sig-prename descclassname"><span class="pre">uadapy.plotting.plots2D.</span></span><span class="sig-name descname"><span class="pre">plot_contour</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ranges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.plots2D.plot_contour" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.plotting.plots2D.plot_samples">
+<span class="sig-prename descclassname"><span class="pre">uadapy.plotting.plots2D.</span></span><span class="sig-name descname"><span class="pre">plot_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distribution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.plots2D.plot_samples" title="Link to this definition"></a></dt>
+<dd><p>Plot samples from the given distribution. If several distributions should be
+plotted together, an array can be passed to this function
+:param distribution: Distributions to plot
+:param num_samples: Number of samples per distribution
+:param kwargs: Optional other arguments to pass:</p>
+<blockquote>
+<div><p>xlabel for label of x-axis
+ylabel for label of y-axis</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-uadapy.plotting.plotsND">
+<span id="uadapy-plotting-plotsnd-module"></span><h2>uadapy.plotting.plotsND module<a class="headerlink" href="#module-uadapy.plotting.plotsND" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.plotting.plotsND.plot_contour">
+<span class="sig-prename descclassname"><span class="pre">uadapy.plotting.plotsND.</span></span><span class="sig-name descname"><span class="pre">plot_contour</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ranges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.plotsND.plot_contour" title="Link to this definition"></a></dt>
+<dd><p>Visualizes a multidimensional distribution in a matrix of contour plot
+:param distributions: Distributions to plot
+:param resolution: The resolution for the pdf
+:param ranges: Array of ranges for all dimensions
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.plotting.plotsND.plot_contour_samples">
+<span class="sig-prename descclassname"><span class="pre">uadapy.plotting.plotsND.</span></span><span class="sig-name descname"><span class="pre">plot_contour_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ranges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.plotsND.plot_contour_samples" title="Link to this definition"></a></dt>
+<dd><p>Visualizes a multidimensional distribution in a matrix visualization where the
+upper diagonal contains contour plots and the lower diagonal normal scatterplots
+:param distributions: Distributions to plot
+:param num_samples: Number of samples for the scatterplot
+:param resolution: The resolution for the pdf
+:param ranges: Array of ranges for all dimensions
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.plotting.plotsND.plot_samples">
+<span class="sig-prename descclassname"><span class="pre">uadapy.plotting.plotsND.</span></span><span class="sig-name descname"><span class="pre">plot_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.plotsND.plot_samples" title="Link to this definition"></a></dt>
+<dd><p>Plot samples from the multivariate distribution as a SLOM
+:param distribution: The multivariate distributions
+:param num_samples: Number of samples to draw
+:param kwargs: Optional other arguments to pass:
+:return:</p>
+</dd></dl>
+
+</section>
+<section id="module-uadapy.plotting.utils">
+<span id="uadapy-plotting-utils-module"></span><h2>uadapy.plotting.utils module<a class="headerlink" href="#module-uadapy.plotting.utils" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.plotting.utils.generate_random_colors">
+<span class="sig-prename descclassname"><span class="pre">uadapy.plotting.utils.</span></span><span class="sig-name descname"><span class="pre">generate_random_colors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.utils.generate_random_colors" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.plotting.utils.generate_spectrum_colors">
+<span class="sig-prename descclassname"><span class="pre">uadapy.plotting.utils.</span></span><span class="sig-name descname"><span class="pre">generate_spectrum_colors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.plotting.utils.generate_spectrum_colors" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-uadapy.plotting">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-uadapy.plotting" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Ruben Bauer, Marina Evers, David Hägele, Patrick Paetzold.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

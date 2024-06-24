@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>uadapy.dr package &mdash; UADAPy  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            UADAPy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">uadapy.dr package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-uadapy.dr.uamds">uadapy.dr.uamds module</a><ul>
+<li><a class="reference internal" href="#uadapy.dr.uamds.apply_uamds"><code class="docutils literal notranslate"><span class="pre">apply_uamds()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.dr.uamds.convert_xform_affine_to_uamds"><code class="docutils literal notranslate"><span class="pre">convert_xform_affine_to_uamds()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.dr.uamds.convert_xform_uamds_to_affine"><code class="docutils literal notranslate"><span class="pre">convert_xform_uamds_to_affine()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.dr.uamds.get_means_covs"><code class="docutils literal notranslate"><span class="pre">get_means_covs()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.dr.uamds.gradient"><code class="docutils literal notranslate"><span class="pre">gradient()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.dr.uamds.iterate_simple_gradient_descent"><code class="docutils literal notranslate"><span class="pre">iterate_simple_gradient_descent()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.dr.uamds.minimize_scipy"><code class="docutils literal notranslate"><span class="pre">minimize_scipy()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.dr.uamds.mk_normal_distr_spec"><code class="docutils literal notranslate"><span class="pre">mk_normal_distr_spec()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.dr.uamds.perform_projection"><code class="docutils literal notranslate"><span class="pre">perform_projection()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.dr.uamds.precalculate_constants"><code class="docutils literal notranslate"><span class="pre">precalculate_constants()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.dr.uamds.stress"><code class="docutils literal notranslate"><span class="pre">stress()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.dr.uamds.uamds"><code class="docutils literal notranslate"><span class="pre">uamds()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-uadapy.dr.uapca">uadapy.dr.uapca module</a><ul>
+<li><a class="reference internal" href="#uadapy.dr.uapca.compute_ua_cov"><code class="docutils literal notranslate"><span class="pre">compute_ua_cov()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.dr.uapca.compute_uapca"><code class="docutils literal notranslate"><span class="pre">compute_uapca()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.dr.uapca.transform_uapca"><code class="docutils literal notranslate"><span class="pre">transform_uapca()</span></code></a></li>
+<li><a class="reference internal" href="#uadapy.dr.uapca.uapca"><code class="docutils literal notranslate"><span class="pre">uapca()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-uadapy.dr">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">UADAPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">uadapy.dr package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/uadapy.dr.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="uadapy-dr-package">
+<h1>uadapy.dr package<a class="headerlink" href="#uadapy-dr-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-uadapy.dr.uamds">
+<span id="uadapy-dr-uamds-module"></span><h2>uadapy.dr.uamds module<a class="headerlink" href="#module-uadapy.dr.uamds" title="Link to this heading"></a></h2>
+<p>This module contains functions that implement the uncertainty aware multidimensional scaling (UAMDS) algorithm.
+This is a dimensionality reduction algorithm for sets of normally distributed random vectors (i.e. multivariate
+normal distributions). See the corresponding paper at <a class="reference external" href="https://doi.org/10.1109/TVCG.2022.3209420">https://doi.org/10.1109/TVCG.2022.3209420</a>.</p>
+<p>Copyright: (c) 2024 David Haegele, Patrick Paetzold, Ruben Bauer, Marina Evers</p>
+<p>License: MIT</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.dr.uamds.apply_uamds">
+<span class="sig-prename descclassname"><span class="pre">uadapy.dr.uamds.</span></span><span class="sig-name descname"><span class="pre">apply_uamds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">means</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#uadapy.dr.uamds.apply_uamds" title="Link to this definition"></a></dt>
+<dd><p>Applies UAMDS to the specified normal distributions (given as means and covariance matrices).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>means</strong> (<em>list</em>) – list of vectors that resemble the means of the normal distributions</p></li>
+<li><p><strong>covs</strong> (<em>list</em>) – list of matrices that resemble the covariances of the normal distributions</p></li>
+<li><p><strong>target_dim</strong> (<em>int</em>) – the dimensionality of the projection space, 2 by default</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>dictionary containing the results:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="s1">&#39;means&#39;</span><span class="p">]:</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">projected</span> <span class="n">means</span>
+<span class="p">[</span><span class="s1">&#39;covs&#39;</span><span class="p">]:</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">projected</span> <span class="n">covariances</span>
+<span class="p">[</span><span class="s1">&#39;translations&#39;</span><span class="p">]:</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">low</span><span class="o">-</span><span class="n">dimensional</span> <span class="n">translation</span> <span class="n">vectors</span> <span class="k">for</span> <span class="n">affine</span> <span class="n">transform</span> <span class="n">of</span> <span class="n">high</span><span class="o">-</span><span class="n">dimensional</span> <span class="n">means</span>
+<span class="p">[</span><span class="s1">&#39;projection&#39;</span><span class="p">]:</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">projection</span> <span class="n">matrices</span> <span class="k">for</span> <span class="n">affine</span> <span class="n">transform</span> <span class="n">of</span> <span class="n">high</span><span class="o">-</span><span class="n">dimensional</span> <span class="n">means</span> <span class="ow">and</span> <span class="n">covs</span>
+<span class="p">[</span><span class="s1">&#39;stress&#39;</span><span class="p">]:</span> <span class="n">remaining</span> <span class="n">stress</span> <span class="n">of</span> <span class="n">the</span> <span class="n">projection</span>
+</pre></div>
+</div>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.dr.uamds.convert_xform_affine_to_uamds">
+<span class="sig-prename descclassname"><span class="pre">uadapy.dr.uamds.</span></span><span class="sig-name descname"><span class="pre">convert_xform_affine_to_uamds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">normal_distr_spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affine_transforms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#uadapy.dr.uamds.convert_xform_affine_to_uamds" title="Link to this definition"></a></dt>
+<dd><p>Does the opposite of convert_xform_uamds_to_affine.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>normal_distr_spec</strong> (<em>np.ndarray</em>) – normal distributions specification (means followed by covariance matrices)</p></li>
+<li><p><strong>affine_transforms</strong> (<em>np.ndarray</em>) – affine transformations for each distribution (low-dim translations followed by projection matrices)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>uamds transforms for each distribution. This is a matrix starting with n low-dimensional mean vectors followed by
+n distribution specific projection matrices B_i. The distribution specific projection matrix is the result
+of transforming it by the basis of the covariance matrix (cov=U*S*U’ -&gt; B = U’<a href="#id1"><span class="problematic" id="id2">*</span></a>P).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">uamds_transforms</span><span class="p">[:</span><span class="n">n</span><span class="p">,:]</span> <span class="ow">is</span> <span class="n">the</span> <span class="n">block</span> <span class="n">of</span> <span class="n">mean</span> <span class="n">vectors</span>
+<span class="n">uamds_transforms</span><span class="p">[</span><span class="n">n</span><span class="p">:,:]</span> <span class="ow">is</span> <span class="n">the</span> <span class="n">block</span> <span class="n">of</span> <span class="n">local</span> <span class="n">projection</span> <span class="n">matrices</span>
+</pre></div>
+</div>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.dr.uamds.convert_xform_uamds_to_affine">
+<span class="sig-prename descclassname"><span class="pre">uadapy.dr.uamds.</span></span><span class="sig-name descname"><span class="pre">convert_xform_uamds_to_affine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">normal_distr_spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uamds_transforms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#uadapy.dr.uamds.convert_xform_uamds_to_affine" title="Link to this definition"></a></dt>
+<dd><p>Converts the internally used and optimized transformations into generally applicable affine transformations.
+UAMDS optimizes an affine transform per distribution, each consisting of a projection matrix and translation vector.
+However, the transforms are reformulated with respect to their distribution to allow for more efficient computations
+of the stress and gradient. These are called the uamds_transforms and each of them live in their own coordinate
+system. What this method returns are these transformations, but all with respect to the same coordinate system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>normal_distr_spec</strong> (<em>np.ndarray</em>) – normal distributions specification (means followed by covariance matrices)</p></li>
+<li><p><strong>uamds_transforms</strong> (<em>np.ndarray</em>) – uamds transformations for each distribution (low-dim means followed by local projection matrices B_i)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>affine transforms for each distribution. This is a matrix starting with n translation vectors followed by
+n projection matrices. An affine transform is a function of the form f(x)=x*P+t where x is a high-dimensional
+point, P is a projection matrix into low-dimensional space, and t is a low-dimensional translation.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">affine_transforms</span><span class="p">[:</span><span class="n">n</span><span class="p">,:]</span> <span class="ow">is</span> <span class="n">the</span> <span class="n">block</span> <span class="n">of</span> <span class="n">translation</span> <span class="n">vectors</span>
+<span class="n">affine_transforms</span><span class="p">[</span><span class="n">n</span><span class="p">:,:]</span> <span class="ow">is</span> <span class="n">the</span> <span class="n">block</span> <span class="n">of</span> <span class="n">projection</span> <span class="n">matrices</span>
+</pre></div>
+</div>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.dr.uamds.get_means_covs">
+<span class="sig-prename descclassname"><span class="pre">uadapy.dr.uamds.</span></span><span class="sig-name descname"><span class="pre">get_means_covs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">normal_distr_spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#uadapy.dr.uamds.get_means_covs" title="Link to this definition"></a></dt>
+<dd><p>Separates the mean vectors and covariance matrices from the stacked normal distributions specification format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>normal_distr_spec</strong> (<em>np.ndarray</em>) – Normal distributions specification. Matrix starting with n row vectors (means) followed by
+n square matrices (covariances).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a list of mean vectors and a list of covariance matrices</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[list[np.ndarray], list[np.ndarray]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.dr.uamds.gradient">
+<span class="sig-prename descclassname"><span class="pre">uadapy.dr.uamds.</span></span><span class="sig-name descname"><span class="pre">gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">normal_distr_spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uamds_transforms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precalc_constants</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#uadapy.dr.uamds.gradient" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.dr.uamds.iterate_simple_gradient_descent">
+<span class="sig-prename descclassname"><span class="pre">uadapy.dr.uamds.</span></span><span class="sig-name descname"><span class="pre">iterate_simple_gradient_descent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">normal_distr_spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uamds_transforms_init</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precalc_constants</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'plain'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.999</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-07</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#uadapy.dr.uamds.iterate_simple_gradient_descent" title="Link to this definition"></a></dt>
+<dd><p>Performs gradient descent on the UAMDS stress to find an optimal projection.
+This uses a fixed number of iterations after which the method returns.
+There are 3 different gradient descent schemes to choose from.
+Alternatively, the method minimize_scipy(…) can be used to minimize the stress, which runs until convergence is
+reached.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>normal_distr_spec</strong> (<em>np.ndarray</em>) – Normal distributions specification. Matrix starting with n row vectors (means) followed by
+n square matrices (covariances).</p></li>
+<li><p><strong>uamds_transforms_init</strong> (<em>np.ndarray</em>) – uamds transformations for each distribution (low-dim means followed by local projection matrices B_i)</p></li>
+<li><p><strong>precalc_constants</strong> (<em>tuple</em>) – a tuple containing the pre-computed constant expressions of the stress and gradient.
+Can be None and will be computed by precalculate_constants(normal_distr_spec)</p></li>
+<li><p><strong>num_iter</strong> (<em>int</em>) – number of iterations to perform. The required number of iterations varies with the used descent scheme.</p></li>
+<li><p><strong>a</strong> (<em>float</em>) – step size (learning rate). Depends on the size of the optimization problem and used descent scheme.
+Adam and momentum can usually employ larger learning rates than plain gradient descent.</p></li>
+<li><p><strong>optimizer</strong> (<em>str</em>) – one of ‘adam’, ‘momentum’, ‘plain’.</p></li>
+<li><p><strong>b1</strong> (<em>float</em>) – only used with ‘adam’, exponential decay rate for the 1st moment estimates.</p></li>
+<li><p><strong>b2</strong> (<em>float</em>) – only used with ‘adam’, exponential decay rate for the 2nd moment estimates</p></li>
+<li><p><strong>mass</strong> (<em>flaot</em>) – only used with ‘momentum’, mass parameter in ]0, 1[. When heavy, the descent direction changes only slightly by
+the current gradient in each iteration.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the optimized uamds transforms. The method convert_xform_uamds_to_affine(normal_distr_spec, uamds_transforms)
+can be used to obtain the corresponding affine transformations.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.dr.uamds.minimize_scipy">
+<span class="sig-prename descclassname"><span class="pre">uadapy.dr.uamds.</span></span><span class="sig-name descname"><span class="pre">minimize_scipy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">normal_distr_spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uamds_transforms_init</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precalc_constants</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'BFGS'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#uadapy.dr.uamds.minimize_scipy" title="Link to this definition"></a></dt>
+<dd><p>Minimizes the UAMDS stress using scipy.optimize.
+This will run until scipy’s optimization routine is returning, i.e., until convergence is reached.
+Alternatively, the method iterate_simple_gradient_descent(…) can be used to perform a fixed number of
+gradient descent iterations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>normal_distr_spec</strong> (<em>np.ndarray</em>) – Normal distributions specification. Matrix starting with n row vectors (means) followed by
+n square matrices (covariances).</p></li>
+<li><p><strong>uamds_transforms_init</strong> (<em>np.ndarray</em>) – uamds transformations for each distribution (low-dim means followed by local projection matrices B_i)</p></li>
+<li><p><strong>precalc_constants</strong> (<em>tuple</em>) – a tuple containing the pre-computed constant expressions of the stress and gradient.
+Can be None and will be computed by precalculate_constants(normal_distr_spec)</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – an unconstrained scipy optimization method, ‘BFGS’ by default.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the optimal uamds transforms. The method convert_xform_uamds_to_affine(normal_distr_spec, uamds_transforms) can
+be used to obtain the corresponding affine transformations.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.dr.uamds.mk_normal_distr_spec">
+<span class="sig-prename descclassname"><span class="pre">uadapy.dr.uamds.</span></span><span class="sig-name descname"><span class="pre">mk_normal_distr_spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">means</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#uadapy.dr.uamds.mk_normal_distr_spec" title="Link to this definition"></a></dt>
+<dd><p>Creates a normal distributions specification matrix for the provided means and covariance matrices.
+This is a matrix starting with n row vectors (means) followed by n square matrices (covariances).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>means</strong> (<em>list</em><em>[</em><em>np.ndarray</em><em>]</em>) – list of mean vectors</p></li>
+<li><p><strong>covs</strong> (<em>list</em><em>[</em><em>list</em><em>[</em><em>np.ndarray</em><em>]</em><em>]</em>) – list of covariance matrices</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>normal distributions specification, n means followed by n covariance matrices</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.dr.uamds.perform_projection">
+<span class="sig-prename descclassname"><span class="pre">uadapy.dr.uamds.</span></span><span class="sig-name descname"><span class="pre">perform_projection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">normal_distr_spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uamds_transforms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#uadapy.dr.uamds.perform_projection" title="Link to this definition"></a></dt>
+<dd><p>Projects the distributions specified in normal_distr_spec using the provided uamds_transforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>normal_distr_spec</strong> (<em>np.ndarray</em>) – Normal distributions specification. Matrix starting with n row vectors (means) followed by
+n square matrices (covariances).</p></li>
+<li><p><strong>uamds_transforms</strong> (<em>np.ndarray</em>) – uamds transformations for each distribution (low-dim means followed by local projection matrices B_i)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>projected normal distributions in the normal distribution specification format (block of means followed by
+block of covariance matrices).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.dr.uamds.precalculate_constants">
+<span class="sig-prename descclassname"><span class="pre">uadapy.dr.uamds.</span></span><span class="sig-name descname"><span class="pre">precalculate_constants</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">normal_distr_spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#uadapy.dr.uamds.precalculate_constants" title="Link to this definition"></a></dt>
+<dd><p>Computes constant expressions used in the stress and gradient calculations.
+These constants are specific properties of the individual distributions, e.g. the SVDs of the covariance matrices,
+or relationships beetween the distributions, such as the pairwise squared distances between the distribution means
+(similar to the dissimilarity matrix in regular MDS).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>normal_distr_spec</strong> (<em>np.ndarray</em>) – normal distributions specification (block of means followed by block of covariance matrices)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a tuple containing the computed constant expressions</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.dr.uamds.stress">
+<span class="sig-prename descclassname"><span class="pre">uadapy.dr.uamds.</span></span><span class="sig-name descname"><span class="pre">stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">normal_distr_spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uamds_transforms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precalc_constants</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#uadapy.dr.uamds.stress" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.dr.uamds.uamds">
+<span class="sig-prename descclassname"><span class="pre">uadapy.dr.uamds.</span></span><span class="sig-name descname"><span class="pre">uamds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.dr.uamds.uamds" title="Link to this definition"></a></dt>
+<dd><p>Applies the UAMDS algorithm to the provided distributions and returns the projected distributions
+in lower-dimensional space. It assumes multivariate normal distributions.
+If you supply other distributions that provide mean and covariance, these values would be used
+to approximate a normal distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>distributions</strong> (<em>list</em>) – list of input distributions (distribution objects offering mean() and cov() methods)</p></li>
+<li><p><strong>dims</strong> (<em>int</em>) – target dimensionality, 2 by default.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of distributions living in projection space (i.e. of provided dimensionality)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-uadapy.dr.uapca">
+<span id="uadapy-dr-uapca-module"></span><h2>uadapy.dr.uapca module<a class="headerlink" href="#module-uadapy.dr.uapca" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.dr.uapca.compute_ua_cov">
+<span class="sig-prename descclassname"><span class="pre">uadapy.dr.uapca.</span></span><span class="sig-name descname"><span class="pre">compute_ua_cov</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">means</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#uadapy.dr.uapca.compute_ua_cov" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.dr.uapca.compute_uapca">
+<span class="sig-prename descclassname"><span class="pre">uadapy.dr.uapca.</span></span><span class="sig-name descname"><span class="pre">compute_uapca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">means</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#uadapy.dr.uapca.compute_uapca" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.dr.uapca.transform_uapca">
+<span class="sig-prename descclassname"><span class="pre">uadapy.dr.uapca.</span></span><span class="sig-name descname"><span class="pre">transform_uapca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">means</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#uadapy.dr.uapca.transform_uapca" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="uadapy.dr.uapca.uapca">
+<span class="sig-prename descclassname"><span class="pre">uadapy.dr.uapca.</span></span><span class="sig-name descname"><span class="pre">uapca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uadapy.dr.uapca.uapca" title="Link to this definition"></a></dt>
+<dd><p>Applies UAPCA algorithm to the distribution and returns the distribution
+in lower-dimensional space. It assumes a normal distributions. If you apply
+other distributions that provide mean and covariance, these values would be used
+to approximate a normal distribution
+:param distributions: List of input distributions
+:param dims: Target dimension
+:return: List of distributions in low-dimensional space</p>
+</dd></dl>
+
+</section>
+<section id="module-uadapy.dr">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-uadapy.dr" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Ruben Bauer, Marina Evers, David Hägele, Patrick Paetzold.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -134,7 +134,7 @@ dmypy.json
 .idea
 
 # bokeh plots
-*.html
+#*.html
 
 # vscode
 .vscode
