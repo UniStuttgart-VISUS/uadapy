@@ -11,8 +11,8 @@ Welcome to UADAPy's documentation!
    :caption: Contents:
 
    Changelog :doc:`./changelog.rst`
-   Installation <installation.rst>
-   Examples <examples.rst>
+   Installation :doc:`./installation.rst`
+   Examples :doc:`./examples.rst`
 
 
 Indices and tables
