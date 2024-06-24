@@ -1,5 +1,3 @@
-import itertools
-
 import matplotlib.pyplot as plt
 import numpy as np
 import uadapy.distribution as dist
@@ -46,14 +44,40 @@ def plot_samples(distributions, num_samples, **kwargs):
     fig.tight_layout()
     plt.show()
 
-def plot_contour(distributions, resolution=32, ranges=None, **kwargs):
+def plot_contour(distributions, num_samples, resolution=128, ranges=None, quantiles:list=None, seed=55, **kwargs):
     """
-    Visualizes a multidimensional distribution in a matrix of contour plot
-    :param distributions: Distributions to plot
-    :param resolution: The resolution for the pdf
-    :param ranges: Array of ranges for all dimensions
-    :return:
+    Visualizes a multidimensional distribution in a matrix of contour plots.
+
+    Parameters
+    ----------
+    distributions : list
+        List of distributions to plot.
+    num_samples : int
+        Number of samples per distribution.
+    resolution : int, optional
+        The resolution for the pdf. Default is 128.
+    ranges : list or None, optional
+        Array of ranges for all dimensions. If None, the ranges are calculated based on the distributions.
+    quantiles : list or None, optional
+        List of quantiles to use for determining isovalues. If None, the 99.7%, 95%, and 68% quantiles are used.
+    seed : int
+        Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
+    **kwargs : additional keyword arguments
+        Additional optional plotting arguments.
+
+    Returns
+    -------
+    None
+        This function does not return a value. It displays a plot using plt.show().
+
+    Raises
+    ------
+    ValueError
+        If a quantile is not between 0 and 100 (exclusive), or if a quantile results in an index that is out of bounds.
+    Exception
+        If the dimension of the distribution is less than 2.
     """
+
     if isinstance(distributions, dist.distribution):
         distributions = [distributions]
     contour_colors = utils.generate_spectrum_colors(len(distributions))
@@ -89,6 +113,25 @@ def plot_contour(distributions, resolution=32, ranges=None, **kwargs):
         pdf = d.pdf(coordinates.reshape((-1, coordinates.shape[-1])))
         pdf = pdf.reshape(coordinates.shape[:-1])
         pdf = pdf.transpose((1,0)+tuple(range(2,numvars)))
+
+        # Monte Carlo approach for determining isovalues
+        isovalues = []
+        samples = d.sample(num_samples, seed)
+        densities = d.pdf(samples)
+        densities.sort()
+        if quantiles is None:
+            isovalues.append(densities[int((1 - 99.7/100) * num_samples)]) # 99.7% quantile
+            isovalues.append(densities[int((1 - 95/100) * num_samples)]) # 95% quantile
+            isovalues.append(densities[int((1 - 68/100) * num_samples)]) # 68% quantile
+        else:
+            quantiles.sort(reverse=True)
+            for quantile in quantiles:
+                if not 0 < quantile < 100:
+                    raise ValueError(f"Invalid quantile: {quantile}. Quantiles must be between 0 and 100 (exclusive).")
+                elif int((1 - quantile/100) * num_samples) >= num_samples:
+                    raise ValueError(f"Quantile {quantile} results in an index that is out of bounds.")
+                isovalues.append(densities[int((1 - quantile/100) * num_samples)])
+
         for i, j in zip(*np.triu_indices_from(axes, k=1)):
             for x, y in [(i, j), (j, i)]:
                 color = contour_colors[k]
@@ -98,7 +141,7 @@ def plot_contour(distributions, resolution=32, ranges=None, **kwargs):
                 pdf_agg = np.sum(pdf, axis=tuple(indices))
                 if x > y:
                     pdf_agg = pdf_agg.T
-                axes[x,y].contour(dims[y], dims[x], pdf_agg, colors=[color])
+                axes[x,y].contour(dims[y], dims[x], pdf_agg, levels=isovalues, colors=[color])
 
         # Fill diagonal
         for i in range(numvars):
@@ -115,16 +158,41 @@ def plot_contour(distributions, resolution=32, ranges=None, **kwargs):
     fig.tight_layout()
     plt.show()
 
-def plot_contour_samples(distributions, num_samples, resolution=32, ranges=None, **kwargs):
+def plot_contour_samples(distributions, num_samples, resolution=128, ranges=None, quantiles:list=None, seed=55, **kwargs):
     """
     Visualizes a multidimensional distribution in a matrix visualization where the
-    upper diagonal contains contour plots and the lower diagonal normal scatterplots
-    :param distributions: Distributions to plot
-    :param num_samples: Number of samples for the scatterplot
-    :param resolution: The resolution for the pdf
-    :param ranges: Array of ranges for all dimensions
-    :return:
+    upper diagonal contains contour plots and the lower diagonal contains scatterplots.
+
+    Parameters
+    ----------
+    distributions : list
+        List of distributions to plot.
+    num_samples : int
+        Number of samples for the scatterplot.
+    resolution : int, optional
+        The resolution for the pdf. Default is 128.
+    ranges : list or None, optional
+        Array of ranges for all dimensions. If None, the ranges are calculated based on the distributions.
+    quantiles : list or None, optional
+        List of quantiles to use for determining isovalues. If None, the 99.7%, 95%, and 68% quantiles are used.
+    seed : int
+        Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
+    **kwargs : additional keyword arguments
+        Additional optional plotting arguments.
+
+    Returns
+    -------
+    None
+        This function does not return a value. It displays a plot using plt.show().
+
+    Raises
+    ------
+    ValueError
+        If a quantile is not between 0 and 100 (exclusive), or if a quantile results in an index that is out of bounds.
+    Exception
+        If the dimension of the distribution is less than 2.
     """
+
     if isinstance(distributions, dist.distribution):
         distributions = [distributions]
     contour_colors = utils.generate_spectrum_colors(len(distributions))
@@ -148,7 +216,7 @@ def plot_contour_samples(distributions, num_samples, resolution=32, ranges=None,
 
     # Fill matrix with data
     for k, d in enumerate(distributions):
-        samples = d.sample(num_samples)
+        samples = d.sample(num_samples, seed)
         if d.dim < 2:
             raise Exception('Wrong dimension of distribution')
         dims = ()
@@ -159,6 +227,25 @@ def plot_contour_samples(distributions, num_samples, resolution=32, ranges=None,
         pdf = d.pdf(coordinates.reshape((-1, coordinates.shape[-1])))
         pdf = pdf.reshape(coordinates.shape[:-1])
         pdf = pdf.transpose((1,0)+tuple(range(2,numvars)))
+
+        # Monte Carlo approach for determining isovalues
+        isovalues = []
+        samples = d.sample(num_samples, seed)
+        densities = d.pdf(samples)
+        densities.sort()
+        if quantiles is None:
+            isovalues.append(densities[int((1 - 99.7/100) * num_samples)]) # 99.7% quantile
+            isovalues.append(densities[int((1 - 95/100) * num_samples)]) # 95% quantile
+            isovalues.append(densities[int((1 - 68/100) * num_samples)]) # 68% quantile
+        else:
+            quantiles.sort(reverse=True)
+            for quantile in quantiles:
+                if not 0 < quantile < 100:
+                    raise ValueError(f"Invalid quantile: {quantile}. Quantiles must be between 0 and 100 (exclusive).")
+                elif int((1 - quantile/100) * num_samples) >= num_samples:
+                    raise ValueError(f"Quantile {quantile} results in an index that is out of bounds.")
+                isovalues.append(densities[int((1 - quantile/100) * num_samples)])
+
         for i, j in zip(*np.triu_indices_from(axes, k=1)):
             for x, y in [(i, j), (j, i)]:
                 color = contour_colors[k]
@@ -167,7 +254,7 @@ def plot_contour_samples(distributions, num_samples, resolution=32, ranges=None,
                 indices.remove(y)
                 pdf_agg = np.sum(pdf, axis=tuple(indices))
                 if x < y:
-                    axes[x,y].contour(dims[x], dims[y], pdf_agg, colors=[color])
+                    axes[x,y].contour(dims[x], dims[y], pdf_agg, levels=isovalues, colors=[color])
                 else:
                     axes[x, y].scatter(samples[:, y], y=samples[:, x], color=contour_colors[k])
                     axes[x, y].set_xlim(ranges[x][0], ranges[x][1])
