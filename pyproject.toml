@@ -25,6 +25,6 @@ dynamic = ["dependencies"]
 dependencies = {file = ["requirements.txt"]}
 
 [project.urls]
-"Homepage" = "https://github.com/hageldave/uadapy"
-"Bug Tracker" = "https://github.com/hageldave/uadapy/issues"
+"Homepage" = "https://github.com/UniStuttgart-VISUS/uadapy"
+"Bug Tracker" = "https://github.com/UniStuttgart-VISUS/uadapy/issues"
 
