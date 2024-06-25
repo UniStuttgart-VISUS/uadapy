@@ -26,7 +26,7 @@ def plot_samples(distribution, num_samples, **kwargs):
         plt.ylabel(kwargs['ylabel'])
     plt.show()
 
-def plot_contour(distributions, num_samples, resolution=128, ranges=None, quantiles:list=None, seed=55, **kwargs):
+def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None, seed=55, **kwargs):
     """
     Plot contour plots for samples drawn from given distributions.
 
@@ -34,8 +34,6 @@ def plot_contour(distributions, num_samples, resolution=128, ranges=None, quanti
     ----------
     distributions : list
         List of distributions to plot.
-    num_samples : int
-        Number of samples per distribution.
     resolution : int, optional
         The resolution of the plot. Default is 128.
     ranges : list or None, optional
@@ -86,6 +84,7 @@ def plot_contour(distributions, num_samples, resolution=128, ranges=None, quanti
 
         # Monte Carlo approach for determining isovalues
         isovalues = []
+        num_samples = 10_000
         samples = d.sample(num_samples, seed)
         densities = d.pdf(samples)
         densities.sort()
