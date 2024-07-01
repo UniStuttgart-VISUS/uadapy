@@ -84,7 +84,7 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
 
         # Monte Carlo approach for determining isovalues
         isovalues = []
-        num_samples = 10_000
+        num_samples = 10_000  #TODO: cleverly determine how many samples are needed based on the largest quantile
         samples = d.sample(num_samples, seed)
         densities = d.pdf(samples)
         densities.sort()
