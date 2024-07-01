@@ -1,6 +1,11 @@
+=========
+Changelog
+=========
+
 0.1
------
+---
 Features in first version:
+
 * Uncertainty-aware Principle Component Analysis
 * Uncertainty-aware Multi-dimensional Scaling
 * Basic visualizations:
