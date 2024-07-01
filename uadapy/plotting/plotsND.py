@@ -1,5 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.stats
+from numpy.random.mtrand import sample
+
 import uadapy.distribution as dist
 import uadapy.plotting.utils as utils
 
@@ -274,3 +277,108 @@ def plot_contour_samples(distributions, num_samples, resolution=128, ranges=None
         axes[0,1].yaxis.set_visible(True)
     fig.tight_layout()
     plt.show()
+
+
+def contour_plot_matrix(distributions,  quantiles:list=None, n_scatter_samples=50, seed=55, distrib_colors=None, **kwargs):
+    if isinstance(distributions, dist.distribution):
+        distributions = [distributions]
+    if distrib_colors is None:
+        distrib_colors = utils.generate_spectrum_colors(len(distributions))
+    # Create matrix
+    numvars = distributions[0].dim
+    # if ranges is None:
+    #     min_val = np.zeros(distributions[0].mean().shape)+1000
+    #     max_val = np.zeros(distributions[0].mean().shape)-1000
+    #     cov_max = np.zeros(np.diagonal(distributions[0].cov()).shape)
+    #     for d in distributions:
+    #         min_val=np.min(np.array([d.mean(), min_val]), axis=0)
+    #         max_val=np.max(np.array([d.mean(), max_val]), axis=0)
+    #         cov_max = np.max(np.array([np.diagonal(d.cov()), cov_max]), axis=0)
+    #     cov_max = np.sqrt(cov_max)
+    #     ranges = [(mi-3*co, ma+3*co) for mi,ma, co in zip(min_val, max_val, cov_max)]
+    fig, axes = plt.subplots(nrows=numvars, ncols=numvars)
+    for i, ax in enumerate(axes.flat):
+        # Hide all ticks and labels
+        ax.xaxis.set_visible(False)
+        ax.yaxis.set_visible(False)
+
+    # Fill matrix with data
+    for k, d in enumerate(distributions):
+        # samples = d.sample(num_samples, seed)
+        if d.dim < 2:
+            raise Exception('Wrong dimension of distribution')
+        # dims = ()
+        # for i in range(d.dim):
+        #     x = np.linspace(ranges[i][0], ranges[i][1], resolution)
+        #     dims = (*dims, x)
+        # coordinates = np.array(np.meshgrid(*dims)).transpose(tuple(range(1, numvars+1)) + (0,))
+        # pdf = d.pdf(coordinates.reshape((-1, coordinates.shape[-1])))
+        # pdf = pdf.reshape(coordinates.shape[:-1])
+        # pdf = pdf.transpose((1,0)+tuple(range(2,numvars)))
+
+        n_samples_for_contour = 1_000
+        samples = d.sample(n_samples_for_contour, random_state=seed)
+        samples_scatter = d.sample(n_scatter_samples, random_state=seed)
+        for i, j in zip(*np.triu_indices_from(axes, k=1)):
+            for x, y in [(i, j)]:#, (j, i)]:
+                color = distrib_colors[k]
+
+                samples_xy = samples[:,[x,y]]
+                samples_scatter_xy = samples_scatter[:,[x,y]]
+                kde = dist.distribution(samples_xy)
+                min_xy = np.vstack([samples_xy,samples_scatter_xy]).min(axis=0)
+                max_xy = np.vstack([samples_xy,samples_scatter_xy]).max(axis=0)
+
+                gridx, gridy = np.meshgrid(
+                    np.linspace(min_xy[0], max_xy[0], num=50),
+                    np.linspace(min_xy[1], max_xy[1], num=50),
+                    indexing='ij')
+
+                # Monte Carlo approach for determining isovalues
+                isovalues = []
+                densities = kde.pdf(samples_xy)
+                densities.sort()
+                if quantiles is None:
+                    isovalues.append(densities[int((1 - 95 / 100) * n_samples_for_contour)])  # 99.7% quantile
+                    isovalues.append(densities[int((1 - 75 / 100) * n_samples_for_contour)])  # 95% quantile
+                    isovalues.append(densities[int((1 - 25 / 100) * n_samples_for_contour)])  # 68% quantile
+                else:
+                    quantiles.sort(reverse=True)
+                    for quantile in quantiles:
+                        if not 0 < quantile < 100:
+                            raise ValueError(
+                                f"Invalid quantile: {quantile}. Quantiles must be between 0 and 100 (exclusive).")
+                        elif int((1 - quantile / 100) * n_samples_for_contour) >= n_samples_for_contour:
+                            raise ValueError(f"Quantile {quantile} results in an index that is out of bounds.")
+                        isovalues.append(densities[int((1 - quantile / 100) * n_samples_for_contour)])
+
+                grid = np.hstack((gridx.ravel()[:,None], gridy.ravel()[:,None]))
+                pdf = kde.pdf(grid)
+                pdf = pdf.reshape(gridx.shape)
+
+                # contour plotting
+                axes[x,y].contour(gridy.T, gridx.T, pdf.T, levels=isovalues, colors=[color])
+                #axes[y,x].contour(gridx, gridy, pdf, levels=isovalues, colors=[color])
+
+                # scatter plotting
+
+                axes[y, x].scatter(samples_scatter_xy[:, 1], samples_scatter_xy[:, 0], color=distrib_colors[k], s=1.0)
+                # axes[x, y].set_xlim(ranges[x][0], ranges[x][1])
+                # axes[x, y].set_ylim(ranges[y][0], ranges[y][1])
+
+        # Fill diagonal
+        for i in range(numvars):
+            samples_i = samples[:,i,None]
+            coords = np.linspace(samples_i.min(), samples_i.max(), num=50)[:,None]
+            kde = dist.distribution(samples_i)
+            pdf = kde.pdf(coords)
+            axes[i,i].plot(coords, pdf, color=color)
+            axes[i,i].xaxis.set_visible(True)
+            axes[i,i].yaxis.set_visible(True)
+
+        for i in range(numvars):
+            axes[-1,i].xaxis.set_visible(True)
+            axes[i,0].yaxis.set_visible(True)
+        axes[0,1].yaxis.set_visible(True)
+    fig.tight_layout()
+    return fig, ax

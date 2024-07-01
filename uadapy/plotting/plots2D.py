@@ -26,7 +26,7 @@ def plot_samples(distribution, num_samples, **kwargs):
         plt.ylabel(kwargs['ylabel'])
     plt.show()
 
-def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None, seed=55, **kwargs):
+def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None, seed=55, distrib_colors=None, **kwargs):
     """
     Plot contour plots for samples drawn from given distributions.
 
@@ -58,7 +58,8 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
 
     if isinstance(distributions, dist.distribution):
         distributions = [distributions]
-    contour_colors = generate_spectrum_colors(len(distributions))
+    if distrib_colors is None:
+        distrib_colors = generate_spectrum_colors(len(distributions))
 
     if ranges is None:
         min_val = np.zeros(distributions[0].mean().shape)+1000
@@ -72,6 +73,7 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
         ranges = [(mi-3*co, ma+3*co) for mi,ma, co in zip(min_val, max_val, cov_max)]
     range_x = ranges[0]
     range_y = ranges[1]
+    fig, ax = plt.subplots()
     for i, d in enumerate(distributions):
         x = np.linspace(range_x[0], range_x[1], resolution)
         y = np.linspace(range_y[0], range_y[1], resolution)
@@ -80,7 +82,7 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
         coordinates = coordinates.reshape((-1, 2))
         pdf = d.pdf(coordinates)
         pdf = pdf.reshape(xv.shape)
-        color = contour_colors[i]
+        color = distrib_colors[i]
 
         # Monte Carlo approach for determining isovalues
         isovalues = []
@@ -101,8 +103,8 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
                     raise ValueError(f"Quantile {quantile} results in an index that is out of bounds.")
                 isovalues.append(densities[int((1 - quantile/100) * num_samples)])
 
-        plt.contour(xv, yv, pdf, levels=isovalues, colors = [color])
-    plt.show()
+        ax.contour(xv, yv, pdf, levels=isovalues, colors = [color])
+    return fig,ax
 
 def plot_contour_bands(distributions, num_samples, resolution=128, ranges=None, quantiles:list=None, seed=55, **kwargs):
     """

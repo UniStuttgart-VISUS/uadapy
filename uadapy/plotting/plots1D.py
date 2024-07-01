@@ -100,7 +100,7 @@ def setup_plot(distributions, num_samples, seed, fig=None, axs=None, colors=None
 
     # Generate Glasbey colors
     if colors is None:
-        palette = gb.create_palette(palette_size=len(samples), colorblind_safe=kwargs.get('colorblind_safe', False))
+        palette = gb.create_palette(palette_size=len(samples), colorblind_safe=kwargs.get('colorblind_safe', True))
     else:
         # If colors are provided but fewer than the number of samples, add more colors from Glasbey palette
         if len(colors) < len(samples):
