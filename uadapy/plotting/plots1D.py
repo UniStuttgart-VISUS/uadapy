@@ -254,5 +254,5 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
                 ax.grid(True, linestyle=':', linewidth='0.5', color='gray')
             else:
                 ax.set_visible(False)  # Hide unused subplots
-
+    fig.tight_layout()
     return fig, axs

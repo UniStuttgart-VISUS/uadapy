@@ -1,6 +1,7 @@
 import uadapy as ua
 import uadapy.data as data
 import uadapy.dr.uamds as uamds
+import uadapy.dr.uapca as uapca
 import uadapy.plotting.plots1D as plots1D
 import uadapy.plotting.plots2D as plots2D
 import uadapy.plotting.plotsND as plotsND
@@ -13,16 +14,26 @@ import matplotlib as mpl
 def example_uamds():
     distribs_hi = data.load_iris_normal()
     colors = mpl.colormaps['Set2'].colors[0:3]
-    fig, ax = plots1D.plot_1d_distribution(distribs_hi, num_samples=100, plot_types='boxplot', colors=colors)
+    attrib_names = ['spl-L', 'spl-W', 'ptl-L', 'ptl-W']
+    fig, ax = plots1D.plot_1d_distribution(distribs_hi, num_samples=10_000, plot_types=['boxplot', 'violinplot'], colors=colors, titles=attrib_names)
     fig.show()
+    fig, ax = plotsND.contour_plot_matrix(distribs_hi, distrib_colors=colors)
+    fig.show()
+    fig, ax = plt.subplots(nrows=2, ncols=1)
     distribs_lo = uamds.uamds(distribs_hi, dims=2)
-    fig, ax = plots2D.plot_contour(distribs_lo, distrib_colors=colors)
+    plots2D.plot_contour_bands(distribs_lo, distrib_colors=colors, ax=ax[0])
+    ax[0].set_title("uncertainty-aware MDS")
+    ax[0].axis('equal')
+    distribs_lo = uapca.uapca(distribs_hi, dims=2)
+    plots2D.plot_contour_bands(distribs_lo, distrib_colors=colors, ax=ax[1])
+    ax[1].set_title("uncertainty-aware PCA")
+    ax[1].axis('equal')
+    fig.tight_layout()
     fig.show()
     #plots2D.plot_contour_bands(distribs_lo, 10000, 128, None, [5, 25, 55, 75, 95])
     #plotsND.plot_contour(distribs_lo, 10000, 128, None, [5, 25, 50, 75, 95])
     #plotsND.plot_contour_samples(distribs_lo, 10000, 128, None, [5, 25, 50, 75, 95])
-    fig, ax = plotsND.contour_plot_matrix(distribs_hi, distrib_colors=colors)
-    fig.show()
+
 
 def example_kde():
     samples = np.random.randn(1000,2)

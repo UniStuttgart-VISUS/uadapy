@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import uadapy.distribution as dist
-from numpy import ma
-from matplotlib import ticker
+import uadapy.plotting.utils as utils
 
 def plot_samples(distribution, num_samples, **kwargs):
     """
@@ -59,7 +58,7 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
     if isinstance(distributions, dist.distribution):
         distributions = [distributions]
     if distrib_colors is None:
-        distrib_colors = generate_spectrum_colors(len(distributions))
+        distrib_colors = utils.generate_spectrum_colors(len(distributions))
 
     if ranges is None:
         min_val = np.zeros(distributions[0].mean().shape)+1000
@@ -106,7 +105,7 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
         ax.contour(xv, yv, pdf, levels=isovalues, colors = [color])
     return fig,ax
 
-def plot_contour_bands(distributions, num_samples, resolution=128, ranges=None, quantiles:list=None, seed=55, **kwargs):
+def plot_contour_bands(distributions, resolution=128, ranges=None, quantiles:list=None, seed=55, distrib_colors=None, fig=None, ax=None, **kwargs):
     """
     Plot contour bands for samples drawn from given distributions.
 
@@ -114,8 +113,6 @@ def plot_contour_bands(distributions, num_samples, resolution=128, ranges=None, 
     ----------
     distributions : list
         List of distributions to plot.
-    num_samples : int
-        Number of samples per distribution.
     resolution : int, optional
         The resolution of the plot. Default is 128.
     ranges : list or None, optional
@@ -140,6 +137,8 @@ def plot_contour_bands(distributions, num_samples, resolution=128, ranges=None, 
 
     if isinstance(distributions, dist.distribution):
         distributions = [distributions]
+    if distrib_colors is None:
+        distrib_colors = utils.generate_spectrum_colors(len(distributions))
 
     # Sequential and perceptually uniform colormaps
     colormaps = [
@@ -158,9 +157,12 @@ def plot_contour_bands(distributions, num_samples, resolution=128, ranges=None, 
             max_val=np.max(np.array([d.mean(), max_val]), axis=0)
             cov_max = np.max(np.array([np.diagonal(d.cov()), cov_max]), axis=0)
         cov_max = np.sqrt(cov_max)
-        ranges = [(mi-3*co, ma+3*co) for mi,ma, co in zip(min_val, max_val, cov_max)]
+        ranges = [(min-3*co, max+3*co) for min,max, co in zip(min_val, max_val, cov_max)]
     range_x = ranges[0]
     range_y = ranges[1]
+
+    if ax is None:
+        fig, ax = plt.subplots()
     for i, d in enumerate(distributions):
         x = np.linspace(range_x[0], range_x[1], resolution)
         y = np.linspace(range_y[0], range_y[1], resolution)
@@ -169,17 +171,18 @@ def plot_contour_bands(distributions, num_samples, resolution=128, ranges=None, 
         coordinates = coordinates.reshape((-1, 2))
         pdf = d.pdf(coordinates)
         pdf = pdf.reshape(xv.shape)
-        pdf = ma.masked_where(pdf <= 0, pdf)  # Mask non-positive values to avoid log scale issues
+        pdf = np.ma.masked_where(pdf <= 0, pdf)  # Mask non-positive values to avoid log scale issues
 
         # Monte Carlo approach for determining isovalues
+        num_samples = 10_000
         isovalues = []
         samples = d.sample(num_samples, seed)
         densities = d.pdf(samples)
         densities.sort()
         if quantiles is None:
-            isovalues.append(densities[int((1 - 99.7/100) * num_samples)]) # 99.7% quantile
             isovalues.append(densities[int((1 - 95/100) * num_samples)]) # 95% quantile
-            isovalues.append(densities[int((1 - 68/100) * num_samples)]) # 68% quantile
+            isovalues.append(densities[int((1 - 75/100) * num_samples)]) # 75% quantile
+            isovalues.append(densities[int((1 - 25/100) * num_samples)]) # 25% quantile
         else:
             quantiles.sort(reverse=True)
             for quantile in quantiles:
@@ -188,16 +191,12 @@ def plot_contour_bands(distributions, num_samples, resolution=128, ranges=None, 
                 elif int((1 - quantile/100) * num_samples) >= num_samples:
                     raise ValueError(f"Quantile {quantile} results in an index that is out of bounds.")
                 isovalues.append(densities[int((1 - quantile/100) * num_samples)])
-
+        colors = [
+            distrib_colors[i],
+            utils.scale_saturation(utils.scale_brightness(utils.any_color_to_rgb(distrib_colors[i]), 0.9), 0.9)
+        ]
+        if isovalues[-1] != np.infty:
+            isovalues.append(np.infty)
         # Generate logarithmic levels and create the contour plot with different colormap for each distribution
-        plt.contourf(xv, yv, pdf, levels=isovalues, locator=ticker.LogLocator(), cmap=colormaps[i % len(colormaps)])
-
-    plt.show()
-
-# HELPER FUNCTIONS
-def generate_random_colors(length):
-    return ["#"+''.join([np.random.choice('0123456789ABCDEF') for j in range(6)]) for _ in range(length)]
-
-def generate_spectrum_colors(length):
-    cmap = plt.cm.get_cmap('viridis', length)  # You can choose different colormaps like 'jet', 'hsv', 'rainbow', etc.
-    return np.array([cmap(i) for i in range(length)])
+        ax.contourf(xv, yv, pdf, levels=isovalues, colors=colors, alpha=0.5)
+    return fig, ax
