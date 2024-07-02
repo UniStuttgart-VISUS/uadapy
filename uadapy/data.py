@@ -1,6 +1,6 @@
 from sklearn import datasets
 import numpy as np
-import uadapy.distribution as ua
+from uadapy import distribution
 
 def load_iris_normal():
     """
@@ -10,7 +10,7 @@ def load_iris_normal():
     iris = datasets.load_iris()
     dist = []
     for c in np.unique(iris.target):
-        dist.append(ua.distribution(np.array(iris.data[iris.target == c]), "Normal"))
+        dist.append(distribution(np.array(iris.data[iris.target == c]), "Normal"))
     return dist
 
 def load_iris():
@@ -21,5 +21,5 @@ def load_iris():
     iris = datasets.load_iris()
     dist = []
     for c in np.unique(iris.target):
-        dist.append(ua.distribution(np.array(iris.data[iris.target == c])))
+        dist.append(distribution(np.array(iris.data[iris.target == c])))
     return dist
