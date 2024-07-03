@@ -3,15 +3,15 @@ requires = ["setuptools>=62.6"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "UADAPy"
-version = "0.0.3"
+name = "uadapy"
+version = "0.0.1"
 description = "A software package for uncertainty-aware data analysis with Python"
 authors = [
-  { name = "David Hägele", email = "haegele.david@gmail.com"},
-  { name = "Marina Evers", email = "marina.evers@visus.uni-stuttgart.de"},
-  { name = "Patrick Paetzold", email = "patrick.paetzold@uni-konstanz.de"},
-  { name = "Ruben Bauer", email = "has@no.email"},
-  { name = "Nikhil Bhavikatti", email = "has@no.email"},
+  { name = "David Hägele"},
+  { name = "Marina Evers"},
+  { name = "Patrick Paetzold"},
+  { name = "Ruben Bauer"},
+  { name = "Nikhil Bhavikatti"},
 ]
 license = { file = "LICENSE" }
 readme = "README.md"
