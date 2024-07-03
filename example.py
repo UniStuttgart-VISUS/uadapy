@@ -42,7 +42,7 @@ def example_uamds():
 
 
 def example_kde():
-    samples = np.random.randn(1000,2)
+    samples = np.random.randn(1000, 2)
     distr = ua.distribution.distribution(samples)
     plots2D.plot_contour(distr)
 
