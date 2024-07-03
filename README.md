@@ -1,7 +1,7 @@
 # UADAPy - Uncertainty-aware Data Analysis with Python
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-TODO: Include image
+![Alt text](image.png)
 
 UADAPy is a Python library to support an easy analysis of uncertain data.
 
