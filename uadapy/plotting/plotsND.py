@@ -279,7 +279,7 @@ def plot_contour_samples(distributions, num_samples, resolution=128, ranges=None
     plt.show()
 
 
-def contour_plot_matrix(distributions,  quantiles:list=None, n_scatter_samples=50, seed=55, distrib_colors=None, **kwargs):
+def contour_plot_matrix(distributions,  quantiles:list=None, n_scatter_samples=50, n_kde_samples=1000, grid_resolution=50, seed=55, distrib_colors=None, attrib_names=None, **kwargs):
     if isinstance(distributions, dist.distribution):
         distributions = [distributions]
     if distrib_colors is None:
@@ -316,8 +316,7 @@ def contour_plot_matrix(distributions,  quantiles:list=None, n_scatter_samples=5
         # pdf = pdf.reshape(coordinates.shape[:-1])
         # pdf = pdf.transpose((1,0)+tuple(range(2,numvars)))
 
-        n_samples_for_contour = 1_000
-        samples = d.sample(n_samples_for_contour, random_state=seed)
+        samples = d.sample(n_kde_samples, random_state=seed)
         samples_scatter = d.sample(n_scatter_samples, random_state=seed)
         for i, j in zip(*np.triu_indices_from(axes, k=1)):
             for x, y in [(i, j)]:#, (j, i)]:
@@ -330,8 +329,8 @@ def contour_plot_matrix(distributions,  quantiles:list=None, n_scatter_samples=5
                 max_xy = np.vstack([samples_xy,samples_scatter_xy]).max(axis=0)
 
                 gridx, gridy = np.meshgrid(
-                    np.linspace(min_xy[0], max_xy[0], num=50),
-                    np.linspace(min_xy[1], max_xy[1], num=50),
+                    np.linspace(min_xy[0], max_xy[0], num=grid_resolution),
+                    np.linspace(min_xy[1], max_xy[1], num=grid_resolution),
                     indexing='ij')
 
                 # Monte Carlo approach for determining isovalues
@@ -339,18 +338,18 @@ def contour_plot_matrix(distributions,  quantiles:list=None, n_scatter_samples=5
                 densities = kde.pdf(samples_xy)
                 densities.sort()
                 if quantiles is None:
-                    isovalues.append(densities[int((1 - 95 / 100) * n_samples_for_contour)])  # 99.7% quantile
-                    isovalues.append(densities[int((1 - 75 / 100) * n_samples_for_contour)])  # 95% quantile
-                    isovalues.append(densities[int((1 - 25 / 100) * n_samples_for_contour)])  # 68% quantile
+                    isovalues.append(densities[int((1 - 95 / 100) * n_kde_samples)])  # 99.7% quantile
+                    isovalues.append(densities[int((1 - 75 / 100) * n_kde_samples)])  # 95% quantile
+                    isovalues.append(densities[int((1 - 25 / 100) * n_kde_samples)])  # 68% quantile
                 else:
                     quantiles.sort(reverse=True)
                     for quantile in quantiles:
                         if not 0 < quantile < 100:
                             raise ValueError(
                                 f"Invalid quantile: {quantile}. Quantiles must be between 0 and 100 (exclusive).")
-                        elif int((1 - quantile / 100) * n_samples_for_contour) >= n_samples_for_contour:
+                        elif int((1 - quantile / 100) * n_kde_samples) >= n_kde_samples:
                             raise ValueError(f"Quantile {quantile} results in an index that is out of bounds.")
-                        isovalues.append(densities[int((1 - quantile / 100) * n_samples_for_contour)])
+                        isovalues.append(densities[int((1 - quantile / 100) * n_kde_samples)])
 
                 grid = np.hstack((gridx.ravel()[:,None], gridy.ravel()[:,None]))
                 pdf = kde.pdf(grid)
@@ -375,6 +374,11 @@ def contour_plot_matrix(distributions,  quantiles:list=None, n_scatter_samples=5
             axes[i,i].plot(coords, pdf, color=color)
             axes[i,i].xaxis.set_visible(True)
             axes[i,i].yaxis.set_visible(True)
+        if attrib_names is not None:
+            for i in range(numvars):
+                axes[i, i].annotate(attrib_names[i], (0.5, 0.95), xycoords='axes fraction',
+                                    ha='center', va='top', fontsize=6,
+                                    bbox={'facecolor': 'white', 'edgecolor': 'none', 'alpha': 0.2, 'pad': 2})
 
         for i in range(numvars):
             axes[-1,i].xaxis.set_visible(True)

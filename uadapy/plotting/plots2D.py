@@ -193,7 +193,7 @@ def plot_contour_bands(distributions, resolution=128, ranges=None, quantiles:lis
                 isovalues.append(densities[int((1 - quantile/100) * num_samples)])
         colors = [
             distrib_colors[i],
-            utils.scale_saturation(utils.scale_brightness(utils.any_color_to_rgb(distrib_colors[i]), 0.9), 0.9)
+            utils.scale_saturation(utils.scale_brightness(utils.any_color_to_rgb(distrib_colors[i]), 0.8), 0.9)
         ]
         if isovalues[-1] != np.infty:
             isovalues.append(np.infty)
