@@ -156,7 +156,11 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
 
     fig, axs, samples, palette, num_plots, num_cols = setup_plot(distributions, num_samples, seed, fig, axs, colors, **kwargs)
 
-    num_attributes = np.shape(samples)[2]
+    # Check number of attributes
+    num_attributes = 1
+    if np.ndim(samples) > 2:
+        num_attributes = np.shape(samples)[2]
+
     if labels:
         ticks = range(len(labels))
     else:
@@ -169,6 +173,8 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
                 y_min = 9999
                 y_max = -9999
                 for k, sample in enumerate(samples):
+                    if np.ndim(sample) == 1:
+                        sample = np.array(sample).reshape(1,-1)
                     if 'boxplot' in plot_types:
                         boxprops = dict(facecolor=palette[k % len(palette)], edgecolor='black')
                         whiskerprops = dict(color='black', linestyle='--')

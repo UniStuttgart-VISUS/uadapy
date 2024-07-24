@@ -1,6 +1,7 @@
 from uadapy import distribution
 from uadapy.dr import uamds
 import uadapy.data as data
+from uadapy.data import load_iris_normal
 import uadapy.plotting.plots1D as plots1D
 import uadapy.plotting.plots2D as plots2D
 import uadapy.plotting.plotsND as plotsND
