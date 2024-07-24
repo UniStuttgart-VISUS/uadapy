@@ -1,9 +1,12 @@
-import traceback
+# make script aware of parent directory where uadapy is located
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import traceback
+from uadapy import distribution
 import numpy as np
 import scipy as sp
 import scipy.stats as st
-import distribution as ds
 
 
 
@@ -68,11 +71,11 @@ def test_distrib_class():
 
     # initialize distribution object for each of the scipy distribs (univariate)
     for scipi_distrib in model_1D:
-        distrib = ds.distribution(scipi_distrib)
+        distrib = distribution(scipi_distrib)
     # initialize distribution object for each of the scipy distribs (multivariate)
     for scipi_distrib in model_nD:
         try:
-            distrib = ds.distribution(scipi_distrib)
+            distrib = distribution(scipi_distrib)
             cov = distrib.cov()
             if cov.shape[0] != n or cov.shape[1] != n:
                 raise RuntimeError(f"shape expected to be {n} x {n}, but was {cov.shape}")
@@ -81,9 +84,6 @@ def test_distrib_class():
         except Exception as e:
             print(f"Exception occured: {e} (error encountered with {scipi_distrib.__class__.__name__})")
             traceback.print_exception(e)
-
-
-
 
 
 if __name__ == '__main__':
