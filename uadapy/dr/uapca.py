@@ -1,5 +1,5 @@
 import numpy as np
-import uadapy as ua
+from uadapy import distribution
 from scipy.stats import multivariate_normal
 
 def uapca(distributions, dims: int):
@@ -18,7 +18,7 @@ def uapca(distributions, dims: int):
         means_pca, covs_pca = transform_uapca(means, covs, dims)
         dist_pca = []
         for (m, c) in zip(means_pca, covs_pca):
-            dist_pca.append(ua.distribution.distribution(multivariate_normal(m, c)))
+            dist_pca.append(distribution(multivariate_normal(m, c)))
         return dist_pca
     except Exception as e:
         raise Exception(f'Something went wrong. Did you input normal distributions? Exception:{e}')

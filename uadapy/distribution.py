@@ -47,7 +47,7 @@ class distribution:
         if isinstance(self.model, np.ndarray):
             return self.kde.pdf(x.T)
         if not hasattr(self.model, 'pdf'):
-            raise AttributeError(f"The model has no pdf.{self.model.__class__.__name__}")
+            raise AttributeError(f"The model has no pdf. {self.model.__class__.__name__}")
         else:
             return self.model.pdf(x)
 
@@ -90,7 +90,7 @@ class distribution:
             return stats.skew(self.model)
         if hasattr(self.model, 'stats') and callable(self.model.stats):
             return self.model.stats(moments='s')
-        if isinstance(self.model, multivariate_t_frozen):
+        if isinstance(self.model, mv.multivariate_t_frozen):
             return 0
 
     def kurt(self) -> np.ndarray | float:

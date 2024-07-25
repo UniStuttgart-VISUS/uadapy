@@ -12,8 +12,8 @@ import numba
 import numpy as np
 from scipy.spatial import distance_matrix
 from scipy.optimize import minimize
-import uadapy as ua
 from scipy.stats import multivariate_normal
+from uadapy import distribution
 
 
 def precalculate_constants(normal_distr_spec: np.ndarray) -> tuple:
@@ -546,7 +546,7 @@ def uamds(distributions: list, dims: int=2):
         result = apply_uamds(means, covs, dims)
         distribs_lo = []
         for (m, c) in zip(result['means'], result['covs']):
-            distribs_lo.append(ua.distribution.distribution(multivariate_normal(m, c)))
+            distribs_lo.append(distribution(multivariate_normal(m, c)))
         return distribs_lo
     except Exception as e:
         raise Exception(f'Something went wrong. Did you input normal distributions? Exception:{e}')
