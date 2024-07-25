@@ -7,6 +7,6 @@ You can install the library by typing:
 
 .. code-block:: console
 
-    pip install git+https://github.com/UniStuttgart-VISUS/uadapy
+    pip install uadapy
 
 The library was tested under Windows.

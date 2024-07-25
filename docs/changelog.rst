@@ -2,7 +2,11 @@
 Changelog
 =========
 
-0.1
+0.0.2 (in preparation)
+---
+* Reorganization of imports
+
+0.0.1
 ---
 Features in first version:
 
