@@ -1,23 +1,23 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import uadapy.distribution as dist
+from uadapy import distribution
 from numpy import ma
 from matplotlib import ticker
 
-def plot_samples(distribution, num_samples, **kwargs):
+def plot_samples(distributions, num_samples, **kwargs):
     """
     Plot samples from the given distribution. If several distributions should be
     plotted together, an array can be passed to this function
-    :param distribution: Distributions to plot
+    :param distributions: Distributions to plot
     :param num_samples: Number of samples per distribution
     :param kwargs: Optional other arguments to pass:
         xlabel for label of x-axis
         ylabel for label of y-axis
     :return:
     """
-    if isinstance(distribution, dist.distribution):
-        distribution = [distribution]
-    for d in distribution:
+    if isinstance(distributions, distribution):
+        distributions = [distributions]
+    for d in distributions:
         samples = d.sample(num_samples)
         plt.scatter(x=samples[:,0], y=samples[:,1])
     if 'xlabel' in kwargs:
@@ -56,7 +56,7 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
         If a quantile is not between 0 and 100 (exclusive), or if a quantile results in an index that is out of bounds.
     """
 
-    if isinstance(distributions, dist.distribution):
+    if isinstance(distributions, distribution):
         distributions = [distributions]
     contour_colors = generate_spectrum_colors(len(distributions))
 
@@ -136,7 +136,7 @@ def plot_contour_bands(distributions, num_samples, resolution=128, ranges=None, 
         If a quantile is not between 0 and 100 (exclusive), or if a quantile results in an index that is out of bounds.
     """
 
-    if isinstance(distributions, dist.distribution):
+    if isinstance(distributions, distribution):
         distributions = [distributions]
 
     # Sequential and perceptually uniform colormaps

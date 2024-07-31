@@ -1,5 +1,5 @@
 import numpy as np
-import uadapy.distribution as dist
+from uadapy import distribution
 import matplotlib.pyplot as plt
 from math import ceil, sqrt
 import glasbey as gb
@@ -67,7 +67,7 @@ def setup_plot(distributions, num_samples, seed, fig=None, axs=None, colors=None
 
     samples = []
 
-    if isinstance(distributions, dist.distribution):
+    if isinstance(distributions, distribution):
         distributions = [distributions]
 
     # Calculate the layout of subplots
@@ -145,6 +145,9 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
         - dot_size : float, optional
             This parameter determines the size of the dots used in the 'stripplot' and 'swarmplot'.
             If not provided, the size is calculated based on the number of samples and the type of plot.
+        - showmeans : bool, optional
+            If True, display means in plot. Only effective on violin plot =.
+            Default is False.
 
     Returns
     -------
@@ -156,7 +159,11 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
 
     fig, axs, samples, palette, num_plots, num_cols = setup_plot(distributions, num_samples, seed, fig, axs, colors, **kwargs)
 
-    num_attributes = np.shape(samples)[2]
+    # Check number of attributes
+    num_attributes = 1
+    if np.ndim(samples) > 2:
+        num_attributes = np.shape(samples)[2]
+
     if labels:
         ticks = range(len(labels))
     else:
@@ -169,6 +176,8 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
                 y_min = 9999
                 y_max = -9999
                 for k, sample in enumerate(samples):
+                    if np.ndim(sample) == 1:
+                        sample = np.array(sample).reshape(1,-1)
                     if 'boxplot' in plot_types:
                         boxprops = dict(facecolor=palette[k % len(palette)], edgecolor='black')
                         whiskerprops = dict(color='black', linestyle='--')
@@ -178,7 +187,7 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
                                    showmeans=True, meanline=True, meanprops=dict(color="black", linestyle='-'),
                                    medianprops=dict(linewidth=0), vert=kwargs.get('vert', True))
                     if 'violinplot' in plot_types:
-                        parts =  ax.violinplot(sample[:,index], positions=[k], showmeans=True, vert=kwargs.get('vert', True))
+                        parts =  ax.violinplot(sample[:,index], positions=[k], showmeans=kwargs.get('showmeans', False), vert=kwargs.get('vert', True))
                         for pc in parts['bodies']:
                             pc.set_facecolor(palette[k % len(palette)])
                             pc.set_edgecolor(palette[k % len(palette)])
@@ -186,7 +195,8 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
                         parts['cbars'].remove()
                         parts['cmaxes'].remove()
                         parts['cmins'].remove()
-                        parts['cmeans'].set_edgecolor('black')
+                        if kwargs.get('showmeans', False):
+                          parts['cmeans'].set_edgecolor('black')
                     if 'stripplot' in plot_types or 'swarmplot' in plot_types or 'dotplot' in plot_types: 
                         if 'dot_size' in kwargs:
                             dot_size = kwargs['dot_size']
