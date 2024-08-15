@@ -4,27 +4,59 @@ from uadapy import distribution
 from numpy import ma
 from matplotlib import ticker
 
-def plot_samples(distributions, num_samples, **kwargs):
+def plot_samples(distributions, num_samples, seed=55, **kwargs):
     """
     Plot samples from the given distribution. If several distributions should be
-    plotted together, an array can be passed to this function
-    :param distributions: Distributions to plot
-    :param num_samples: Number of samples per distribution
-    :param kwargs: Optional other arguments to pass:
-        xlabel for label of x-axis
-        ylabel for label of y-axis
-    :return:
+    plotted together, an array can be passed to this function.
+
+    Parameters
+    ----------
+    distributions : list
+        List of distributions to plot.
+    num_samples : int
+        Number of samples per distribution.
+    seed : int
+        Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
+    **kwargs : additional keyword arguments
+        Additional optional plotting arguments.
+        - xlabel : string, optional
+            label for x-axis.
+        - ylabel : string, optional
+            label for y-axis.
+        - show_plot : bool, optional
+            If True, display the plot.
+            Default is False.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The figure object containing the plot.
+    list
+        List of Axes objects used for plotting.
     """
+
     if isinstance(distributions, distribution):
         distributions = [distributions]
     for d in distributions:
-        samples = d.sample(num_samples)
+        samples = d.sample(num_samples, seed)
         plt.scatter(x=samples[:,0], y=samples[:,1])
     if 'xlabel' in kwargs:
         plt.xlabel(kwargs['xlabel'])
     if 'ylabel' in kwargs:
         plt.ylabel(kwargs['ylabel'])
-    plt.show()
+    if 'title' in kwargs:
+        plt.title(kwargs['title'])
+
+    # Get the current figure and axes
+    fig = plt.gcf()
+    axs = plt.gca()
+
+    show_plot = kwargs.get('show_plot', False)
+    if show_plot:
+        fig.tight_layout()
+        plt.show()
+
+    return fig, axs
 
 def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None, seed=55, **kwargs):
     """
@@ -44,11 +76,16 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
     **kwargs : additional keyword arguments
         Additional optional plotting arguments.
+        - show_plot : bool, optional
+            If True, display the plot.
+            Default is False.
 
     Returns
     -------
-    None
-        This function does not return a value. It displays a plot using plt.show().
+    matplotlib.figure.Figure
+        The figure object containing the plot.
+    list
+        List of Axes objects used for plotting.
 
     Raises
     ------
@@ -102,7 +139,17 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
                 isovalues.append(densities[int((1 - quantile/100) * num_samples)])
 
         plt.contour(xv, yv, pdf, levels=isovalues, colors = [color])
-    plt.show()
+
+    # Get the current figure and axes
+    fig = plt.gcf()
+    axs = plt.gca()
+
+    show_plot = kwargs.get('show_plot', False)
+    if show_plot:
+        fig.tight_layout()
+        plt.show()
+
+    return fig, axs
 
 def plot_contour_bands(distributions, num_samples, resolution=128, ranges=None, quantiles:list=None, seed=55, **kwargs):
     """
@@ -124,11 +171,16 @@ def plot_contour_bands(distributions, num_samples, resolution=128, ranges=None, 
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
     **kwargs : additional keyword arguments
         Additional optional plotting arguments.
+        - show_plot : bool, optional
+            If True, display the plot.
+            Default is False.
 
     Returns
     -------
-    None
-        This function does not return a value. It displays a plot using plt.show().
+    matplotlib.figure.Figure
+        The figure object containing the plot.
+    list
+        List of Axes objects used for plotting.
 
     Raises
     ------
@@ -190,7 +242,16 @@ def plot_contour_bands(distributions, num_samples, resolution=128, ranges=None, 
         # Generate logarithmic levels and create the contour plot with different colormap for each distribution
         plt.contourf(xv, yv, pdf, levels=isovalues, locator=ticker.LogLocator(), cmap=colormaps[i % len(colormaps)])
 
-    plt.show()
+    # Get the current figure and axes
+    fig = plt.gcf()
+    axs = plt.gca()
+
+    show_plot = kwargs.get('show_plot', False)
+    if show_plot:
+        fig.tight_layout()
+        plt.show()
+
+    return fig, axs
 
 # HELPER FUNCTIONS
 def generate_random_colors(length):
