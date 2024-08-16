@@ -185,9 +185,9 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
                         ax.boxplot(sample[:, index], positions=[k], patch_artist=True, boxprops=boxprops,
                                    showfliers=False, whiskerprops=whiskerprops, capprops=capprops,
                                    showmeans=True, meanline=True, meanprops=dict(color="black", linestyle='-'),
-                                   medianprops=dict(linewidth=0), vert=kwargs.get('vert', True))
+                                   medianprops=dict(linewidth=0), widths=0.5, vert=kwargs.get('vert', True))
                     if 'violinplot' in plot_types:
-                        parts =  ax.violinplot(sample[:,index], positions=[k], showmeans=kwargs.get('showmeans', False), vert=kwargs.get('vert', True))
+                        parts =  ax.violinplot(sample[:,index], positions=[k], showmeans=kwargs.get('showmeans', False), widths=0.75, vert=kwargs.get('vert', True))
                         for pc in parts['bodies']:
                             pc.set_facecolor(palette[k % len(palette)])
                             pc.set_edgecolor(palette[k % len(palette)])
