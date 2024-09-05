@@ -142,6 +142,12 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
         - colorblind_safe : bool, optional
             If True, the plot will use colors suitable for colorblind individuals.
             Default is False.
+        - boxplot_width : float, optional
+            The width of each box in units of the positions axis.
+            Default is 0.5.
+        - violinplot_width : float, optional
+            The maximum width of each violin in units of the positions axis.
+            Default is 0.75.
         - dot_size : float, optional
             This parameter determines the size of the dots used in the 'stripplot' and 'swarmplot'.
             If not provided, the size is calculated based on the number of samples and the type of plot.
@@ -182,12 +188,20 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
                         boxprops = dict(facecolor=palette[k % len(palette)], edgecolor='black')
                         whiskerprops = dict(color='black', linestyle='--')
                         capprops = dict(color='black')
+                        if 'boxplot_width' in kwargs:
+                            boxplot_width = kwargs['boxplot_width']
+                        else:
+                            boxplot_width = 0.5
                         ax.boxplot(sample[:, index], positions=[k], patch_artist=True, boxprops=boxprops,
                                    showfliers=False, whiskerprops=whiskerprops, capprops=capprops,
                                    showmeans=True, meanline=True, meanprops=dict(color="black", linestyle='-'),
-                                   medianprops=dict(linewidth=0), vert=kwargs.get('vert', True))
+                                   medianprops=dict(linewidth=0), widths=boxplot_width, vert=kwargs.get('vert', True))
                     if 'violinplot' in plot_types:
-                        parts =  ax.violinplot(sample[:,index], positions=[k], showmeans=kwargs.get('showmeans', False), vert=kwargs.get('vert', True))
+                        if 'violinplot_width' in kwargs:
+                            violinplot_width = kwargs['violinplot_width']
+                        else:
+                            violinplot_width = 0.75
+                        parts =  ax.violinplot(sample[:,index], positions=[k], showmeans=kwargs.get('showmeans', False), widths=violinplot_width, vert=kwargs.get('vert', True))
                         for pc in parts['bodies']:
                             pc.set_facecolor(palette[k % len(palette)])
                             pc.set_edgecolor(palette[k % len(palette)])
