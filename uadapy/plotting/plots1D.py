@@ -20,7 +20,7 @@ def calculate_offsets(count, max_count):
 
 def calculate_dot_size(num_samples, scale_factor):
     if num_samples < 100:
-        dot_size = 3.125
+        dot_size = scale_factor * 3.125
     else:
         dot_size = scale_factor * (50 /(4 ** np.log10(num_samples)))
     return dot_size
@@ -216,7 +216,10 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
                             dot_size = kwargs['dot_size']
                     if 'stripplot' in plot_types:
                         if 'dot_size' not in kwargs:
-                            scale_factor = 1 + np.log10(num_samples/100)
+                            if num_samples < 100:
+                                scale_factor = 1
+                            else:
+                                scale_factor = 1 + np.log10(num_samples/100)
                             dot_size = calculate_dot_size(len(sample[:,index]), scale_factor)
                         if kwargs.get('vert',True):
                             sns.stripplot(x=[k]*len(sample[:,index]), y=sample[:,index], color=palette[k % len(palette)], size=dot_size, jitter=0.25, ax=ax)
