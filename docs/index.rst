@@ -10,6 +10,15 @@ UADAPy is a Python library to support an easy analysis of uncertain data. Here y
    installation.rst
    examples.rst
 
+Classes
+=======
+In the following, we describe the most important data structure and provide detailed explanations on some concepts. This section is currently work in progress and will be extended over time.
+
+.. toctree::
+   :maxdepth: 1
+
+   distribution.rst
+
 Indices and tables
 ==================
 * :ref:`genindex`
