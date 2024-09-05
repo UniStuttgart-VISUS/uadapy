@@ -3,14 +3,32 @@ import numpy as np
 from uadapy import distribution
 import uadapy.plotting.utils as utils
 
-def plot_samples(distributions, num_samples, **kwargs):
+def plot_samples(distributions, num_samples, seed=55, **kwargs):
     """
-    Plot samples from the multivariate distribution as a SLOM
-    :param distribution: The multivariate distributions
-    :param num_samples: Number of samples to draw
-    :param kwargs: Optional other arguments to pass:
-    :return:
+    Plot samples from the multivariate distribution as a SLOM.
+
+    Parameters
+    ----------
+    distributions : list
+        List of distributions to plot.
+    num_samples : int
+        Number of samples per distribution.
+    seed : int
+        Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
+    **kwargs : additional keyword arguments
+        Additional optional plotting arguments.
+        - show_plot : bool, optional
+            If True, display the plot.
+            Default is False.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The figure object containing the plot.
+    list
+        List of Axes objects used for plotting.
     """
+
     if isinstance(distributions, distribution):
         distributions = [distributions]
     # Create matrix
@@ -26,7 +44,7 @@ def plot_samples(distributions, num_samples, **kwargs):
     for k, d in enumerate(distributions):
         if d.dim < 2:
             raise Exception('Wrong dimension of distribution')
-        samples = d.sample(num_samples)
+        samples = d.sample(num_samples, seed)
         for i, j in zip(*np.triu_indices_from(axes, k=1)):
             for x, y in [(i, j), (j, i)]:
                 axes[x,y].scatter(samples[:,y], y=samples[:,x], color=contour_colors[k])
@@ -41,8 +59,17 @@ def plot_samples(distributions, num_samples, **kwargs):
             axes[-1,i].xaxis.set_visible(True)
             axes[i,0].yaxis.set_visible(True)
         axes[0,1].yaxis.set_visible(True)
-    fig.tight_layout()
-    plt.show()
+
+    # Get the current figure and axes
+    fig = plt.gcf()
+    axs = plt.gca()
+
+    show_plot = kwargs.get('show_plot', False)
+    if show_plot:
+        fig.tight_layout()
+        plt.show()
+
+    return fig, axs
 
 def plot_contour(distributions, num_samples, resolution=128, ranges=None, quantiles:list=None, seed=55, **kwargs):
     """
@@ -64,11 +91,16 @@ def plot_contour(distributions, num_samples, resolution=128, ranges=None, quanti
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
     **kwargs : additional keyword arguments
         Additional optional plotting arguments.
+        - show_plot : bool, optional
+            If True, display the plot.
+            Default is False.
 
     Returns
     -------
-    None
-        This function does not return a value. It displays a plot using plt.show().
+    matplotlib.figure.Figure
+        The figure object containing the plot.
+    list
+        List of Axes objects used for plotting.
 
     Raises
     ------
@@ -155,8 +187,17 @@ def plot_contour(distributions, num_samples, resolution=128, ranges=None, quanti
             axes[-1,i].xaxis.set_visible(True)
             axes[i,0].yaxis.set_visible(True)
         axes[0,1].yaxis.set_visible(True)
-    fig.tight_layout()
-    plt.show()
+
+    # Get the current figure and axes
+    fig = plt.gcf()
+    axs = plt.gca()
+
+    show_plot = kwargs.get('show_plot', False)
+    if show_plot:
+        fig.tight_layout()
+        plt.show()
+
+    return fig, axs
 
 def plot_contour_samples(distributions, num_samples, resolution=128, ranges=None, quantiles:list=None, seed=55, **kwargs):
     """
@@ -179,11 +220,16 @@ def plot_contour_samples(distributions, num_samples, resolution=128, ranges=None
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
     **kwargs : additional keyword arguments
         Additional optional plotting arguments.
+        - show_plot : bool, optional
+            If True, display the plot.
+            Default is False.
 
     Returns
     -------
-    None
-        This function does not return a value. It displays a plot using plt.show().
+    matplotlib.figure.Figure
+        The figure object containing the plot.
+    list
+        List of Axes objects used for plotting.
 
     Raises
     ------
@@ -272,5 +318,14 @@ def plot_contour_samples(distributions, num_samples, resolution=128, ranges=None
             axes[-1,i].xaxis.set_visible(True)
             axes[i,0].yaxis.set_visible(True)
         axes[0,1].yaxis.set_visible(True)
-    fig.tight_layout()
-    plt.show()
+
+    # Get the current figure and axes
+    fig = plt.gcf()
+    axs = plt.gca()
+
+    show_plot = kwargs.get('show_plot', False)
+    if show_plot:
+        fig.tight_layout()
+        plt.show()
+
+    return fig, axs

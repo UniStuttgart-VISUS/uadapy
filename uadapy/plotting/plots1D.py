@@ -152,7 +152,10 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
             This parameter determines the size of the dots used in the 'stripplot' and 'swarmplot'.
             If not provided, the size is calculated based on the number of samples and the type of plot.
         - showmeans : bool, optional
-            If True, display means in plot. Only effective on violin plot =.
+            If True, display means in plot. Only effective on violin plot.
+            Default is False.
+        - show_plot : bool, optional
+            If True, display the plot.
             Default is False.
 
     Returns
@@ -281,5 +284,10 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
                 ax.grid(True, linestyle=':', linewidth='0.5', color='gray')
             else:
                 ax.set_visible(False)  # Hide unused subplots
+
+    show_plot = kwargs.get('show_plot', False)
+    if show_plot:
+        fig.tight_layout()
+        plt.show()
 
     return fig, axs
