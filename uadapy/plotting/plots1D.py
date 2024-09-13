@@ -72,7 +72,7 @@ def setup_plot(distributions, num_samples, seed, fig=None, axs=None, colors=None
 
     # Calculate the layout of subplots
     if axs is None:
-        num_plots = distributions[0].dim
+        num_plots = distributions[0].n_dims
         num_rows = ceil(sqrt(num_plots))
         num_cols = ceil(num_plots / num_rows)
         fig, axs = plt.subplots(num_rows, num_cols)

@@ -32,7 +32,7 @@ def plot_samples(distributions, num_samples, seed=55, **kwargs):
     if isinstance(distributions, distribution):
         distributions = [distributions]
     # Create matrix
-    numvars = distributions[0].dim
+    numvars = distributions[0].n_dims
     fig, axes = plt.subplots(nrows=numvars, ncols=numvars)
     contour_colors = utils.generate_spectrum_colors(len(distributions))
     for ax in axes.flat:
@@ -42,7 +42,7 @@ def plot_samples(distributions, num_samples, seed=55, **kwargs):
 
     # Fill matrix with data
     for k, d in enumerate(distributions):
-        if d.dim < 2:
+        if d.n_dims < 2:
             raise Exception('Wrong dimension of distribution')
         samples = d.sample(num_samples, seed)
         for i, j in zip(*np.triu_indices_from(axes, k=1)):
@@ -114,7 +114,7 @@ def plot_contour(distributions, num_samples, resolution=128, ranges=None, quanti
         distributions = [distributions]
     contour_colors = utils.generate_spectrum_colors(len(distributions))
     # Create matrix
-    numvars = distributions[0].dim
+    numvars = distributions[0].n_dims
     if ranges is None:
         min_val = np.zeros(distributions[0].mean().shape)+1000
         max_val = np.zeros(distributions[0].mean().shape)-1000
@@ -133,11 +133,11 @@ def plot_contour(distributions, num_samples, resolution=128, ranges=None, quanti
 
     # Fill matrix with data
     for k, d in enumerate(distributions):
-        if d.dim < 2:
+        if d.n_dims < 2:
             raise Exception('Wrong dimension of distribution')
         dims = ()
         test = ()
-        for i in range(d.dim):
+        for i in range(d.n_dims):
             test = (*test, i)
             x = np.linspace(ranges[i][0], ranges[i][1], resolution)
             dims = (*dims, x)
@@ -167,7 +167,7 @@ def plot_contour(distributions, num_samples, resolution=128, ranges=None, quanti
         for i, j in zip(*np.triu_indices_from(axes, k=1)):
             for x, y in [(i, j), (j, i)]:
                 color = contour_colors[k]
-                indices = list(np.arange(d.dim))
+                indices = list(np.arange(d.n_dims))
                 indices.remove(x)
                 indices.remove(y)
                 pdf_agg = np.sum(pdf, axis=tuple(indices))
@@ -177,7 +177,7 @@ def plot_contour(distributions, num_samples, resolution=128, ranges=None, quanti
 
         # Fill diagonal
         for i in range(numvars):
-            indices = list(np.arange(d.dim))
+            indices = list(np.arange(d.n_dims))
             indices.remove(i)
             axes[i,i].plot(dims[i], np.sum(pdf, axis=tuple(indices)), color=color)
             axes[i,i].xaxis.set_visible(True)
@@ -243,7 +243,7 @@ def plot_contour_samples(distributions, num_samples, resolution=128, ranges=None
         distributions = [distributions]
     contour_colors = utils.generate_spectrum_colors(len(distributions))
     # Create matrix
-    numvars = distributions[0].dim
+    numvars = distributions[0].n_dims
     if ranges is None:
         min_val = np.zeros(distributions[0].mean().shape)+1000
         max_val = np.zeros(distributions[0].mean().shape)-1000
@@ -263,10 +263,10 @@ def plot_contour_samples(distributions, num_samples, resolution=128, ranges=None
     # Fill matrix with data
     for k, d in enumerate(distributions):
         samples = d.sample(num_samples, seed)
-        if d.dim < 2:
+        if d.n_dims < 2:
             raise Exception('Wrong dimension of distribution')
         dims = ()
-        for i in range(d.dim):
+        for i in range(d.n_dims):
             x = np.linspace(ranges[i][0], ranges[i][1], resolution)
             dims = (*dims, x)
         coordinates = np.array(np.meshgrid(*dims)).transpose(tuple(range(1, numvars+1)) + (0,))
@@ -295,7 +295,7 @@ def plot_contour_samples(distributions, num_samples, resolution=128, ranges=None
         for i, j in zip(*np.triu_indices_from(axes, k=1)):
             for x, y in [(i, j), (j, i)]:
                 color = contour_colors[k]
-                indices = list(np.arange(d.dim))
+                indices = list(np.arange(d.n_dims))
                 indices.remove(x)
                 indices.remove(y)
                 pdf_agg = np.sum(pdf, axis=tuple(indices))
@@ -308,7 +308,7 @@ def plot_contour_samples(distributions, num_samples, resolution=128, ranges=None
 
         # Fill diagonal
         for i in range(numvars):
-            indices = list(np.arange(d.dim))
+            indices = list(np.arange(d.n_dims))
             indices.remove(i)
             axes[i,i].plot(dims[i], np.sum(pdf, axis=tuple(indices)), color=color)
             axes[i,i].xaxis.set_visible(True)

@@ -521,7 +521,7 @@ def apply_uamds(means: list[np.ndarray], covs: list[np.ndarray], target_dim=2) -
     }
 
 
-def uamds(distributions: list, dims: int=2, seed: int=0):
+def uamds(distributions: list, n_dims: int = 2, seed: int = 0):
     """
     Applies the UAMDS algorithm to the provided distributions and returns the projected distributions
     in lower-dimensional space. It assumes multivariate normal distributions.
@@ -532,7 +532,7 @@ def uamds(distributions: list, dims: int=2, seed: int=0):
     ----------
     distributions : list
         list of input distributions (distribution objects offering mean() and cov() methods)
-    dims : int
+    n_dims : int
         target dimensionality, 2 by default.
     seed : int
         Set the random seed for the initialization, 0 by default
@@ -546,7 +546,7 @@ def uamds(distributions: list, dims: int=2, seed: int=0):
         np.random.seed(seed)
         means = [d.mean() for d in distributions]
         covs = [d.cov() for d in distributions]
-        result = apply_uamds(means, covs, dims)
+        result = apply_uamds(means, covs, n_dims)
         distribs_lo = []
         for (m, c) in zip(result['means'], result['covs']):
             distribs_lo.append(distribution(multivariate_normal(m, c)))

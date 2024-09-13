@@ -21,8 +21,8 @@ def test_dr_module():
     import numpy as np
     # list of distributions (normal distributions estimated from random data
     distribs = [uadapy.distribution(np.random.rand(10, 3), name='Normal') for _ in range(4)]
-    uadapy.dr.uapca(distributions=distribs, dims=2)
-    uadapy.dr.uamds(distributions=distribs, dims=2)
+    uadapy.dr.uapca(distributions=distribs, n_dims=2)
+    uadapy.dr.uamds(distributions=distribs, n_dims=2)
 
 
 def test_plotting_module():
