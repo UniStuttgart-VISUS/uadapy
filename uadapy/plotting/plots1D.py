@@ -110,7 +110,17 @@ def setup_plot(distributions, n_samples, seed, fig=None, axs=None, colors=None, 
 
     return fig, axs, samples, palette, n_plots, n_cols
 
-def plot_1d_distribution(distributions, n_samples, plot_types:list, seed=55, fig=None, axs=None, labels=None, titles=None, colors=None, **kwargs):
+def plot_1d_distribution(
+        distributions,
+        n_samples,
+        plot_types: list,
+        seed=55,
+        fig=None,
+        axs=None,
+        distrib_labels=None,
+        dim_labels=None,
+        distrib_colors=None,
+        **kwargs):
     """
     Plot box plots, violin plots and dot plots for samples drawn from given distributions.
 
@@ -128,11 +138,11 @@ def plot_1d_distribution(distributions, n_samples, plot_types:list, seed=55, fig
         Figure object to use for plotting. If None, a new figure will be created.
     axs : matplotlib.axes.Axes or array of Axes or None, optional
         Axes object(s) to use for plotting. If None, new axes will be created.
-    labels : list or None, optional
+    distrib_labels : list or None, optional
         Labels for each distribution.
-    titles : list or None, optional
+    dim_labels : list or None, optional
         Titles for each subplot.
-    colors : list or None, optional
+    distrib_colors : list or None, optional
         List of colors to use for each distribution. If None, Glasbey colors will be used.
     **kwargs : additional keyword arguments
         Additional optional plotting arguments.
@@ -166,15 +176,15 @@ def plot_1d_distribution(distributions, n_samples, plot_types:list, seed=55, fig
         List of Axes objects used for plotting.
     """
 
-    fig, axs, samples, palette, n_plots, n_cols = setup_plot(distributions, n_samples, seed, fig, axs, colors, **kwargs)
+    fig, axs, samples, palette, n_plots, n_cols = setup_plot(distributions, n_samples, seed, fig, axs, distrib_colors, **kwargs)
 
     # Check number of attributes
     n_attributes = 1
     if np.ndim(samples) > 2:
         n_attributes = np.shape(samples)[2]
 
-    if labels:
-        ticks = range(len(labels))
+    if distrib_labels:
+        ticks = range(len(distrib_labels))
     else:
         ticks = range(len(samples))
 
@@ -271,15 +281,15 @@ def plot_1d_distribution(distributions, n_samples, plot_types:list, seed=55, fig
                     else:
                         ax.set_xlim(y_min - 1, y_max + 1)
                         ax.set_ylim(0, len(samples))
-                if labels:
+                if distrib_labels:
                     if kwargs.get('vert', True):
                         ax.set_xticks(ticks)
-                        ax.set_xticklabels(labels, rotation=45, ha='right')
+                        ax.set_xticklabels(distrib_labels, rotation=45, ha='right')
                     else:
                         ax.set_yticks(ticks)
-                        ax.set_yticklabels(labels, rotation=45, ha='right')
-                if titles:
-                    ax.set_title(titles[index] if titles and index < len(titles) else 'Distribution ' + str(index + 1))
+                        ax.set_yticklabels(distrib_labels, rotation=45, ha='right')
+                if dim_labels:
+                    ax.set_title(dim_labels[index] if dim_labels and index < len(dim_labels) else 'Distribution ' + str(index + 1))
                 ax.yaxis.set_ticks_position('none')
                 ax.grid(True, linestyle=':', linewidth='0.5', color='gray')
             else:
