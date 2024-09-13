@@ -4,7 +4,7 @@ from uadapy import Distribution
 from numpy import ma
 from matplotlib import ticker
 
-def plot_samples(distributions, num_samples, seed=55, **kwargs):
+def plot_samples(distributions, n_samples, seed=55, **kwargs):
     """
     Plot samples from the given distribution. If several distributions should be
     plotted together, an array can be passed to this function.
@@ -13,7 +13,7 @@ def plot_samples(distributions, num_samples, seed=55, **kwargs):
     ----------
     distributions : list
         List of distributions to plot.
-    num_samples : int
+    n_samples : int
         Number of samples per distribution.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
@@ -38,7 +38,7 @@ def plot_samples(distributions, num_samples, seed=55, **kwargs):
     if isinstance(distributions, Distribution):
         distributions = [distributions]
     for d in distributions:
-        samples = d.sample(num_samples, seed)
+        samples = d.sample(n_samples, seed)
         plt.scatter(x=samples[:,0], y=samples[:,1])
     if 'xlabel' in kwargs:
         plt.xlabel(kwargs['xlabel'])
@@ -121,22 +121,22 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
 
         # Monte Carlo approach for determining isovalues
         isovalues = []
-        num_samples = 10_000  #TODO: cleverly determine how many samples are needed based on the largest quantile
-        samples = d.sample(num_samples, seed)
+        n_samples = 10_000  #TODO: cleverly determine how many samples are needed based on the largest quantile
+        samples = d.sample(n_samples, seed)
         densities = d.pdf(samples)
         densities.sort()
         if quantiles is None:
-            isovalues.append(densities[int((1 - 99.7/100) * num_samples)]) # 99.7% quantile
-            isovalues.append(densities[int((1 - 95/100) * num_samples)]) # 95% quantile
-            isovalues.append(densities[int((1 - 68/100) * num_samples)]) # 68% quantile
+            isovalues.append(densities[int((1 - 99.7/100) * n_samples)]) # 99.7% quantile
+            isovalues.append(densities[int((1 - 95/100) * n_samples)]) # 95% quantile
+            isovalues.append(densities[int((1 - 68/100) * n_samples)]) # 68% quantile
         else:
             quantiles.sort(reverse=True)
             for quantile in quantiles:
                 if not 0 < quantile < 100:
                     raise ValueError(f"Invalid quantile: {quantile}. Quantiles must be between 0 and 100 (exclusive).")
-                elif int((1 - quantile/100) * num_samples) >= num_samples:
+                elif int((1 - quantile/100) * n_samples) >= n_samples:
                     raise ValueError(f"Quantile {quantile} results in an index that is out of bounds.")
-                isovalues.append(densities[int((1 - quantile/100) * num_samples)])
+                isovalues.append(densities[int((1 - quantile/100) * n_samples)])
 
         plt.contour(xv, yv, pdf, levels=isovalues, colors = [color])
 
@@ -151,7 +151,8 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
 
     return fig, axs
 
-def plot_contour_bands(distributions, num_samples, resolution=128, ranges=None, quantiles:list=None, seed=55, **kwargs):
+def plot_contour_bands(distributions, n_samples, resolution=128, ranges=None, quantiles: list = None, seed=55,
+                       **kwargs):
     """
     Plot contour bands for samples drawn from given distributions.
 
@@ -159,7 +160,7 @@ def plot_contour_bands(distributions, num_samples, resolution=128, ranges=None, 
     ----------
     distributions : list
         List of distributions to plot.
-    num_samples : int
+    n_samples : int
         Number of samples per distribution.
     resolution : int, optional
         The resolution of the plot. Default is 128.
@@ -219,25 +220,25 @@ def plot_contour_bands(distributions, num_samples, resolution=128, ranges=None, 
         coordinates = coordinates.reshape((-1, 2))
         pdf = d.pdf(coordinates)
         pdf = pdf.reshape(xv.shape)
-        pdf = ma.masked_where(pdf <= 0, pdf)  # Mask non-positive values to avoid log scale issues
+        pdf = np.ma.masked_where(pdf <= 0, pdf)  # Mask non-positive values to avoid log scale issues
 
         # Monte Carlo approach for determining isovalues
         isovalues = []
-        samples = d.sample(num_samples, seed)
+        samples = d.sample(n_samples, seed)
         densities = d.pdf(samples)
         densities.sort()
         if quantiles is None:
-            isovalues.append(densities[int((1 - 99.7/100) * num_samples)]) # 99.7% quantile
-            isovalues.append(densities[int((1 - 95/100) * num_samples)]) # 95% quantile
-            isovalues.append(densities[int((1 - 68/100) * num_samples)]) # 68% quantile
+            isovalues.append(densities[int((1 - 99.7/100) * n_samples)]) # 99.7% quantile
+            isovalues.append(densities[int((1 - 95/100) * n_samples)]) # 95% quantile
+            isovalues.append(densities[int((1 - 68/100) * n_samples)]) # 68% quantile
         else:
             quantiles.sort(reverse=True)
             for quantile in quantiles:
                 if not 0 < quantile < 100:
                     raise ValueError(f"Invalid quantile: {quantile}. Quantiles must be between 0 and 100 (exclusive).")
-                elif int((1 - quantile/100) * num_samples) >= num_samples:
+                elif int((1 - quantile/100) * n_samples) >= n_samples:
                     raise ValueError(f"Quantile {quantile} results in an index that is out of bounds.")
-                isovalues.append(densities[int((1 - quantile/100) * num_samples)])
+                isovalues.append(densities[int((1 - quantile/100) * n_samples)])
 
         # Generate logarithmic levels and create the contour plot with different colormap for each distribution
         plt.contourf(xv, yv, pdf, levels=isovalues, locator=ticker.LogLocator(), cmap=colormaps[i % len(colormaps)])

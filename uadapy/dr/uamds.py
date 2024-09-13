@@ -307,14 +307,13 @@ def iterate_simple_gradient_descent(
         normal_distr_spec: np.ndarray,
         uamds_transforms_init: np.ndarray,
         precalc_constants: tuple = None,
-        num_iter: int = 100,
+        n_iter: int = 100,
         a: float = 0.0001,
         optimizer="plain",
         b1: float = 0.9,
         b2: float = 0.999,
         e: float = 10e-8,
-        mass=0.8
-) -> np.ndarray:
+        mass=0.8) -> np.ndarray:
     """
     Performs gradient descent on the UAMDS stress to find an optimal projection.
     This uses a fixed number of iterations after which the method returns.
@@ -332,7 +331,7 @@ def iterate_simple_gradient_descent(
     precalc_constants : tuple
         a tuple containing the pre-computed constant expressions of the stress and gradient.
         Can be None and will be computed by precalculate_constants(normal_distr_spec)
-    num_iter : int
+    n_iter : int
         number of iterations to perform. The required number of iterations varies with the used descent scheme.
     a : float
         step size (learning rate). Depends on the size of the optimization problem and used descent scheme.
@@ -360,7 +359,7 @@ def iterate_simple_gradient_descent(
         case "adam":
             m = np.zeros_like(uamds_transforms_init)
             v = np.zeros_like(uamds_transforms_init)
-            for i in range(num_iter):
+            for i in range(n_iter):
                 grad = gradient(normal_distr_spec, uamds_transforms, precalc_constants)
                 m = (1 - b1) * grad + b1 * m  # first  moment estimate.
                 v = (1 - b2) * (grad ** 2) + b2 * v  # second moment estimate.
@@ -370,13 +369,13 @@ def iterate_simple_gradient_descent(
 
         case "momentum":
             velocity = np.zeros_like(uamds_transforms_init)
-            for i in range(num_iter):
+            for i in range(n_iter):
                 grad = gradient(normal_distr_spec, uamds_transforms, precalc_constants)
                 velocity = mass * velocity + (1.0 - mass) * grad
                 uamds_transforms = uamds_transforms - a * velocity
 
         case _:
-            for i in range(num_iter):
+            for i in range(n_iter):
                 grad = gradient(normal_distr_spec, uamds_transforms, precalc_constants)
                 uamds_transforms = uamds_transforms - a * grad
 
