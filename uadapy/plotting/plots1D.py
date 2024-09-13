@@ -1,5 +1,5 @@
 import numpy as np
-from uadapy import distribution
+from uadapy import Distribution
 import matplotlib.pyplot as plt
 from math import ceil, sqrt
 import glasbey as gb
@@ -67,7 +67,7 @@ def setup_plot(distributions, num_samples, seed, fig=None, axs=None, colors=None
 
     samples = []
 
-    if isinstance(distributions, distribution):
+    if isinstance(distributions, Distribution):
         distributions = [distributions]
 
     # Calculate the layout of subplots

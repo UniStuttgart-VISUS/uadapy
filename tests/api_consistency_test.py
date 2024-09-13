@@ -20,7 +20,7 @@ def test_dr_module():
     import uadapy.distribution
     import numpy as np
     # list of distributions (normal distributions estimated from random data
-    distribs = [uadapy.distribution(np.random.rand(10, 3), name='Normal') for _ in range(4)]
+    distribs = [uadapy.Distribution(np.random.rand(10, 3), name='Normal') for _ in range(4)]
     uadapy.dr.uapca(distributions=distribs, n_dims=2)
     uadapy.dr.uamds(distributions=distribs, n_dims=2)
 

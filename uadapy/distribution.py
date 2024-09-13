@@ -4,7 +4,7 @@ from scipy import stats
 from scipy.stats import _multivariate as mv
 
 
-class distribution:
+class Distribution:
 
     def __init__(self, model, name="", n_dims=1):
         """

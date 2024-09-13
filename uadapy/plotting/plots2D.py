@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from uadapy import distribution
+from uadapy import Distribution
 from numpy import ma
 from matplotlib import ticker
 
@@ -35,7 +35,7 @@ def plot_samples(distributions, num_samples, seed=55, **kwargs):
         List of Axes objects used for plotting.
     """
 
-    if isinstance(distributions, distribution):
+    if isinstance(distributions, Distribution):
         distributions = [distributions]
     for d in distributions:
         samples = d.sample(num_samples, seed)
@@ -93,7 +93,7 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
         If a quantile is not between 0 and 100 (exclusive), or if a quantile results in an index that is out of bounds.
     """
 
-    if isinstance(distributions, distribution):
+    if isinstance(distributions, Distribution):
         distributions = [distributions]
     contour_colors = generate_spectrum_colors(len(distributions))
 
@@ -188,7 +188,7 @@ def plot_contour_bands(distributions, num_samples, resolution=128, ranges=None, 
         If a quantile is not between 0 and 100 (exclusive), or if a quantile results in an index that is out of bounds.
     """
 
-    if isinstance(distributions, distribution):
+    if isinstance(distributions, Distribution):
         distributions = [distributions]
 
     # Sequential and perceptually uniform colormaps

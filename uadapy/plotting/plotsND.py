@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from uadapy import distribution
+from uadapy import Distribution
 import uadapy.plotting.utils as utils
 
 def plot_samples(distributions, num_samples, seed=55, **kwargs):
@@ -29,7 +29,7 @@ def plot_samples(distributions, num_samples, seed=55, **kwargs):
         List of Axes objects used for plotting.
     """
 
-    if isinstance(distributions, distribution):
+    if isinstance(distributions, Distribution):
         distributions = [distributions]
     # Create matrix
     numvars = distributions[0].n_dims
@@ -110,7 +110,7 @@ def plot_contour(distributions, num_samples, resolution=128, ranges=None, quanti
         If the dimension of the distribution is less than 2.
     """
 
-    if isinstance(distributions, distribution):
+    if isinstance(distributions, Distribution):
         distributions = [distributions]
     contour_colors = utils.generate_spectrum_colors(len(distributions))
     # Create matrix
@@ -239,7 +239,7 @@ def plot_contour_samples(distributions, num_samples, resolution=128, ranges=None
         If the dimension of the distribution is less than 2.
     """
 
-    if isinstance(distributions, distribution):
+    if isinstance(distributions, Distribution):
         distributions = [distributions]
     contour_colors = utils.generate_spectrum_colors(len(distributions))
     # Create matrix
