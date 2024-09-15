@@ -3,25 +3,25 @@ from scipy.linalg import kron
 from dataclasses import dataclass
 
 @dataclass
-class UncertainData:
+class uncertain_data:
     mu: np.ndarray
-    Sigma: np.ndarray
+    sigma: np.ndarray
     samples: np.ndarray
-    corMat: np.ndarray
-    AHat: np.ndarray
+    cor_mat: np.ndarray
+    a_hat: np.ndarray
 
 @dataclass
-class Options:
+class options:
     robust: bool = False
     n_o: int = 1
     n_i: int = 2
     n_s: int = None #np.ndarray = None 
     n_l: int = None #np.ndarray = None
     n_t: int = None
-    postSmoothingSeasonal: bool = True
-    postSmoothingSeasonal_n: int = None #np.ndarray = None
-    postSmoothingTrend: bool = True
-    postSmoothingTrend_n: int = None
+    post_smoothing_seasonal: bool = True
+    post_smoothing_seasonal_n: int = None #np.ndarray = None
+    post_smoothing_trend: bool = True
+    post_smoothing_trend_n: int = None
 
 def convmtx(h, n):
     """
@@ -77,14 +77,14 @@ def loessmtx(a, s, d, omega=None):
         idx = np.argsort(distances, axis=0)[:s].flatten()
         
         # Center positions
-        aTild = a[idx] - a[i]
+        a_tild = a[idx] - a[i]
         
         # Compute scaling
-        aTildAbs = np.abs(aTild)
-        scaling = (1 - (aTildAbs / np.max(aTildAbs))**3)**3
+        a_tild_abs = np.abs(a_tild)
+        scaling = (1 - (a_tild_abs / np.max(a_tild_abs))**3)**3
         
         # Define Vandermonde matrix
-        V = np.vander(aTild.flatten(), N=d+1, increasing=True)
+        V = np.vander(a_tild.flatten(), N=d+1, increasing=True)
         
         # Compute diagonal matrix
         D = np.diag((scaling.flatten() * omega[idx].flatten()))
@@ -102,117 +102,117 @@ def loessmtx(a, s, d, omega=None):
     
     return B
 
-def uastl(X: UncertainData, p, opts: Options):
+def uastl(X: uncertain_data, p, opts: options):
     n = len(X.mu)
     L = 1 #len(p)
 
     opts.n_s = np.maximum(2 * (np.ceil(n / p).astype(int) // 2) + 1, 5)
     opts.n_l = np.maximum(2 * (p // 2) + 1, 5)
     opts.n_t = 2 * (int((1.5 * p) / (1 - 1.5 / max(np.ceil(n / p), 5))) // 2) + 1 #p[-1]
-    opts.postSmoothingSeasonal_n = np.maximum(2 * (p // 2 // 2) + 1, 5)
-    opts.postSmoothingTrend_n = np.maximum(2 * (n // 2 // 2) + 1, 5)
+    opts.post_smoothing_seasonal_n = np.maximum(2 * (p // 2 // 2) + 1, 5)
+    opts.post_smoothing_trend_n = np.maximum(2 * (n // 2 // 2) + 1, 5)
 
     print("#################################################################################")
     print("##### Uncertainty-Aware Seasonal-Trend Decomposition Based on Loess (UASTL) #####")
     print("#################################################################################")
     q = []
     q.append(p)
-    X_data = UncertainData(mu=X.mu.copy(), Sigma=X.Sigma.copy(), samples=X.samples.copy(), corMat=X.corMat.copy(), AHat=X.AHat.copy())
-    XHat = UncertainData(mu=X.mu.copy(), Sigma=X.Sigma.copy(), samples=X.samples.copy(), corMat=X.corMat.copy(), AHat=X.AHat.copy())
+    x_data = uncertain_data(mu=X.mu.copy(), sigma=X.sigma.copy(), samples=X.samples.copy(), cor_mat=X.cor_mat.copy(), a_hat=X.a_hat.copy())
+    x_hat = uncertain_data(mu=X.mu.copy(), sigma=X.sigma.copy(), samples=X.samples.copy(), cor_mat=X.cor_mat.copy(), a_hat=X.a_hat.copy())
 
 
-    nHat = (3 + L) * n
-    XHat.mu = np.zeros((nHat, 1))
-    XHat.mu[:n] = X_data.mu.reshape(-1, 1)
-    XHat.Sigma = np.zeros((nHat, nHat))
-    XHat.Sigma[:n, :n] = X_data.Sigma
+    n_hat = (3 + L) * n
+    x_hat.mu = np.zeros((n_hat, 1))
+    x_hat.mu[:n] = x_data.mu.reshape(-1, 1)
+    x_hat.sigma = np.zeros((n_hat, n_hat))
+    x_hat.sigma[:n, :n] = x_data.sigma
 
-    AHatGlobal = np.eye(nHat)
+    a_hat_global = np.eye(n_hat)
     weights = np.ones(n)
 
     for outer_loop in range(opts.n_o):
-        AHat = np.eye(nHat)
+        a_hat = np.eye(n_hat)
         for inner_loop in range(opts.n_i):
 
             for k in range(L):
-                # Line 7: Update AHat regarding seasonal trends --- Steps 1-4
+                # Line 7: Update a_hat regarding seasonal trends --- Steps 1-4
                 
                 # ------- Step 1: detrending()
-                A_Deltat = np.zeros((3+L, 3+L))
-                A_Deltat[2+k, 0] = 1
-                A_Deltat[2+k, 1] = -1 # 1+k+1
-                A_Deltat[2+k, 2+k] = 0
+                a_delta_t = np.zeros((3+L, 3+L))
+                a_delta_t[2+k, 0] = 1
+                a_delta_t[2+k, 1] = -1 # 1+k+1
+                a_delta_t[2+k, 2+k] = 0
                 
                 # ------- Step 2: cycle_subseries_smoothing(p_k, n_s, omega)
-                E_ext = np.zeros((n+2*q[k], n))
-                E_ext[q[k]:q[k]+n, :n] = np.eye(n)
-                E_ext[:q[k], :q[k]] = np.eye(q[k])
-                E_ext[-q[k]:, -q[k]:] = np.eye(q[k])
+                e_ext = np.zeros((n+2*q[k], n))
+                e_ext[q[k]:q[k]+n, :n] = np.eye(n)
+                e_ext[:q[k], :q[k]] = np.eye(q[k])
+                e_ext[-q[k]:, -q[k]:] = np.eye(q[k])
 
 
-                E_split = np.zeros((n+2*q[k], n+2*q[k]))
-                B_ns = np.zeros((n+2*q[k], n+2*q[k]))
+                e_split = np.zeros((n+2*q[k], n+2*q[k]))
+                b_ns = np.zeros((n+2*q[k], n+2*q[k]))
                 indx = 0
                 for i in range(0, q[k]):
-                    cycleSubseries = np.arange(i-q[k], i+np.floor((n-i -1)/q[k])*q[k]+q[k] + 1, q[k]) + q[k]
-                    lenCS = len(cycleSubseries)
-                    cycleSubseries = cycleSubseries.astype(int)  # Ensure integer indices
-                    cycleSubseriesWeights = weights[i::q[k]]
-                    f_e = np.array([cycleSubseriesWeights[0]])
-                    l_e = np.array([cycleSubseriesWeights[-1]])
-                    B_ns[indx:indx+lenCS, indx:indx+lenCS] = loessmtx(lenCS, opts.n_s, 2, np.concatenate((f_e, cycleSubseriesWeights, l_e)))
-                    E_split[indx:indx+lenCS, cycleSubseries] = np.eye(lenCS)
-                    indx += lenCS
+                    cycle_subseries = np.arange(i-q[k], i+np.floor((n-i -1)/q[k])*q[k]+q[k] + 1, q[k]) + q[k]
+                    len_cs = len(cycle_subseries)
+                    cycle_subseries = cycle_subseries.astype(int)  # Ensure integer indices
+                    cycle_subseries_weights = weights[i::q[k]]
+                    f_e = np.array([cycle_subseries_weights[0]])
+                    l_e = np.array([cycle_subseries_weights[-1]])
+                    b_ns[indx:indx+len_cs, indx:indx+len_cs] = loessmtx(len_cs, opts.n_s, 2, np.concatenate((f_e, cycle_subseries_weights, l_e)))
+                    e_split[indx:indx+len_cs, cycle_subseries] = np.eye(len_cs)
+                    indx += len_cs
 
                 # ------- Step 3: cycle_subseries_low_pass_filtering(p_k, n_l)
                 h = 3 * np.arange(q[k]+1).reshape(-1, 1)
                 h[[0, -1]] += np.array([1, -2]).reshape(-1, 1)
                 h = np.concatenate((h, h[-2::-1])) / (q[k]**2 * 3)
 
-                A_L = convmtx(h, n)
-                B_nl = loessmtx(n, opts.n_l, 1)
+                a_l = convmtx(h, n)
+                b_nl = loessmtx(n, opts.n_l, 1)
                 
 
                 # ------- Step 4: cycle_subseries_detrending()
-                P_1n = np.zeros((n, n+2*q[k]))
-                P_1n[:, q[k]:q[k]+n] = np.eye(n)
+                p_1n = np.zeros((n, n+2*q[k]))
+                p_1n[:, q[k]:q[k]+n] = np.eye(n)
 
-                A_p = (P_1n - B_nl @ A_L.T) @ E_split.T @ B_ns @ E_split @ E_ext
+                a_p = (p_1n - b_nl @ a_l.T) @ e_split.T @ b_ns @ e_split @ e_ext
 
-                # update STL matrix AHat regarding seasonal trends
-                A_S_id = np.eye(3+L)
-                A_S_id[2+k, 2+k] = 0
+                # update STL matrix a_hat regarding seasonal trends
+                a_s_id = np.eye(3+L)
+                a_s_id[2+k, 2+k] = 0
 
-                AHat = (np.kron(A_S_id, np.eye(n)) + np.kron(A_Deltat, A_p)) @ AHat
+                a_hat = (np.kron(a_s_id, np.eye(n)) + np.kron(a_delta_t, a_p)) @ a_hat
 
-            A_tDash = np.zeros((3+L, 3+L))
-            A_tDash[1, 0] = 1
-            A_tDash[1, 2] = -1 # 2:2 + L
-            A_tDash[1, 1] = 0
-            A_T_id = np.eye(3+L)
-            A_T_id[1, 1] = 0
-            AHat = (np.kron(A_T_id, np.eye(n)) + np.kron(A_tDash, loessmtx(n, opts.n_t, 1))) @ AHat
+            a_t_dash = np.zeros((3+L, 3+L))
+            a_t_dash[1, 0] = 1
+            a_t_dash[1, 2] = -1 # 2:2 + L
+            a_t_dash[1, 1] = 0
+            a_t_id = np.eye(3+L)
+            a_t_id[1, 1] = 0
+            a_hat = (np.kron(a_t_id, np.eye(n)) + np.kron(a_t_dash, loessmtx(n, opts.n_t, 1))) @ a_hat
 
-        if opts.postSmoothingSeasonal:
+        if opts.post_smoothing_seasonal:
             for k in range(L):
-                A_S_post = np.zeros((L+3, L+3))
-                A_S_post[2+k, 2+k] = 1
-                AHat = (kron(np.eye(L+3) - A_S_post, np.eye(n)) + kron(A_S_post, loessmtx(n, opts.postSmoothingSeasonal_n, 2))) @ AHat
+                a_s_post = np.zeros((L+3, L+3))
+                a_s_post[2+k, 2+k] = 1
+                a_hat = (kron(np.eye(L+3) - a_s_post, np.eye(n)) + kron(a_s_post, loessmtx(n, opts.post_smoothing_seasonal_n, 2))) @ a_hat
 
-        if opts.postSmoothingTrend:
-            AHat = (kron(A_T_id, np.eye(n)) + kron(A_tDash, loessmtx(n, opts.postSmoothingTrend_n, 2))) @ AHat
+        if opts.post_smoothing_trend:
+            a_hat = (kron(a_t_id, np.eye(n)) + kron(a_t_dash, loessmtx(n, opts.post_smoothing_trend_n, 2))) @ a_hat
 
         tmpmtx = np.eye(L+3)
         tmpmtx[L+3-1, 0] = 1
         tmpmtx[L+3-1, 1:L+2] = -1
         tmpmtx[L+3-1, L+3-1] = 0
-        AHat = kron(tmpmtx, np.eye(n)) @ AHat
-        XHat.mu = AHat @ XHat.mu
-        XHat.Sigma = AHat @ XHat.Sigma @ AHat.T
-        AHatGlobal = AHat @ AHatGlobal
+        a_hat = kron(tmpmtx, np.eye(n)) @ a_hat
+        x_hat.mu = a_hat @ x_hat.mu
+        x_hat.sigma = a_hat @ x_hat.sigma @ a_hat.T
+        a_hat_global = a_hat @ a_hat_global
 
         if opts.robust and outer_loop < opts.n_o - 1:
-            r = np.random.multivariate_normal(XHat.mu, XHat.Sigma, n)
+            r = np.random.multivariate_normal(x_hat.mu, x_hat.sigma, n)
             r = r[:, -n:]
             h = 6 * np.median(np.abs(r), axis=0)
             u = np.abs(r) / h
@@ -224,4 +224,4 @@ def uastl(X: UncertainData, p, opts: Options):
     print("##### UASTL DONE #####")
     print("#################################################################################")
     
-    return XHat, AHatGlobal
+    return x_hat, a_hat_global
