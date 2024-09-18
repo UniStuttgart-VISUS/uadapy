@@ -7,6 +7,9 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 import sphinx_rtd_theme
+import sys
+import os
+sys.path.insert(0, os.path.abspath('..'))
 
 project = 'UADAPy'
 copyright = '2024, Ruben Bauer, Marina Evers, David Hägele, Patrick Paetzold'

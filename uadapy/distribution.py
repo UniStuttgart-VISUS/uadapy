@@ -24,9 +24,15 @@ class Distribution:
         no assumptions about the distribution are made. For the pdf and the sampling,
         a KDE is used. If the name is "Normal", the samples
         are treated as samples of a normal distribution.
-        :param model: A scipy.stats distribution or samples
-        :param name: The name of the distribution
-        :param n_dims: The dimensionality of the distribution
+
+        Parameters
+        ----------
+        model: 
+            A scipy.stats distribution or samples
+        name: str, optional
+            The name of the distribution
+        n_dims: int, optional
+            The dimensionality of the distribution (default is 1)
         """
         if name:
             self.name = name
@@ -47,15 +53,43 @@ class Distribution:
         if isinstance(self.model, np.ndarray):
             self.kde = stats.gaussian_kde(self.model.T)
 
-    def sample(self, n: int, random_state: int = None) -> np.ndarray:
+    def sample(self, n: int, seed: int = None) -> np.ndarray:
+        """
+        Creates samples from the distribution.
+
+        Parameters
+        ----------
+        n : int
+            Number of samples.
+        seed : int, optional
+            Seed for the random number generator for reproducibility, default is None.
+
+        Returns
+        -------
+        np.ndarray
+            Samples of the distribution.
+        """
         if isinstance(self.model, np.ndarray):
-            return self.kde.resample(n, random_state).T
+            return self.kde.resample(n, seed).T
         if hasattr(self.model, 'rvs') and callable(self.model.rvs):
-            return self.model.rvs(size=n, random_state=random_state)
+            return self.model.rvs(size=n, random_state=seed)
         if hasattr(self.model, 'resample') and callable(self.model.resample):
-            return self.model.resample(size=n, seed=random_state)
+            return self.model.resample(size=n, seed=seed)
 
     def pdf(self, x: np.ndarray | float) -> np.ndarray | float:
+        """
+        Computes the probability density function.
+
+        Parameters
+        ----------
+        x : np.ndarray or float
+            The position where the pdf should be evaluated.
+
+        Returns
+        -------
+        np.ndarray or float
+            Samples of the distribution.
+        """
         if isinstance(self.model, np.ndarray):
             return self.kde.pdf(x.T)
         if not hasattr(self.model, 'pdf'):
@@ -64,6 +98,14 @@ class Distribution:
             return self.model.pdf(x)
 
     def mean(self) -> np.ndarray | float:
+        """
+        Expected value of the distribution.
+
+        Returns
+        -------
+        np.ndarray or float
+            Expected value of the distribution.
+        """
         if isinstance(self.model, np.ndarray):
             return np.mean(self.model, axis=0)
         if hasattr(self.model, 'mean'):
@@ -78,6 +120,14 @@ class Distribution:
            raise AttributeError(f"Mean not implemented yet! {self.model.__class__.__name__}")
 
     def cov(self) -> np.ndarray | float:
+        """
+        Covariance of the distribution.
+
+        Returns
+        -------
+        np.ndarray or float
+            Covariance of the distribution.
+        """
         if isinstance(self.model, np.ndarray):
             return np.cov(self.model.T)
         if hasattr(self.model, 'cov'):
@@ -98,6 +148,14 @@ class Distribution:
 
 
     def skew(self) -> np.ndarray | float:
+        """
+        Skewness of the distribution.
+
+        Returns
+        -------
+        np.ndarray or float
+            Skewness of the distribution.
+        """
         if isinstance(self.model, np.ndarray):
             return stats.skew(self.model)
         if hasattr(self.model, 'stats') and callable(self.model.stats):
@@ -106,6 +164,14 @@ class Distribution:
             return 0
 
     def kurt(self) -> np.ndarray | float:
+        """
+        Kurtosis of the distribution.
+
+        Returns
+        -------
+        np.ndarray or float
+            Kurtosis of the distribution.
+        """
         if isinstance(self.model, np.ndarray):
             return stats.kurtosis(self.model)
         if hasattr(self.model, 'stats') and callable(self.model.stats):
