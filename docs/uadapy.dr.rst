@@ -1,8 +1,6 @@
 uadapy.dr package
 =================
 
-Submodules
-----------
 
 uadapy.dr.uamds module
 ----------------------

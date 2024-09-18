@@ -4,7 +4,9 @@ Changelog
 
 0.0.2 (in preparation)
 ---
+
 * Reorganization of imports
+* Documentation of distribution class
 
 0.0.1
 ---
