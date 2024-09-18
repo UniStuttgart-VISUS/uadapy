@@ -5,6 +5,18 @@ from scipy.stats import _multivariate as mv
 
 
 class Distribution:
+    """
+    The Distribution class provides a consistent interface to a variety of distributions.
+    
+    Attributes
+    ----------
+    model : str
+        The underlying concrete distribution model, a `scipy.stats` distribution object or an array of samples
+    name : str 
+        Name of the distribution type, e.g. 'Normal'
+    n_dims : int
+        Dimensionality of the distribution
+    """
 
     def __init__(self, model, name="", n_dims=1):
         """
