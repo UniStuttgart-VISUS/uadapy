@@ -1,24 +1,24 @@
 import numpy as np
-from uadapy import distribution
+from uadapy import Distribution
 from scipy.stats import multivariate_normal
 
-def uapca(distributions, dims: int):
+def uapca(distributions, n_dims: int = 2):
     """
     Applies UAPCA algorithm to the distribution and returns the distribution
     in lower-dimensional space. It assumes a normal distributions. If you apply
     other distributions that provide mean and covariance, these values would be used
     to approximate a normal distribution
     :param distributions: List of input distributions
-    :param dims: Target dimension
+    :param n_dims: Target dimension
     :return: List of distributions in low-dimensional space
     """
     try:
         means = np.array([d.mean() for d in distributions])
         covs = np.array([d.cov() for d in distributions])
-        means_pca, covs_pca = transform_uapca(means, covs, dims)
+        means_pca, covs_pca = transform_uapca(means, covs, n_dims)
         dist_pca = []
         for (m, c) in zip(means_pca, covs_pca):
-            dist_pca.append(distribution(multivariate_normal(m, c)))
+            dist_pca.append(Distribution(multivariate_normal(m, c)))
         return dist_pca
     except Exception as e:
         raise Exception(f'Something went wrong. Did you input normal distributions? Exception:{e}')

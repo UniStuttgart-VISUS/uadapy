@@ -1,5 +1,5 @@
 import numpy as np
-from uadapy import distribution
+from uadapy import Distribution
 import matplotlib.pyplot as plt
 from math import ceil, sqrt
 import glasbey as gb
@@ -11,21 +11,21 @@ def calculate_freedman_diaconis_bins(data):
     q25, q75 = np.percentile(data, [25, 75])
     iqr = q75 - q25
     bin_width = 2 * iqr / np.cbrt(len(data))
-    num_bins = int((np.max(data) - np.min(data)) / bin_width)
-    return num_bins
+    n_bins = int((np.max(data) - np.min(data)) / bin_width)
+    return n_bins
 
 def calculate_offsets(count, max_count):
     occupancy = (count/max_count)
     return np.linspace(-0.45 * occupancy, 0.45 * occupancy, count)
 
-def calculate_dot_size(num_samples, scale_factor):
-    if num_samples < 100:
-        dot_size = 3.125
+def calculate_dot_size(n_samples, scale_factor):
+    if n_samples < 100:
+        dot_size = scale_factor * 3.125
     else:
-        dot_size = scale_factor * (50 /(4 ** np.log10(num_samples)))
+        dot_size = scale_factor * (50 / (4 ** np.log10(n_samples)))
     return dot_size
 
-def setup_plot(distributions, num_samples, seed, fig=None, axs=None, colors=None, **kwargs):
+def setup_plot(distributions, n_samples, seed, fig=None, axs=None, colors=None, **kwargs):
     """
     Set up the plot for samples drawn from given distributions.
 
@@ -33,7 +33,7 @@ def setup_plot(distributions, num_samples, seed, fig=None, axs=None, colors=None
     ----------
     distributions : list
         List of distributions to plot. If a single distribution is passed, it will be converted into a list.
-    num_samples : int
+    n_samples : int
         Number of samples per distribution.
     seed : int
         Seed for the random number generator for reproducibility.
@@ -59,44 +59,44 @@ def setup_plot(distributions, num_samples, seed, fig=None, axs=None, colors=None
         List of samples drawn from the distributions.
     palette : list
         List of colors to use for each distribution.
-    num_plots : int
+    n_plots : int
         Number of subplots.
-    num_cols : int
+    n_cols : int
         Number of columns in the subplot layout.
     """
 
     samples = []
 
-    if isinstance(distributions, distribution):
+    if isinstance(distributions, Distribution):
         distributions = [distributions]
 
     # Calculate the layout of subplots
     if axs is None:
-        num_plots = distributions[0].dim
-        num_rows = ceil(sqrt(num_plots))
-        num_cols = ceil(num_plots / num_rows)
-        fig, axs = plt.subplots(num_rows, num_cols)
+        n_plots = distributions[0].n_dims
+        n_rows = ceil(sqrt(n_plots))
+        n_cols = ceil(n_plots / n_rows)
+        fig, axs = plt.subplots(n_rows, n_cols)
     else:
         # Case 1: axs is a 2D array (multiple rows and columns)
         if isinstance(axs, np.ndarray):
             dim = axs.shape
             if (len(axs.shape) == 1):
-                num_rows, num_cols = 1, dim[0]
+                n_rows, n_cols = 1, dim[0]
             else:
-                num_rows, num_cols = dim
+                n_rows, n_cols = dim
         # Case 2: axs is not an array (single subplot)
         else:
-            num_rows, num_cols = 1, 1
-        num_plots = num_rows + num_cols
+            n_rows, n_cols = 1, 1
+        n_plots = n_rows + n_cols
 
     # Ensure axs is a 2D array even if there's only one row or column
-    if num_rows == 1:
+    if n_rows == 1:
         axs = [axs]
-    if num_cols == 1:
+    if n_cols == 1:
         axs = [[ax] for ax in axs]
 
     for d in distributions:
-        samples.append(d.sample(num_samples, seed))
+        samples.append(d.sample(n_samples, seed))
 
     # Generate Glasbey colors
     if colors is None:
@@ -108,9 +108,19 @@ def setup_plot(distributions, num_samples, seed, fig=None, axs=None, colors=None
             colors.extend(additional_colors)
         palette = colors
 
-    return fig, axs, samples, palette, num_plots, num_cols
+    return fig, axs, samples, palette, n_plots, n_cols
 
-def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, fig=None, axs=None, labels=None, titles=None, colors=None, **kwargs):
+def plot_1d_distribution(
+        distributions,
+        n_samples,
+        plot_types: list,
+        seed=55,
+        fig=None,
+        axs=None,
+        distrib_labels=None,
+        dim_labels=None,
+        distrib_colors=None,
+        **kwargs):
     """
     Plot box plots, violin plots and dot plots for samples drawn from given distributions.
 
@@ -118,7 +128,7 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
     ----------
     distributions : list
         List of distributions to plot.
-    num_samples : int
+    n_samples : int
         Number of samples per distribution.
     plot_types : list
         List of plot types to plot. Valid values are 'boxplot','violinplot', 'stripplot', 'swarmplot' and 'dotplot'.
@@ -128,11 +138,11 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
         Figure object to use for plotting. If None, a new figure will be created.
     axs : matplotlib.axes.Axes or array of Axes or None, optional
         Axes object(s) to use for plotting. If None, new axes will be created.
-    labels : list or None, optional
+    distrib_labels : list or None, optional
         Labels for each distribution.
-    titles : list or None, optional
+    dim_labels : list or None, optional
         Titles for each subplot.
-    colors : list or None, optional
+    distrib_colors : list or None, optional
         List of colors to use for each distribution. If None, Glasbey colors will be used.
     **kwargs : additional keyword arguments
         Additional optional plotting arguments.
@@ -142,11 +152,20 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
         - colorblind_safe : bool, optional
             If True, the plot will use colors suitable for colorblind individuals.
             Default is False.
+        - boxplot_width : float, optional
+            The width of each box in units of the positions axis.
+            Default is 0.5.
+        - violinplot_width : float, optional
+            The maximum width of each violin in units of the positions axis.
+            Default is 0.75.
         - dot_size : float, optional
             This parameter determines the size of the dots used in the 'stripplot' and 'swarmplot'.
             If not provided, the size is calculated based on the number of samples and the type of plot.
         - showmeans : bool, optional
-            If True, display means in plot. Only effective on violin plot =.
+            If True, display means in plot. Only effective on violin plot.
+            Default is False.
+        - show_plot : bool, optional
+            If True, display the plot.
             Default is False.
 
     Returns
@@ -157,22 +176,22 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
         List of Axes objects used for plotting.
     """
 
-    fig, axs, samples, palette, num_plots, num_cols = setup_plot(distributions, num_samples, seed, fig, axs, colors, **kwargs)
+    fig, axs, samples, palette, n_plots, n_cols = setup_plot(distributions, n_samples, seed, fig, axs, distrib_colors, **kwargs)
 
     # Check number of attributes
-    num_attributes = 1
+    n_attributes = 1
     if np.ndim(samples) > 2:
-        num_attributes = np.shape(samples)[2]
+        n_attributes = np.shape(samples)[2]
 
-    if labels:
-        ticks = range(len(labels))
+    if distrib_labels:
+        ticks = range(len(distrib_labels))
     else:
         ticks = range(len(samples))
 
     for i, ax_row in enumerate(axs):
         for j, ax in enumerate(ax_row):
-            index = i * num_cols + j
-            if index < num_plots and index < num_attributes:
+            index = i * n_cols + j
+            if index < n_plots and index < n_attributes:
                 y_min = 9999
                 y_max = -9999
                 for k, sample in enumerate(samples):
@@ -182,12 +201,20 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
                         boxprops = dict(facecolor=palette[k % len(palette)], edgecolor='black')
                         whiskerprops = dict(color='black', linestyle='--')
                         capprops = dict(color='black')
+                        if 'boxplot_width' in kwargs:
+                            boxplot_width = kwargs['boxplot_width']
+                        else:
+                            boxplot_width = 0.5
                         ax.boxplot(sample[:, index], positions=[k], patch_artist=True, boxprops=boxprops,
                                    showfliers=False, whiskerprops=whiskerprops, capprops=capprops,
                                    showmeans=True, meanline=True, meanprops=dict(color="black", linestyle='-'),
-                                   medianprops=dict(linewidth=0), vert=kwargs.get('vert', True))
+                                   medianprops=dict(linewidth=0), widths=boxplot_width, vert=kwargs.get('vert', True))
                     if 'violinplot' in plot_types:
-                        parts =  ax.violinplot(sample[:,index], positions=[k], showmeans=kwargs.get('showmeans', False), vert=kwargs.get('vert', True))
+                        if 'violinplot_width' in kwargs:
+                            violinplot_width = kwargs['violinplot_width']
+                        else:
+                            violinplot_width = 0.75
+                        parts =  ax.violinplot(sample[:,index], positions=[k], showmeans=kwargs.get('showmeans', False), widths=violinplot_width, vert=kwargs.get('vert', True))
                         for pc in parts['bodies']:
                             pc.set_facecolor(palette[k % len(palette)])
                             pc.set_edgecolor(palette[k % len(palette)])
@@ -202,7 +229,10 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
                             dot_size = kwargs['dot_size']
                     if 'stripplot' in plot_types:
                         if 'dot_size' not in kwargs:
-                            scale_factor = 1 + np.log10(num_samples/100)
+                            if n_samples < 100:
+                                scale_factor = 1
+                            else:
+                                scale_factor = 1 + np.log10(n_samples / 100)
                             dot_size = calculate_dot_size(len(sample[:,index]), scale_factor)
                         if kwargs.get('vert',True):
                             sns.stripplot(x=[k]*len(sample[:,index]), y=sample[:,index], color=palette[k % len(palette)], size=dot_size, jitter=0.25, ax=ax)
@@ -224,8 +254,8 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
                             y_min = np.min(flat_sample)
                         if y_max < np.max(flat_sample):
                             y_max = np.max(flat_sample)
-                        num_bins = calculate_freedman_diaconis_bins(flat_sample)
-                        bin_width = kwargs.get('bin_width', (np.max(flat_sample) - np.min(flat_sample)) / num_bins)
+                        n_bins = calculate_freedman_diaconis_bins(flat_sample)
+                        bin_width = kwargs.get('bin_width', (np.max(flat_sample) - np.min(flat_sample)) / n_bins)
                         bins = np.arange(np.min(flat_sample), np.max(flat_sample) + bin_width, bin_width)
                         binned_data, bin_edges = np.histogram(flat_sample, bins=bins)
                         max_count = np.max(binned_data)
@@ -251,18 +281,23 @@ def plot_1d_distribution(distributions, num_samples, plot_types:list, seed=55, f
                     else:
                         ax.set_xlim(y_min - 1, y_max + 1)
                         ax.set_ylim(0, len(samples))
-                if labels:
+                if distrib_labels:
                     if kwargs.get('vert', True):
                         ax.set_xticks(ticks)
-                        ax.set_xticklabels(labels, rotation=45, ha='right')
+                        ax.set_xticklabels(distrib_labels, rotation=45, ha='right')
                     else:
                         ax.set_yticks(ticks)
-                        ax.set_yticklabels(labels, rotation=45, ha='right')
-                if titles:
-                    ax.set_title(titles[index] if titles and index < len(titles) else 'Distribution ' + str(index + 1))
+                        ax.set_yticklabels(distrib_labels, rotation=45, ha='right')
+                if dim_labels:
+                    ax.set_title(dim_labels[index] if dim_labels and index < len(dim_labels) else 'Distribution ' + str(index + 1))
                 ax.yaxis.set_ticks_position('none')
                 ax.grid(True, linestyle=':', linewidth='0.5', color='gray')
             else:
                 ax.set_visible(False)  # Hide unused subplots
+
+    show_plot = kwargs.get('show_plot', False)
+    if show_plot:
+        fig.tight_layout()
+        plt.show()
 
     return fig, axs

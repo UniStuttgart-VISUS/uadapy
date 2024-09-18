@@ -4,9 +4,9 @@ from scipy import stats
 from scipy.stats import _multivariate as mv
 
 
-class distribution:
+class Distribution:
 
-    def __init__(self, model, name="", dim = 1):
+    def __init__(self, model, name="", n_dims=1):
         """
         Creates a distribution, if samples are passed as the first parameter,
         no assumptions about the distribution are made. For the pdf and the sampling,
@@ -14,7 +14,7 @@ class distribution:
         are treated as samples of a normal distribution.
         :param model: A scipy.stats distribution or samples
         :param name: The name of the distribution
-        :param dim: The dimensionality of the distribution
+        :param n_dims: The dimensionality of the distribution
         """
         if name:
             self.name = name
@@ -28,9 +28,9 @@ class distribution:
             self.model = model
         mean = self.mean()
         if isinstance(mean, np.ndarray):
-            self.dim = len(self.mean())
+            self.n_dims = len(self.mean())
         else:
-            self.dim = 1
+            self.n_dims = 1
         self.kde = None
         if isinstance(self.model, np.ndarray):
             self.kde = stats.gaussian_kde(self.model.T)

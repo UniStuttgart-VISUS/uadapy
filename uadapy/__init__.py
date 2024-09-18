@@ -1,3 +1,3 @@
-from .distribution import distribution
+from .distribution import Distribution
 
-__all__ = ['distribution']
+__all__ = ['Distribution']
