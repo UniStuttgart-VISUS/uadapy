@@ -18,3 +18,17 @@ pip install uadapy
 ## Documentation
 You can find the documentation here: https://unistuttgart-visus.github.io/uadapy/
 
+## Citation
+If you use this software in your work, please cite it using the following metadata
+
+```
+@misc{UADAPy,
+      title={UADAPy: An Uncertainty-Aware Visualization and Analysis Toolbox}, 
+      author={Patrick Paetzold and David Hägele and Marina Evers and Daniel Weiskopf and Oliver Deussen},
+      year={2024},
+      eprint={2409.10217},
+      archivePrefix={arXiv},
+      primaryClass={cs.HC},
+      url={https://arxiv.org/abs/2409.10217}, 
+}
+```
