@@ -40,3 +40,5 @@ preferred-citation:
   title: "UADAPy: An Uncertainty-Aware Visualization and Analysis Toolbox"
   year: 2024
   url: "https://arxiv.org/abs/2409.10217"
+  eprint: "2409.10217",
+  archivePrefix: "arXiv"
