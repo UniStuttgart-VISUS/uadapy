@@ -1,0 +1,42 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Paetzold"
+  given-names: "Patrick"
+  orcid: "https://orcid.org/0000-0002-1315-4602"
+- family-names: "Hägele"
+  given-names: "David"
+  orcid: "https://orcid.org/0000-0002-2679-6882"
+- family-names: "Evers"
+  given-names: "Marina"
+  orcid: "https://orcid.org/0000-0003-3904-5065"
+- family-names: "Weiskopf"
+  given-names: "Daniel"
+  orcid: "https://orcid.org/0000-0003-1174-1026"
+- family-names: "Deussen"
+  given-names: "Oliver"
+  orcid: "https://orcid.org/0000-0001-5803-2185"
+title: "UADAPy: An Uncertainty-Aware Visualization and Analysis Toolbox"
+repository-code: "https://github.com/UniStuttgart-VISUS/uadapy"
+type: software
+preferred-citation:
+  type: generic
+  authors:
+  - family-names: "Paetzold"
+    given-names: "Patrick"
+    orcid: "https://orcid.org/0000-0002-1315-4602"
+  - family-names: "Hägele"
+    given-names: "David"
+    orcid: "https://orcid.org/0000-0002-2679-6882"
+  - family-names: "Evers"
+    given-names: "Marina"
+    orcid: "https://orcid.org/0000-0003-3904-5065"
+  - family-names: "Weiskopf"
+    given-names: "Daniel"
+    orcid: "https://orcid.org/0000-0003-1174-1026"
+  - family-names: "Deussen"
+    given-names: "Oliver"
+    orcid: "https://orcid.org/0000-0001-5803-2185"
+  title: "UADAPy: An Uncertainty-Aware Visualization and Analysis Toolbox"
+  year: 2024
+  url: "https://arxiv.org/abs/2409.10217"
