@@ -1,6 +1,7 @@
 import numpy as np
 from uastl import uastl, uncertain_data, options
 from plot_distributionmtx import plot_distributionmtx
+import matplotlib.pyplot as plt
 
 # Synthetic data generation
 def generate_synthetic_data(n=200):
@@ -48,13 +49,13 @@ def main_demo():
         # 'dashed_lines': None
     }
 
-    y_ltstr = plot_distributionmtx(
+    y_ltstr, fig, axs = plot_distributionmtx(
         y_ltstr,
         1,
         'comb',
         samples_colored=True,
         nmbsamples=3,
-        plot_cov=False,
+        plot_cov=True,
         plot_cor=True,
         plot_cor_length=False,
         co_point=100,
@@ -62,6 +63,8 @@ def main_demo():
         line_width=2.5,
         discr_nmb=13
     )
+    fig.tight_layout()
+    plt.show()
 
     # UASTL and Sensitivity Analysis
     pos = 100
@@ -69,10 +72,9 @@ def main_demo():
     bdwidth = 20
     delta = np.ones(len(y_ltstr.mu) // (1 + 3))
     delta[pos - bdwidth:pos + bdwidth + 1] = 1 + ampl * np.exp(-0.5 * np.abs(np.arange(1, 2 * bdwidth + 2) - (bdwidth + 1)) ** 2 / (bdwidth / 3) ** 2)
-
     export['export_name'] = "fig_2"
 
-    y_ltstr = plot_distributionmtx(
+    y_ltstr, fig, axs = plot_distributionmtx(
         y_ltstr,
         1,
         'comb',
@@ -88,6 +90,8 @@ def main_demo():
         delta=delta,
         time_stamp=[50, 150]
     )
+    fig.tight_layout()
+    plt.show()
 
 if __name__ == "__main__":
     main_demo()

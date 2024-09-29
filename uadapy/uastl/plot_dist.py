@@ -90,11 +90,18 @@ def plot_dist(data, plot_type, **opts):
     elif plot_type == "comb":
         plot_dist(data, "isoband", **opts)
         if "sigma_new" in data:
-            for j in range(1, 3):
-                plt.plot(np.arange(len(data['mu'])), data['mu'] + sigmalvl[j] * data['sigma_new'], color=[*col[j, :], 0.5], linewidth=line_fact * 0.25, linestyle='-')
-                plt.plot(np.arange(len(data['mu'])), data['mu'] - sigmalvl[j] * data['sigma_new'], color=[*col[j, :], 0.5], linewidth=line_fact * 0.25, linestyle='-')
-                plt.plot(np.arange(len(data['mu'])), data['mu'] + sigmalvl[j] * data['sigma_new'], color=[*col[j, :], 0.5], linewidth=line_fact * 0.5, linestyle=':')
-                plt.plot(np.arange(len(data['mu'])), data['mu'] - sigmalvl[j] * data['sigma_new'], color=[*col[j, :], 0.5], linewidth=line_fact * 0.5, linestyle=':')
+            flattened_mu = data['mu'].flatten()
+            plt.plot(np.arange(len(data['mu'])), flattened_mu + sigmalvl[1] * data['sigma_new'], color=[*col[1, :], 0.5], linewidth=line_fact * 0.25, linestyle='-')
+            plt.plot(np.arange(len(data['mu'])), flattened_mu - sigmalvl[1] * data['sigma_new'], color=[*col[1, :], 0.5], linewidth=line_fact * 0.25, linestyle='-')
+
+            plt.plot(np.arange(len(data['mu'])), flattened_mu + sigmalvl[2] * data['sigma_new'], color=[*col[2, :], 0.5], linewidth=line_fact * 0.25, linestyle='-')
+            plt.plot(np.arange(len(data['mu'])), flattened_mu - sigmalvl[2] * data['sigma_new'], color=[*col[2, :], 0.5], linewidth=line_fact * 0.25, linestyle='-')
+
+            plt.plot(np.arange(len(data['mu'])), flattened_mu + sigmalvl[1] * data['sigma_new'], color=[*col[1, :], 0.5], linewidth=line_fact * 0.5, linestyle=':')
+            plt.plot(np.arange(len(data['mu'])), flattened_mu - sigmalvl[1] * data['sigma_new'], color=[*col[1, :], 0.5], linewidth=line_fact * 0.5, linestyle=':')
+
+            plt.plot(np.arange(len(data['mu'])), flattened_mu + sigmalvl[2] * data['sigma_new'], color=[*col[2, :], 0.5], linewidth=line_fact * 0.5, linestyle=':')
+            plt.plot(np.arange(len(data['mu'])), flattened_mu - sigmalvl[2] * data['sigma_new'], color=[*col[2, :], 0.5], linewidth=line_fact * 0.5, linestyle=':')
         plt.plot(np.arange(len(data['mu'])), data['mu'], color=col[0, :], linewidth=line_fact)
         plot_dist(data, "spaghetti", **opts)
         if opts['export']['export']:

@@ -160,8 +160,8 @@ def plot_distributionmtx(y_ltstr : uncertain_data, num_periods, plot_type, **opt
             ST = {'samples': np.zeros((tme_stmp[1] - tme_stmp[0] + 1, opts['nmbsamples'] * 2 , num_periods)), #y_ltstr.samples.shape so * 2
                   'sigma_new': np.zeros((tme_stmp[1] - tme_stmp[0] + 1, num_periods))}
             for i in range(num_periods):
-                ST['samples'][:, :, i] = y_ltstr.samples[(i + 1) * ylen + tme_stmp[0]-1:(i + 1) * ylen + tme_stmp[1], :]
-                ST['sigma_new'][:, i] = sigma_new[(i + 1) * ylen + tme_stmp[0]-1:(i + 1) * ylen + tme_stmp[1]]
+                ST['samples'][:, :, i] = y_ltstr.samples[(i + 2) * ylen + tme_stmp[0]-1:(i + 2) * ylen + tme_stmp[1], :]
+                ST['sigma_new'][:, i] = sigma_new[(i + 2) * ylen + tme_stmp[0]-1:(i + 2) * ylen + tme_stmp[1]]
 
             R = {'samples': y_ltstr.samples[(2 + num_periods) * ylen + tme_stmp[0]-1:(2 + num_periods) * ylen + tme_stmp[1], :],
                  'sigma_new': sigma_new[(2 + num_periods) * ylen + tme_stmp[0]-1:(2 + num_periods) * ylen + tme_stmp[1]]}
@@ -198,7 +198,7 @@ def plot_distributionmtx(y_ltstr : uncertain_data, num_periods, plot_type, **opt
     R['sigma'] = y_ltstr.sigma[(2 + num_periods) * ylen + tme_stmp[0]-1:(2 + num_periods) * ylen + tme_stmp[1], (2 + num_periods) * ylen + tme_stmp[0]-1:(2 + num_periods) * ylen + tme_stmp[1]]
 
     # SET FIGURE
-    plt.figure()
+    plt.figure(figsize=(12, 8))
     plt.get_current_fig_manager().resize(1710, 1112)
     plt.suptitle('Uncertainty-Aware Seasonal-Trend Decomposition')
 
@@ -425,13 +425,13 @@ def plot_distributionmtx(y_ltstr : uncertain_data, num_periods, plot_type, **opt
             cur_fig.set_size_inches(16, 9)
             plt.savefig(f"{opts['export']['export_path']}{opts['export']['export_name']}_cor_length.png", bbox_inches='tight', dpi=300)
 
-    plt.tight_layout()
-    plt.show()
+    fig = plt.gcf()
+    axs = plt.gca()
     print("#####")
     print("##### Plotting DONE")
     print("#####")
     print("#################################################################################")
-    return y_ltstr
+    return y_ltstr, fig, axs
 
 # HELPER FUNCTIONS
 
@@ -443,18 +443,22 @@ def plot_cov_mat(y_ltstr, num_periods, opts):
     nmb_colors = opts['discr_nmb']
     color_map = color_lut(1)
     color_map = color_map[np.round(np.linspace(0, 256, nmb_colors)).astype(int), :]
+
+    # Create a custom colormap
+    cmap = mcolors.ListedColormap(color_map)
+
     plt.figure()
     if not opts['export']['export']:
         plt.suptitle('Covariance Matrix')
-    plt.imshow(y_ltstr.sigma, cmap=color_map)
+    plt.imshow(y_ltstr.sigma, cmap=cmap)
     plt.colorbar()
 
     # White lines between block matrices y, LT, STs, R
     sublength = len(y_ltstr.mu) // (num_periods + 3)
-    plt.hold(True)
-    for i in range(1, num_periods + 2):
-        plt.plot([(i * sublength + 0.5)] * len(y_ltstr.mu), linestyle=':', color='white', linewidth=opts['line_width'])
-        plt.plot([(i * sublength + 0.5)] * len(y_ltstr.mu), np.linspace(1, len(y_ltstr.mu), len(y_ltstr.mu)), linestyle=':', color='white', linewidth=opts['line_width'])
+
+    for i in range(1, num_periods + 3):
+        plt.plot([(i - 1) * sublength + 0.5 + sublength] * len(y_ltstr.mu), ':', color='white', linewidth=opts['line_width'])
+        plt.plot([(i - 1) * sublength + sublength + 0.5] * len(y_ltstr.mu), np.linspace(0, len(y_ltstr.mu) - 1, len(y_ltstr.mu)), ':', color='white', linewidth=opts['line_width'])
 
     max_el = np.max(np.abs(y_ltstr.sigma))
     if abs(max_el) > 0:
