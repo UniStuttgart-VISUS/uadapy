@@ -86,7 +86,7 @@ def plot_contour(distributions, n_samples, resolution=128, ranges=None, quantile
     ranges : list or None, optional
         Array of ranges for all dimensions. If None, the ranges are calculated based on the distributions.
     quantiles : list or None, optional
-        List of quantiles to use for determining isovalues. If None, the 99.7%, 95%, and 68% quantiles are used.
+        List of quantiles to use for determining isovalues. If None, the 95%, 75%, and 25% quantiles are used.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
     **kwargs : additional keyword arguments
@@ -113,18 +113,36 @@ def plot_contour(distributions, n_samples, resolution=128, ranges=None, quantile
     if isinstance(distributions, Distribution):
         distributions = [distributions]
     contour_colors = utils.generate_spectrum_colors(len(distributions))
+
+    # Determine default quantiles: 25%, 75%, and 95%
+    if quantiles is None:
+        quantiles = [25, 75, 95]
+    largest_quantile = max(quantiles)
+
     # Create matrix
     n_dims = distributions[0].n_dims
     if ranges is None:
         min_val = np.zeros(distributions[0].mean().shape)+1000
         max_val = np.zeros(distributions[0].mean().shape)-1000
         cov_max = np.zeros(np.diagonal(distributions[0].cov()).shape)
+
+        # Dynamically set the expansion factor based on the largest quantile
+        if largest_quantile >= 99.99:
+            ef = 6  # 6 standard deviations for 99.9% quantiles
+        elif largest_quantile >= 99.9:
+            ef = 5  # 5 standard deviations for 99.9% quantiles
+        elif largest_quantile >= 99:
+            ef = 4  # 4 standard deviations for 99% quantiles
+        else:
+            ef = 3  # Default to 3 standard deviations
+
         for d in distributions:
             min_val=np.min(np.array([d.mean(), min_val]), axis=0)
             max_val=np.max(np.array([d.mean(), max_val]), axis=0)
             cov_max = np.max(np.array([np.diagonal(d.cov()), cov_max]), axis=0)
         cov_max = np.sqrt(cov_max)
-        ranges = [(mi-3*co, ma+3*co) for mi,ma, co in zip(min_val, max_val, cov_max)]
+        ranges = [(mi-ef*co, ma+ef*co) for mi,ma, co in zip(min_val, max_val, cov_max)]
+
     fig, axes = plt.subplots(nrows=n_dims, ncols=n_dims)
     for i, ax in enumerate(axes.flat):
         # Hide all ticks and labels
@@ -151,18 +169,13 @@ def plot_contour(distributions, n_samples, resolution=128, ranges=None, quantile
         samples = d.sample(n_samples, seed)
         densities = d.pdf(samples)
         densities.sort()
-        if quantiles is None:
-            isovalues.append(densities[int((1 - 99.7/100) * n_samples)]) # 99.7% quantile
-            isovalues.append(densities[int((1 - 95/100) * n_samples)]) # 95% quantile
-            isovalues.append(densities[int((1 - 68/100) * n_samples)]) # 68% quantile
-        else:
-            quantiles.sort(reverse=True)
-            for quantile in quantiles:
-                if not 0 < quantile < 100:
-                    raise ValueError(f"Invalid quantile: {quantile}. Quantiles must be between 0 and 100 (exclusive).")
-                elif int((1 - quantile/100) * n_samples) >= n_samples:
-                    raise ValueError(f"Quantile {quantile} results in an index that is out of bounds.")
-                isovalues.append(densities[int((1 - quantile/100) * n_samples)])
+        quantiles.sort(reverse=True)
+        for quantile in quantiles:
+            if not 0 < quantile < 100:
+                raise ValueError(f"Invalid quantile: {quantile}. Quantiles must be between 0 and 100 (exclusive).")
+            elif int((1 - quantile/100) * n_samples) >= n_samples:
+                raise ValueError(f"Quantile {quantile} results in an index that is out of bounds.")
+            isovalues.append(densities[int((1 - quantile/100) * n_samples)])
 
         for i, j in zip(*np.triu_indices_from(axes, k=1)):
             for x, y in [(i, j), (j, i)]:
@@ -216,7 +229,7 @@ def plot_contour_samples(distributions, n_samples, resolution=128, ranges=None, 
     ranges : list or None, optional
         Array of ranges for all dimensions. If None, the ranges are calculated based on the distributions.
     quantiles : list or None, optional
-        List of quantiles to use for determining isovalues. If None, the 99.7%, 95%, and 68% quantiles are used.
+        List of quantiles to use for determining isovalues. If None, the 95%, 75%, and 25% quantiles are used.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
     **kwargs : additional keyword arguments
@@ -243,18 +256,36 @@ def plot_contour_samples(distributions, n_samples, resolution=128, ranges=None, 
     if isinstance(distributions, Distribution):
         distributions = [distributions]
     contour_colors = utils.generate_spectrum_colors(len(distributions))
+
+    # Determine default quantiles: 25%, 75%, and 95%
+    if quantiles is None:
+        quantiles = [25, 75, 95]
+    largest_quantile = max(quantiles)
+
     # Create matrix
     n_dims = distributions[0].n_dims
     if ranges is None:
         min_val = np.zeros(distributions[0].mean().shape)+1000
         max_val = np.zeros(distributions[0].mean().shape)-1000
         cov_max = np.zeros(np.diagonal(distributions[0].cov()).shape)
+
+        # Dynamically set the expansion factor based on the largest quantile
+        if largest_quantile >= 99.99:
+            ef = 6  # 6 standard deviations for 99.9% quantiles
+        elif largest_quantile >= 99.9:
+            ef = 5  # 5 standard deviations for 99.9% quantiles
+        elif largest_quantile >= 99:
+            ef = 4  # 4 standard deviations for 99% quantiles
+        else:
+            ef = 3  # Default to 3 standard deviations
+
         for d in distributions:
             min_val=np.min(np.array([d.mean(), min_val]), axis=0)
             max_val=np.max(np.array([d.mean(), max_val]), axis=0)
             cov_max = np.max(np.array([np.diagonal(d.cov()), cov_max]), axis=0)
         cov_max = np.sqrt(cov_max)
-        ranges = [(mi-3*co, ma+3*co) for mi,ma, co in zip(min_val, max_val, cov_max)]
+        ranges = [(mi-ef*co, ma+ef*co) for mi,ma, co in zip(min_val, max_val, cov_max)]
+
     fig, axes = plt.subplots(nrows=n_dims, ncols=n_dims)
     for i, ax in enumerate(axes.flat):
         # Hide all ticks and labels
@@ -280,18 +311,13 @@ def plot_contour_samples(distributions, n_samples, resolution=128, ranges=None, 
         samples = d.sample(n_samples, seed)
         densities = d.pdf(samples)
         densities.sort()
-        if quantiles is None:
-            isovalues.append(densities[int((1 - 99.7/100) * n_samples)]) # 99.7% quantile
-            isovalues.append(densities[int((1 - 95/100) * n_samples)]) # 95% quantile
-            isovalues.append(densities[int((1 - 68/100) * n_samples)]) # 68% quantile
-        else:
-            quantiles.sort(reverse=True)
-            for quantile in quantiles:
-                if not 0 < quantile < 100:
-                    raise ValueError(f"Invalid quantile: {quantile}. Quantiles must be between 0 and 100 (exclusive).")
-                elif int((1 - quantile/100) * n_samples) >= n_samples:
-                    raise ValueError(f"Quantile {quantile} results in an index that is out of bounds.")
-                isovalues.append(densities[int((1 - quantile/100) * n_samples)])
+        quantiles.sort(reverse=True)
+        for quantile in quantiles:
+            if not 0 < quantile < 100:
+                raise ValueError(f"Invalid quantile: {quantile}. Quantiles must be between 0 and 100 (exclusive).")
+            elif int((1 - quantile/100) * n_samples) >= n_samples:
+                raise ValueError(f"Quantile {quantile} results in an index that is out of bounds.")
+            isovalues.append(densities[int((1 - quantile/100) * n_samples)])
 
         for i, j in zip(*np.triu_indices_from(axes, k=1)):
             for x, y in [(i, j), (j, i)]:
