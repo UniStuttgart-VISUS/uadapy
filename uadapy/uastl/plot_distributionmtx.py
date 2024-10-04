@@ -410,13 +410,19 @@ def plot_distributionmtx(y_ltstr : uncertain_data, num_periods, plot_type, **opt
         cur_fig.set_size_inches(16, 9)
         plt.savefig(f"{opts['export']['export_path']}{export_name}.png", bbox_inches='tight', dpi=300)
 
+    fig_1 = plt.gcf()
+    axs_1 = plt.gca()
+    fig_1.tight_layout()
+
     # Change export_name to original input opts.export.export_name
     opts['export']['export_name'] = export_name
     if opts['plot_cov']:
-        plot_cov_mat(y_ltstr, num_periods, opts)
+        fig_2, axs_2 = plot_cov_mat(y_ltstr, num_periods, opts)
+        fig_2.tight_layout()
 
     if opts['plot_cor']:
-        y_ltstr = plot_cor_mat(y_ltstr, num_periods, opts)
+        y_ltstr, fig_3, axs_2 = plot_cor_mat(y_ltstr, num_periods, opts)
+        fig_3.tight_layout()
 
     if opts['plot_cor_length']:
         plot_cor_length(y_ltstr, num_periods, opts)
@@ -425,13 +431,11 @@ def plot_distributionmtx(y_ltstr : uncertain_data, num_periods, plot_type, **opt
             cur_fig.set_size_inches(16, 9)
             plt.savefig(f"{opts['export']['export_path']}{opts['export']['export_name']}_cor_length.png", bbox_inches='tight', dpi=300)
 
-    fig = plt.gcf()
-    axs = plt.gca()
     print("#####")
     print("##### Plotting DONE")
     print("#####")
     print("#################################################################################")
-    return y_ltstr, fig, axs
+    return y_ltstr
 
 # HELPER FUNCTIONS
 
@@ -473,6 +477,11 @@ def plot_cov_mat(y_ltstr, num_periods, opts):
         opts['export']['pbaspect'] = [1, 1, 1]
         export_plot(opts)
 
+    fig = plt.gcf()
+    axs = plt.gca()
+
+    return fig, axs
+
 def plot_cor_mat(y_ltstr, num_periods, opts):
     """
     This function PLOTCOR creates a plot of the correlation matrix using the
@@ -510,7 +519,11 @@ def plot_cor_mat(y_ltstr, num_periods, opts):
         opts['export']['export_name'] = f"{export_name}_cor_plot"
         opts['export']['pbaspect'] = [1, 1, 1]
         export_plot(opts)
-    return y_ltstr
+
+    fig = plt.gcf()
+    axs = plt.gca()
+
+    return y_ltstr, fig, axs
 
 def compute_cor_mat(y_ltstr):
     """
@@ -535,10 +548,11 @@ def plot_cor_length(y_ltstr, num_periods, opts):
     """
     sb_plot_nmb = num_periods + 3
     length_data = len(y_ltstr.mu) // sb_plot_nmb
-    if 'cor_mat' not in y_ltstr:
+    all_zeros = np.all(y_ltstr.cor_mat == 0)
+    if all_zeros:
         y_ltstr = compute_cor_mat(y_ltstr)
 
-    sign_cor_mat = np.sign(y_ltstr['cor_mat'])
+    sign_cor_mat = np.sign(y_ltstr.cor_mat)
     maxdim = len(sign_cor_mat)
     full_cor_length = np.zeros(maxdim)
     vert_r = np.zeros(maxdim)
@@ -575,23 +589,26 @@ def plot_cor_length(y_ltstr, num_periods, opts):
             full_cor_length[i] = vert1 + vert2 - 1
 
     nmb_colors = opts['discr_nmb'] // 2 + 1
-    out = [None] * len(y_ltstr['cor_mat'])
-    for i in range(len(y_ltstr['cor_mat'])):
+    out = [None] * len(y_ltstr.cor_mat)
+    vert_l = vert_l.astype(int)
+    vert_r = vert_r.astype(int)
+    for i in range(len(y_ltstr.cor_mat)):
         col_ind = np.full(length_data, np.nan)
         k = 2
         if vert_l[i] >= 1 or vert_r[i] >= 1:
+            print(vert_l[i])
             for j in range(vert_l[i] - 1, 0, -1):
-                col_ind[k] = min(int(np.ceil(y_ltstr['cor_mat'][i, i - j] * nmb_colors)), nmb_colors)
+                col_ind[k] = min(int(np.ceil(y_ltstr.cor_mat[i, i - j] * nmb_colors)), nmb_colors)
                 k += 1
-            col_ind[k] = min(int(np.ceil(y_ltstr['cor_mat'][i, i] * nmb_colors)), nmb_colors)
+            col_ind[k] = min(int(np.ceil(y_ltstr.cor_mat[i, i] * nmb_colors)), nmb_colors)
             k += 1
-            for j in range(1, vert_r[i]):
-                col_ind[k] = min(int(np.ceil(y_ltstr['cor_mat'][i, i + j] * nmb_colors)), nmb_colors)
+            for j in range(0, vert_r[i] - 1):
+                col_ind[k] = min(int(np.ceil(y_ltstr.cor_mat[i, i + j] * nmb_colors)), nmb_colors)
                 k += 1
             col_ind = col_ind[~np.isnan(col_ind)]
             out[i] = col_ind
 
-    plot_mat = np.zeros((len(y_ltstr['cor_mat']), length_data))
+    plot_mat = np.zeros((len(y_ltstr.cor_mat), length_data))
     ysize = np.zeros(len(out))
     for i in range(len(out)):
         if out[i] is not None:

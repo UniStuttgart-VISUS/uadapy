@@ -25,7 +25,7 @@ def plot_dist(data, plot_type, **opts):
         ceil_max_sigmalvl = np.ceil(max_sigmalvl + 1)
         lower_bound = np.min(data['mu'] - ceil_max_sigmalvl * data['sigma_sq'])
         upper_bound = np.max(data['mu'] + ceil_max_sigmalvl * data['sigma_sq'])
-        axbounds = [1, len(data['mu']), lower_bound, upper_bound]
+        axbounds = [0, len(data['mu']), lower_bound, upper_bound]
     if 'ylim' in opts:
         all_zeros = np.all(opts['ylim'] == 0)
         if all_zeros:
@@ -33,19 +33,19 @@ def plot_dist(data, plot_type, **opts):
             ceil_max_sigmalvl = np.ceil(max_sigmalvl + 1)
             lower_bound = np.min(data['mu'] - ceil_max_sigmalvl * data['sigma_sq'])
             upper_bound = np.max(data['mu'] + ceil_max_sigmalvl * data['sigma_sq'])
-            axbounds = [1, len(data['mu']), lower_bound, upper_bound]
+            axbounds = [0, len(data['mu']), lower_bound, upper_bound]
         else:
-            axbounds = [1, len(data['mu']), opts['ylim'][0], opts['ylim'][1]]
+            axbounds = [0, len(data['mu']), opts['ylim'][0], opts['ylim'][1]]
 
     if plot_type == "isoband":
-        x = np.arange(1, len(data['mu']) + 1)
-        for j in range(len(sigmalvl) - 1, 1, -1):
+        x = np.arange(len(data['mu']))
+        for j in range(len(sigmalvl) -1 , 0, -1):
             pos_cont = data['mu'] + sigmalvl[j] * data['sigma_sq']
             neg_cont = data['mu'] - sigmalvl[j] * data['sigma_sq']
             for i in range(len(data['mu']) - 1):
                 xp = [x[i], x[i + 1], x[i + 1], x[i]]
                 yp = [neg_cont[i], neg_cont[i + 1], pos_cont[i + 1], pos_cont[i]]
-                plt.fill(xp, yp, color=col[j, :], edgecolor='none', alpha=0.5)
+                plt.fill(xp, yp, color=col[j, :], edgecolor='none')
         plt.plot(x, data['mu'], color=col[0, :], linewidth=line_fact * 1.5)
     elif plot_type == "spaghetti":
         initial_color_order = np.array([

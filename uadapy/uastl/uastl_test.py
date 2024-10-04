@@ -49,7 +49,7 @@ def main_demo():
         # 'dashed_lines': None
     }
 
-    y_ltstr, fig, axs = plot_distributionmtx(
+    y_ltstr= plot_distributionmtx(
         y_ltstr,
         1,
         'comb',
@@ -63,7 +63,6 @@ def main_demo():
         line_width=2.5,
         discr_nmb=13
     )
-    fig.tight_layout()
     plt.show()
 
     # UASTL and Sensitivity Analysis
@@ -74,7 +73,7 @@ def main_demo():
     delta[pos - bdwidth:pos + bdwidth + 1] = 1 + ampl * np.exp(-0.5 * np.abs(np.arange(1, 2 * bdwidth + 2) - (bdwidth + 1)) ** 2 / (bdwidth / 3) ** 2)
     export['export_name'] = "fig_2"
 
-    y_ltstr, fig, axs = plot_distributionmtx(
+    y_ltstr = plot_distributionmtx(
         y_ltstr,
         1,
         'comb',
@@ -90,7 +89,6 @@ def main_demo():
         delta=delta,
         time_stamp=[50, 150]
     )
-    fig.tight_layout()
     plt.show()
 
 if __name__ == "__main__":
