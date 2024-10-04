@@ -122,13 +122,13 @@ def plot_distributionmtx(y_ltstr : uncertain_data, num_periods, plot_type, **opt
             opts['time_stamp'] = []
 
     if not time_stamp:
-        tme_stmp = [1, ylen]
+        tme_stmp = [0, ylen]
         opts['stmp_length'] = ylen
         opts['stamp_indices'] = list(range(len(y_ltstr.mu)))
         opts['time_stamp'] = [1, ylen]
     else:
         tme_stmp = opts['time_stamp']
-        opts['stmp_length'] = tme_stmp[1] - tme_stmp[0] + 1
+        opts['stmp_length'] = tme_stmp[1] - tme_stmp[0]
         stamp_indices = list(range(opts['time_stamp'][0], opts['time_stamp'][1] + 1))
         stamp_indices += list(range(ylen + opts['time_stamp'][0], ylen + opts['time_stamp'][1] + 1))
         for i in range(num_periods):
@@ -152,50 +152,50 @@ def plot_distributionmtx(y_ltstr : uncertain_data, num_periods, plot_type, **opt
             y_ltstr.samples = np.hstack((samp, samp_new))
             sigma_new = np.sqrt(np.sum((a_hat_e_hat @ np.diag(opts['delta']) @ T)**2, axis=1))
 
-            y = {'samples': y_ltstr.samples[tme_stmp[0]-1:tme_stmp[1], :],
-                 'sigma_new': sigma_new[tme_stmp[0]-1:tme_stmp[1]]}
-            LT = {'samples': y_ltstr.samples[ylen + tme_stmp[0]-1:ylen + tme_stmp[1], :],
-                  'sigma_new': sigma_new[ylen + tme_stmp[0]-1:ylen + tme_stmp[1]]}
+            y = {'samples': y_ltstr.samples[tme_stmp[0]:tme_stmp[1], :],
+                 'sigma_new': sigma_new[tme_stmp[0]:tme_stmp[1]]}
+            LT = {'samples': y_ltstr.samples[ylen + tme_stmp[0]:ylen + tme_stmp[1], :],
+                  'sigma_new': sigma_new[ylen + tme_stmp[0]:ylen + tme_stmp[1]]}
 
-            ST = {'samples': np.zeros((tme_stmp[1] - tme_stmp[0] + 1, opts['nmbsamples'] * 2 , num_periods)), #y_ltstr.samples.shape so * 2
-                  'sigma_new': np.zeros((tme_stmp[1] - tme_stmp[0] + 1, num_periods))}
+            ST = {'samples': np.zeros((tme_stmp[1] - tme_stmp[0], opts['nmbsamples'] * 2 , num_periods)), #y_ltstr.samples.shape so * 2
+                  'sigma_new': np.zeros((tme_stmp[1] - tme_stmp[0], num_periods))}
             for i in range(num_periods):
-                ST['samples'][:, :, i] = y_ltstr.samples[(i + 2) * ylen + tme_stmp[0]-1:(i + 2) * ylen + tme_stmp[1], :]
-                ST['sigma_new'][:, i] = sigma_new[(i + 2) * ylen + tme_stmp[0]-1:(i + 2) * ylen + tme_stmp[1]]
+                ST['samples'][:, :, i] = y_ltstr.samples[(i + 2) * ylen + tme_stmp[0]:(i + 2) * ylen + tme_stmp[1], :]
+                ST['sigma_new'][:, i] = sigma_new[(i + 2) * ylen + tme_stmp[0]:(i + 2) * ylen + tme_stmp[1]]
 
-            R = {'samples': y_ltstr.samples[(2 + num_periods) * ylen + tme_stmp[0]-1:(2 + num_periods) * ylen + tme_stmp[1], :],
-                 'sigma_new': sigma_new[(2 + num_periods) * ylen + tme_stmp[0]-1:(2 + num_periods) * ylen + tme_stmp[1]]}
+            R = {'samples': y_ltstr.samples[(2 + num_periods) * ylen + tme_stmp[0]:(2 + num_periods) * ylen + tme_stmp[1], :],
+                 'sigma_new': sigma_new[(2 + num_periods) * ylen + tme_stmp[0]:(2 + num_periods) * ylen + tme_stmp[1]]}
         else:
             if delta:
                 print('No y_ltstr.a_hat given, therefore going on without delta.')
             y_ltstr.samples = np.random.multivariate_normal(y_ltstr.mu.flatten(), y_ltstr.sigma, opts['nmbsamples']).T
-            y = {'samples': y_ltstr.samples[tme_stmp[0]-1:tme_stmp[1], :]}
-            LT = {'samples': y_ltstr.samples[ylen + tme_stmp[0]-1:ylen + tme_stmp[1], :]}
-            ST = {'samples': np.zeros((tme_stmp[1] - tme_stmp[0] + 1, opts['nmbsamples'], num_periods))}
+            y = {'samples': y_ltstr.samples[tme_stmp[0]:tme_stmp[1], :]}
+            LT = {'samples': y_ltstr.samples[ylen + tme_stmp[0]:ylen + tme_stmp[1], :]}
+            ST = {'samples': np.zeros((tme_stmp[1] - tme_stmp[0], opts['nmbsamples'], num_periods))}
             for i in range(num_periods):
-                ST['samples'][:, :, i] = y_ltstr.samples[(i + 2) * ylen + tme_stmp[0]-1:(i + 2) * ylen + tme_stmp[1], :]
-            R = {'samples': y_ltstr.samples[(2 + num_periods) * ylen + tme_stmp[0]-1:(2 + num_periods) * ylen + tme_stmp[1], :]}
+                ST['samples'][:, :, i] = y_ltstr.samples[(i + 2) * ylen + tme_stmp[0]:(i + 2) * ylen + tme_stmp[1], :]
+            R = {'samples': y_ltstr.samples[(2 + num_periods) * ylen + tme_stmp[0]:(2 + num_periods) * ylen + tme_stmp[1], :]}
 
-    y['mu'] = y_ltstr.mu[tme_stmp[0]-1:tme_stmp[1]]
-    y['sigma_sq'] = np.sqrt(np.maximum(np.diag(y_ltstr.sigma[tme_stmp[0]-1:tme_stmp[1], tme_stmp[0]-1:tme_stmp[1]]), 0))
-    y['sigma'] = y_ltstr.sigma[tme_stmp[0]-1:tme_stmp[1], tme_stmp[0]-1:tme_stmp[1]]
+    y['mu'] = y_ltstr.mu[tme_stmp[0]:tme_stmp[1]]
+    y['sigma_sq'] = np.sqrt(np.maximum(np.diag(y_ltstr.sigma[tme_stmp[0]:tme_stmp[1], tme_stmp[0]:tme_stmp[1]]), 0))
+    y['sigma'] = y_ltstr.sigma[tme_stmp[0]:tme_stmp[1], tme_stmp[0]:tme_stmp[1]]
 
-    LT['mu'] = y_ltstr.mu[ylen + tme_stmp[0]-1:ylen + tme_stmp[1]]
-    LT['sigma_sq'] = np.sqrt(np.maximum(np.diag(y_ltstr.sigma[ylen + tme_stmp[0]-1:ylen + tme_stmp[1], ylen + tme_stmp[0]-1:ylen + tme_stmp[1]]), 0))
-    LT['sigma'] = y_ltstr.sigma[ylen + tme_stmp[0]-1:ylen + tme_stmp[1], ylen + tme_stmp[0]-1:ylen + tme_stmp[1]]
+    LT['mu'] = y_ltstr.mu[ylen + tme_stmp[0]:ylen + tme_stmp[1]]
+    LT['sigma_sq'] = np.sqrt(np.maximum(np.diag(y_ltstr.sigma[ylen + tme_stmp[0]:ylen + tme_stmp[1], ylen + tme_stmp[0]:ylen + tme_stmp[1]]), 0))
+    LT['sigma'] = y_ltstr.sigma[ylen + tme_stmp[0]:ylen + tme_stmp[1], ylen + tme_stmp[0]:ylen + tme_stmp[1]]
 
-    ST['mu'] = np.zeros((tme_stmp[1] - tme_stmp[0] + 1, num_periods))
-    ST['sigma_sq'] =  np.zeros((tme_stmp[1] - tme_stmp[0] + 1, num_periods))
-    ST['sigma'] = np.zeros((tme_stmp[1] - tme_stmp[0] + 1, tme_stmp[1] - tme_stmp[0] + 1, num_periods))
+    ST['mu'] = np.zeros((tme_stmp[1] - tme_stmp[0], num_periods))
+    ST['sigma_sq'] =  np.zeros((tme_stmp[1] - tme_stmp[0], num_periods))
+    ST['sigma'] = np.zeros((tme_stmp[1] - tme_stmp[0], tme_stmp[1] - tme_stmp[0], num_periods))
 
     for i in range(num_periods):
-        ST['mu'][:, i] = y_ltstr.mu[(i + 2) * ylen + tme_stmp[0]-1:(i + 2) * ylen + tme_stmp[1]].flatten()
-        ST['sigma_sq'][:, i] = np.sqrt(np.maximum(np.diag(y_ltstr.sigma[(i + 2) * ylen + tme_stmp[0]-1:(i + 2) * ylen + tme_stmp[1], (i + 2) * ylen + tme_stmp[0]-1:(i + 2) * ylen + tme_stmp[1]]), 0))
-        ST['sigma'][:, :, i] = y_ltstr.sigma[(i + 2) * ylen + tme_stmp[0]-1:(i + 2) * ylen + tme_stmp[1], (i + 2) * ylen + tme_stmp[0]-1:(i + 2) * ylen + tme_stmp[1]]
+        ST['mu'][:, i] = y_ltstr.mu[(i + 2) * ylen + tme_stmp[0]:(i + 2) * ylen + tme_stmp[1]].flatten()
+        ST['sigma_sq'][:, i] = np.sqrt(np.maximum(np.diag(y_ltstr.sigma[(i + 2) * ylen + tme_stmp[0]:(i + 2) * ylen + tme_stmp[1], (i + 2) * ylen + tme_stmp[0]:(i + 2) * ylen + tme_stmp[1]]), 0))
+        ST['sigma'][:, :, i] = y_ltstr.sigma[(i + 2) * ylen + tme_stmp[0]:(i + 2) * ylen + tme_stmp[1], (i + 2) * ylen + tme_stmp[0]:(i + 2) * ylen + tme_stmp[1]]
 
-    R['mu'] = y_ltstr.mu[(2 + num_periods) * ylen + tme_stmp[0]-1:(2 + num_periods) * ylen + tme_stmp[1]]
-    R['sigma_sq'] =  np.sqrt(np.maximum(np.diag(y_ltstr.sigma[(2 + num_periods) * ylen + tme_stmp[0]-1:(2 + num_periods) * ylen + tme_stmp[1], (2 + num_periods) * ylen + tme_stmp[0]-1:(2 + num_periods) * ylen + tme_stmp[1]]), 0))
-    R['sigma'] = y_ltstr.sigma[(2 + num_periods) * ylen + tme_stmp[0]-1:(2 + num_periods) * ylen + tme_stmp[1], (2 + num_periods) * ylen + tme_stmp[0]-1:(2 + num_periods) * ylen + tme_stmp[1]]
+    R['mu'] = y_ltstr.mu[(2 + num_periods) * ylen + tme_stmp[0]:(2 + num_periods) * ylen + tme_stmp[1]]
+    R['sigma_sq'] =  np.sqrt(np.maximum(np.diag(y_ltstr.sigma[(2 + num_periods) * ylen + tme_stmp[0]:(2 + num_periods) * ylen + tme_stmp[1], (2 + num_periods) * ylen + tme_stmp[0]:(2 + num_periods) * ylen + tme_stmp[1]]), 0))
+    R['sigma'] = y_ltstr.sigma[(2 + num_periods) * ylen + tme_stmp[0]:(2 + num_periods) * ylen + tme_stmp[1], (2 + num_periods) * ylen + tme_stmp[0]:(2 + num_periods) * ylen + tme_stmp[1]]
 
     # SET FIGURE
     plt.figure(figsize=(12, 8))
@@ -274,8 +274,8 @@ def plot_distributionmtx(y_ltstr : uncertain_data, num_periods, plot_type, **opt
         j = 0
         for i in range(len(plot_back) - 1):
             if i == opts['co_point'] - 1:  # Adjusting for 0-indexing in Python
-                k = (i % ylen) - tme_stmp[0]
-                thickness = (tme_stmp[1] - tme_stmp[0]) / 500
+                k = (i % ylen) - tme_stmp[0] - 1
+                thickness = (tme_stmp[1] - tme_stmp[0] - 1) / 500
                 xdif = x[k + 1] - x[k]
                 xp = [x[k] - thickness * xdif, x[k] + thickness * xdif, x[k] + thickness * xdif, x[k] - thickness * xdif]
                 yss = ymid[j]
@@ -305,8 +305,8 @@ def plot_distributionmtx(y_ltstr : uncertain_data, num_periods, plot_type, **opt
                 pos_cont = yss
                 col_ind = (opts['discr_nmb'] // 2)
 
-            if (i % ylen) != 0 and (i % ylen) >= tme_stmp[0]:
-                k = (i % ylen) - tme_stmp[0]
+            if (i % ylen) != 0 and (i % ylen) >= tme_stmp[0] + 1:
+                k = (i % ylen) - tme_stmp[0] - 1
                 xdif = x[k + 1] - x[k]
                 xp = [x[k] - 1 / 2 * xdif, x[k] + 1 / 2 * xdif, x[k] + 1 / 2 * xdif, x[k] - 1 / 2 * xdif]
                 yp = [neg_cont, neg_cont, pos_cont, pos_cont]
@@ -337,7 +337,7 @@ def plot_distributionmtx(y_ltstr : uncertain_data, num_periods, plot_type, **opt
             basevalue = y['lims'][3]
         y['lims'][3] = basevalue + maxdel
         plotthis = maxdel * (opts['delta'] - 1) / max(opts['delta'] - 1) + basevalue
-        plotthis = plotthis[tme_stmp[0]-1:tme_stmp[1]]
+        plotthis = plotthis[tme_stmp[0]:tme_stmp[1]]
         plt.fill_between(range(len(plotthis)), basevalue, plotthis, facecolor=[0.6, 0.6, 0.6], alpha=0.3, edgecolor='none')
 
     plot_dist(y, plot_type, samples_colored=opts['samples_colored'], nmbsamples=opts['nmbsamples'], ylim=y['lims'][2:4], pbaspect=[pbx_length, pby_length, 1], line_width=opts['line_width'] * 1, export=temp_export)

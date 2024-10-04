@@ -88,21 +88,22 @@ def plot_dist(data, plot_type, **opts):
                 for h in h2a:
                     h.set_alpha(0.5)
     elif plot_type == "comb":
+        x = np.arange(len(data['mu']))
         plot_dist(data, "isoband", **opts)
         if "sigma_new" in data:
             flattened_mu = data['mu'].flatten()
-            plt.plot(np.arange(len(data['mu'])), flattened_mu + sigmalvl[1] * data['sigma_new'], color=[*col[1, :], 0.5], linewidth=line_fact * 0.25, linestyle='-')
-            plt.plot(np.arange(len(data['mu'])), flattened_mu - sigmalvl[1] * data['sigma_new'], color=[*col[1, :], 0.5], linewidth=line_fact * 0.25, linestyle='-')
+            plt.plot(x, flattened_mu + sigmalvl[1] * data['sigma_new'], color=[*col[1, :], 0.5], linewidth=line_fact * 0.25, linestyle='-')
+            plt.plot(x, flattened_mu - sigmalvl[1] * data['sigma_new'], color=[*col[1, :], 0.5], linewidth=line_fact * 0.25, linestyle='-')
 
-            plt.plot(np.arange(len(data['mu'])), flattened_mu + sigmalvl[2] * data['sigma_new'], color=[*col[2, :], 0.5], linewidth=line_fact * 0.25, linestyle='-')
-            plt.plot(np.arange(len(data['mu'])), flattened_mu - sigmalvl[2] * data['sigma_new'], color=[*col[2, :], 0.5], linewidth=line_fact * 0.25, linestyle='-')
+            plt.plot(x, flattened_mu + sigmalvl[2] * data['sigma_new'], color=[*col[2, :], 0.5], linewidth=line_fact * 0.25, linestyle='-')
+            plt.plot(x, flattened_mu - sigmalvl[2] * data['sigma_new'], color=[*col[2, :], 0.5], linewidth=line_fact * 0.25, linestyle='-')
 
-            plt.plot(np.arange(len(data['mu'])), flattened_mu + sigmalvl[1] * data['sigma_new'], color=[*col[1, :], 0.5], linewidth=line_fact * 0.5, linestyle=':')
-            plt.plot(np.arange(len(data['mu'])), flattened_mu - sigmalvl[1] * data['sigma_new'], color=[*col[1, :], 0.5], linewidth=line_fact * 0.5, linestyle=':')
+            plt.plot(x, flattened_mu + sigmalvl[1] * data['sigma_new'], color=[*col[1, :], 0.5], linewidth=line_fact * 0.5, linestyle=':')
+            plt.plot(x, flattened_mu - sigmalvl[1] * data['sigma_new'], color=[*col[1, :], 0.5], linewidth=line_fact * 0.5, linestyle=':')
 
-            plt.plot(np.arange(len(data['mu'])), flattened_mu + sigmalvl[2] * data['sigma_new'], color=[*col[2, :], 0.5], linewidth=line_fact * 0.5, linestyle=':')
-            plt.plot(np.arange(len(data['mu'])), flattened_mu - sigmalvl[2] * data['sigma_new'], color=[*col[2, :], 0.5], linewidth=line_fact * 0.5, linestyle=':')
-        plt.plot(np.arange(len(data['mu'])), data['mu'], color=col[0, :], linewidth=line_fact)
+            plt.plot(x, flattened_mu + sigmalvl[2] * data['sigma_new'], color=[*col[2, :], 0.5], linewidth=line_fact * 0.5, linestyle=':')
+            plt.plot(x, flattened_mu - sigmalvl[2] * data['sigma_new'], color=[*col[2, :], 0.5], linewidth=line_fact * 0.5, linestyle=':')
+        plt.plot(x, data['mu'], color=col[0, :], linewidth=line_fact)
         plot_dist(data, "spaghetti", **opts)
         if opts['export']['export']:
             opts['axbounds'] = plt.axis()
