@@ -307,7 +307,7 @@ def plot_1d_distribution(
     return fig, axs
 
 def generate_boxplot(distributions,
-        n_samples,
+        n_samples=10000,
         seed=55,
         fig=None,
         axs=None,
@@ -325,7 +325,7 @@ def generate_boxplot(distributions,
     ----------
     distributions : list
         List of distributions to plot.
-    n_samples : int
+    n_samples : int, optional
         Number of samples per distribution.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
@@ -366,7 +366,7 @@ def generate_boxplot(distributions,
     return fig, axs
 
 def generate_violinplot(distributions,
-        n_samples,
+        n_samples=10000,
         seed=55,
         fig=None,
         axs=None,
@@ -384,7 +384,7 @@ def generate_violinplot(distributions,
     ----------
     distributions : list
         List of distributions to plot.
-    n_samples : int
+    n_samples : int, optional
         Number of samples per distribution.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
@@ -425,7 +425,7 @@ def generate_violinplot(distributions,
     return fig, axs
 
 def generate_dotplot(distributions,
-        n_samples,
+        n_samples=20,
         fig=None,
         axs=None,
         distrib_labels=None,
@@ -442,7 +442,7 @@ def generate_dotplot(distributions,
     ----------
     distributions : list
         List of distributions to plot.
-    n_samples : int
+    n_samples : int, optional
         Number of samples per distribution.
     fig : matplotlib.figure.Figure or None, optional
         Figure object to use for plotting. If None, a new figure will be created.
@@ -482,7 +482,7 @@ def generate_dotplot(distributions,
     return fig, axs
 
 def generate_stripplot(distributions,
-        n_samples,
+        n_samples=20,
         seed=55,
         fig=None,
         axs=None,
@@ -500,7 +500,7 @@ def generate_stripplot(distributions,
     ----------
     distributions : list
         List of distributions to plot.
-    n_samples : int
+    n_samples : int, optional
         Number of samples per distribution.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
@@ -542,7 +542,7 @@ def generate_stripplot(distributions,
     return fig, axs
 
 def generate_swarmplot(distributions,
-        n_samples,
+        n_samples=20,
         seed=55,
         fig=None,
         axs=None,
@@ -560,7 +560,7 @@ def generate_swarmplot(distributions,
     ----------
     distributions : list
         List of distributions to plot.
-    n_samples : int
+    n_samples : int, optional
         Number of samples per distribution.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
