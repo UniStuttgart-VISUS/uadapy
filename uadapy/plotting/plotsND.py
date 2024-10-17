@@ -32,7 +32,7 @@ def plot_samples(distributions, n_samples, seed=55, show_plot=False):
     # Create matrix
     n_dims = distributions[0].n_dims
     fig, axes = plt.subplots(nrows=n_dims, ncols=n_dims)
-    contour_colors = utils.generate_spectrum_colors(len(distributions))
+    contour_colors = utils.get_colors(len(distributions))
     for ax in axes.flat:
         # Hide all ticks and labels
         ax.xaxis.set_visible(False)
@@ -107,7 +107,7 @@ def plot_contour(distributions, n_samples, resolution=128, ranges=None, quantile
 
     if isinstance(distributions, Distribution):
         distributions = [distributions]
-    contour_colors = utils.generate_spectrum_colors(len(distributions))
+    contour_colors = utils.get_colors(len(distributions))
     # Create matrix
     n_dims = distributions[0].n_dims
     if ranges is None:
@@ -234,7 +234,7 @@ def plot_contour_samples(distributions, n_samples, resolution=128, ranges=None, 
 
     if isinstance(distributions, Distribution):
         distributions = [distributions]
-    contour_colors = utils.generate_spectrum_colors(len(distributions))
+    contour_colors = utils.get_colors(len(distributions))
     # Create matrix
     n_dims = distributions[0].n_dims
     if ranges is None:

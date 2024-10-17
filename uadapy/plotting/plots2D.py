@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from uadapy import Distribution
-from numpy import ma
-from matplotlib import ticker
+from matplotlib.colors import ListedColormap
+import uadapy.plotting.utils as utils
 
 def plot_samples(distributions, n_samples, seed=55, xlabel=None, ylabel=None, title=None, show_plot=False):
     """
@@ -37,9 +37,12 @@ def plot_samples(distributions, n_samples, seed=55, xlabel=None, ylabel=None, ti
 
     if isinstance(distributions, Distribution):
         distributions = [distributions]
-    for d in distributions:
+
+    colors = utils.get_colors(len(distributions))
+
+    for i, d in enumerate(distributions):
         samples = d.sample(n_samples, seed)
-        plt.scatter(x=samples[:,0], y=samples[:,1])
+        plt.scatter(x=samples[:,0], y=samples[:,1], color=colors[i])
     if xlabel:
         plt.xlabel(xlabel)
     if ylabel:
@@ -92,7 +95,8 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
 
     if isinstance(distributions, Distribution):
         distributions = [distributions]
-    contour_colors = generate_spectrum_colors(len(distributions))
+
+    contour_colors = utils.get_colors(len(distributions))
 
     if ranges is None:
         min_val = np.zeros(distributions[0].mean().shape)+1000
@@ -186,13 +190,9 @@ def plot_contour_bands(distributions, n_samples, resolution=128, ranges=None, qu
     if isinstance(distributions, Distribution):
         distributions = [distributions]
 
-    # Sequential and perceptually uniform colormaps
-    colormaps = [
-        'Reds', 'Blues', 'Greens', 'Greys', 'Oranges', 'Purples',
-        'YlOrBr', 'YlOrRd', 'OrRd', 'PuRd', 'RdPu', 'BuPu',
-        'GnBu', 'PuBu', 'YlGnBu', 'PuBuGn', 'BuGn', 'YlGn',
-        'viridis', 'plasma', 'inferno', 'magma', 'cividis'
-    ]
+    n_quantiles = len(quantiles)
+    alpha_values = np.linspace(1/n_quantiles, 1.0, n_quantiles)  # Creates alpha values from 1/n to 1.0
+    custom_cmap = utils.create_shaded_set2_colormap(alpha_values)
 
     if ranges is None:
         min_val = np.zeros(distributions[0].mean().shape)+1000
@@ -233,9 +233,18 @@ def plot_contour_bands(distributions, n_samples, resolution=128, ranges=None, qu
                 elif int((1 - quantile/100) * n_samples) >= n_samples:
                     raise ValueError(f"Quantile {quantile} results in an index that is out of bounds.")
                 isovalues.append(densities[int((1 - quantile/100) * n_samples)])
+        isovalues.append(densities[-1])  # Minimum density value
 
-        # Generate logarithmic levels and create the contour plot with different colormap for each distribution
-        plt.contourf(xv, yv, pdf, levels=isovalues, locator=ticker.LogLocator(), cmap=colormaps[i % len(colormaps)])
+        # Extract the subset of colors corresponding to the current Set2 color and its 3 alpha variations
+        start_idx = i * n_quantiles
+        end_idx = start_idx + n_quantiles
+        color_subset = custom_cmap.colors[start_idx:end_idx]
+
+        # Create a ListedColormap for the current color and its alpha variations
+        cmap_subset = ListedColormap(color_subset)
+
+        # Generate the filled contour plot with transparency and better visibility
+        plt.contourf(xv, yv, pdf, levels=isovalues, cmap=cmap_subset)
 
     # Get the current figure and axes
     fig = plt.gcf()
@@ -246,11 +255,3 @@ def plot_contour_bands(distributions, n_samples, resolution=128, ranges=None, qu
         plt.show()
 
     return fig, axs
-
-# HELPER FUNCTIONS
-def generate_random_colors(length):
-    return ["#"+''.join([np.random.choice('0123456789ABCDEF') for j in range(6)]) for _ in range(length)]
-
-def generate_spectrum_colors(length):
-    cmap = plt.cm.get_cmap('viridis', length)  # You can choose different colormaps like 'jet', 'hsv', 'rainbow', etc.
-    return np.array([cmap(i) for i in range(length)])
