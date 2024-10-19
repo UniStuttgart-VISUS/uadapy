@@ -3,7 +3,7 @@ import numpy as np
 from uadapy import Distribution
 import uadapy.plotting.utils as utils
 
-def plot_samples(distributions, n_samples, seed=55, **kwargs):
+def plot_samples(distributions, n_samples, seed=55, show_plot=False):
     """
     Plot samples from the multivariate distribution as a SLOM.
 
@@ -15,11 +15,9 @@ def plot_samples(distributions, n_samples, seed=55, **kwargs):
         Number of samples per distribution.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
-    **kwargs : additional keyword arguments
-        Additional optional plotting arguments.
-        - show_plot : bool, optional
-            If True, display the plot.
-            Default is False.
+    show_plot : bool, optional
+        If True, display the plot.
+        Default is False.
 
     Returns
     -------
@@ -64,14 +62,13 @@ def plot_samples(distributions, n_samples, seed=55, **kwargs):
     fig = plt.gcf()
     axs = plt.gca()
 
-    show_plot = kwargs.get('show_plot', False)
     if show_plot:
         fig.tight_layout()
         plt.show()
 
     return fig, axs
 
-def plot_contour(distributions, n_samples, resolution=128, ranges=None, quantiles: list = None, seed=55, **kwargs):
+def plot_contour(distributions, n_samples, resolution=128, ranges=None, quantiles: list = None, seed=55, show_plot=False):
     """
     Visualizes a multidimensional distribution in a matrix of contour plots.
 
@@ -89,11 +86,9 @@ def plot_contour(distributions, n_samples, resolution=128, ranges=None, quantile
         List of quantiles to use for determining isovalues. If None, the 99.7%, 95%, and 68% quantiles are used.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
-    **kwargs : additional keyword arguments
-        Additional optional plotting arguments.
-        - show_plot : bool, optional
-            If True, display the plot.
-            Default is False.
+    show_plot : bool, optional
+        If True, display the plot.
+        Default is False.
 
     Returns
     -------
@@ -192,7 +187,6 @@ def plot_contour(distributions, n_samples, resolution=128, ranges=None, quantile
     fig = plt.gcf()
     axs = plt.gca()
 
-    show_plot = kwargs.get('show_plot', False)
     if show_plot:
         fig.tight_layout()
         plt.show()
@@ -200,7 +194,7 @@ def plot_contour(distributions, n_samples, resolution=128, ranges=None, quantile
     return fig, axs
 
 def plot_contour_samples(distributions, n_samples, resolution=128, ranges=None, quantiles: list = None, seed=55,
-                         **kwargs):
+                         show_plot=False):
     """
     Visualizes a multidimensional distribution in a matrix visualization where the
     upper diagonal contains contour plots and the lower diagonal contains scatterplots.
@@ -219,11 +213,9 @@ def plot_contour_samples(distributions, n_samples, resolution=128, ranges=None, 
         List of quantiles to use for determining isovalues. If None, the 99.7%, 95%, and 68% quantiles are used.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
-    **kwargs : additional keyword arguments
-        Additional optional plotting arguments.
-        - show_plot : bool, optional
-            If True, display the plot.
-            Default is False.
+    show_plot : bool, optional
+        If True, display the plot.
+        Default is False.
 
     Returns
     -------
@@ -324,7 +316,6 @@ def plot_contour_samples(distributions, n_samples, resolution=128, ranges=None, 
     fig = plt.gcf()
     axs = plt.gca()
 
-    show_plot = kwargs.get('show_plot', False)
     if show_plot:
         fig.tight_layout()
         plt.show()

@@ -43,11 +43,9 @@ def _setup_plot(distributions, n_samples, seed, fig=None, axs=None, colors=None,
         Axes object(s) to use for plotting. If None, new axes will be created.
     colors : list or None, optional
         List of colors to use for each distribution. If None, Glasbey colors will be used.
-    **kwargs : additional keyword arguments
-        Additional optional arguments.
-        - colorblind_safe : bool, optional
-            If True, the plot will use colors suitable for colorblind individuals.
-            Default is False.
+    colorblind_safe : bool, optional
+        If True, the plot will use colors suitable for colorblind individuals.
+        Default is False.
 
     Returns
     -------
@@ -122,7 +120,7 @@ def plot_1d_distribution(
         distrib_colors=None,
         vert=True,
         colorblind_safe=False,
-        show_plot=True,
+        show_plot=False,
         dot_size=0,
         **kwargs):
     """
@@ -316,7 +314,7 @@ def generate_boxplot(distributions,
         distrib_colors=None,
         vert=True,
         colorblind_safe=False,
-        show_plot=True,
+        show_plot=False,
         **kwargs):
     """
     Plot box plots for samples drawn from given distributions.
@@ -375,7 +373,7 @@ def generate_violinplot(distributions,
         distrib_colors=None,
         vert=True,
         colorblind_safe=False,
-        show_plot=True,
+        show_plot=False,
         **kwargs):
     """
     Plot violin plots for samples drawn from given distributions.
@@ -433,7 +431,7 @@ def generate_dotplot(distributions,
         distrib_colors=None,
         vert=True,
         colorblind_safe=False,
-        show_plot=True,
+        show_plot=False,
         dot_size=0):
     """
     Plot dot plots for samples drawn from given distributions.
@@ -491,7 +489,7 @@ def generate_stripplot(distributions,
         distrib_colors=None,
         vert=True,
         colorblind_safe=False,
-        show_plot=True,
+        show_plot=False,
         dot_size=0):
     """
     Plot strip plots for samples drawn from given distributions.
@@ -551,7 +549,7 @@ def generate_swarmplot(distributions,
         distrib_colors=None,
         vert=True,
         colorblind_safe=False,
-        show_plot=True,
+        show_plot=False,
         dot_size=0):
     """
     Plot swarm plots for samples drawn from given distributions.
