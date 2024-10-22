@@ -2,8 +2,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 from uadapy import Distribution
 import uadapy.plotting.utils as utils
+import glasbey as gb
 
-def plot_samples(distributions, n_samples, seed=55, show_plot=False):
+def plot_samples(distributions,
+                 n_samples,
+                 seed=55,
+                 distrib_colors=None,
+                 colorblind_safe=False,
+                 show_plot=False):
     """
     Plot samples from the multivariate distribution as a SLOM.
 
@@ -15,6 +21,11 @@ def plot_samples(distributions, n_samples, seed=55, show_plot=False):
         Number of samples per distribution.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
+    distrib_colors : list or None, optional
+        List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
+    colorblind_safe : bool, optional
+        If True, the plot will use colors suitable for colorblind individuals.
+        Default is False.
     show_plot : bool, optional
         If True, display the plot.
         Default is False.
@@ -32,7 +43,22 @@ def plot_samples(distributions, n_samples, seed=55, show_plot=False):
     # Create matrix
     n_dims = distributions[0].n_dims
     fig, axes = plt.subplots(nrows=n_dims, ncols=n_dims)
-    contour_colors = utils.get_colors(len(distributions))
+
+    # Generate colors
+    if distrib_colors is None:
+        if colorblind_safe:
+            palette = gb.create_palette(palette_size=len(distributions), colorblind_safe=colorblind_safe)
+        else:
+            palette =  utils.get_colors(len(distributions))
+    else:
+        if len(distrib_colors) < len(distributions):
+            if colorblind_safe:
+                additional_colors = gb.create_palette(palette_size=len(distributions) - len(distrib_colors), colorblind_safe=colorblind_safe)
+            else:
+                additional_colors = utils.get_colors(len(distributions) - len(distrib_colors))
+            distrib_colors.extend(additional_colors)
+        palette = distrib_colors
+
     for ax in axes.flat:
         # Hide all ticks and labels
         ax.xaxis.set_visible(False)
@@ -45,11 +71,11 @@ def plot_samples(distributions, n_samples, seed=55, show_plot=False):
         samples = d.sample(n_samples, seed)
         for i, j in zip(*np.triu_indices_from(axes, k=1)):
             for x, y in [(i, j), (j, i)]:
-                axes[x,y].scatter(samples[:,y], y=samples[:,x], color=contour_colors[k])
+                axes[x,y].scatter(samples[:,y], y=samples[:,x], color=palette[k])
 
         # Fill diagonal
         for i in range(n_dims):
-            axes[i,i].hist(samples[:,i], histtype='stepfilled', fill=False, alpha=1.0, density=True, ec=contour_colors[k])
+            axes[i,i].hist(samples[:,i], histtype='stepfilled', fill=False, alpha=1.0, density=True, ec=palette[k])
             axes[i,i].xaxis.set_visible(True)
             axes[i,i].yaxis.set_visible(True)
 
@@ -68,7 +94,15 @@ def plot_samples(distributions, n_samples, seed=55, show_plot=False):
 
     return fig, axs
 
-def plot_contour(distributions, n_samples, resolution=128, ranges=None, quantiles: list = None, seed=55, show_plot=False):
+def plot_contour(distributions,
+                 n_samples,
+                 resolution=128,
+                 ranges=None,
+                 quantiles: list = None,
+                 seed=55,
+                 distrib_colors=None,
+                 colorblind_safe=False,
+                 show_plot=False):
     """
     Visualizes a multidimensional distribution in a matrix of contour plots.
 
@@ -86,6 +120,11 @@ def plot_contour(distributions, n_samples, resolution=128, ranges=None, quantile
         List of quantiles to use for determining isovalues. If None, the 99.7%, 95%, and 68% quantiles are used.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
+    distrib_colors : list or None, optional
+        List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
+    colorblind_safe : bool, optional
+        If True, the plot will use colors suitable for colorblind individuals.
+        Default is False.
     show_plot : bool, optional
         If True, display the plot.
         Default is False.
@@ -107,7 +146,22 @@ def plot_contour(distributions, n_samples, resolution=128, ranges=None, quantile
 
     if isinstance(distributions, Distribution):
         distributions = [distributions]
-    contour_colors = utils.get_colors(len(distributions))
+
+    # Generate colors
+    if distrib_colors is None:
+        if colorblind_safe:
+            palette = gb.create_palette(palette_size=len(distributions), colorblind_safe=colorblind_safe)
+        else:
+            palette =  utils.get_colors(len(distributions))
+    else:
+        if len(distrib_colors) < len(distributions):
+            if colorblind_safe:
+                additional_colors = gb.create_palette(palette_size=len(distributions) - len(distrib_colors), colorblind_safe=colorblind_safe)
+            else:
+                additional_colors = utils.get_colors(len(distributions) - len(distrib_colors))
+            distrib_colors.extend(additional_colors)
+        palette = distrib_colors
+
     # Create matrix
     n_dims = distributions[0].n_dims
     if ranges is None:
@@ -161,7 +215,7 @@ def plot_contour(distributions, n_samples, resolution=128, ranges=None, quantile
 
         for i, j in zip(*np.triu_indices_from(axes, k=1)):
             for x, y in [(i, j), (j, i)]:
-                color = contour_colors[k]
+                color = palette[k]
                 indices = list(np.arange(d.n_dims))
                 indices.remove(x)
                 indices.remove(y)
@@ -193,7 +247,14 @@ def plot_contour(distributions, n_samples, resolution=128, ranges=None, quantile
 
     return fig, axs
 
-def plot_contour_samples(distributions, n_samples, resolution=128, ranges=None, quantiles: list = None, seed=55,
+def plot_contour_samples(distributions,
+                         n_samples,
+                         resolution=128,
+                         ranges=None,
+                         quantiles: list = None,
+                         seed=55,
+                         distrib_colors=None,
+                         colorblind_safe=False,
                          show_plot=False):
     """
     Visualizes a multidimensional distribution in a matrix visualization where the
@@ -213,6 +274,11 @@ def plot_contour_samples(distributions, n_samples, resolution=128, ranges=None, 
         List of quantiles to use for determining isovalues. If None, the 99.7%, 95%, and 68% quantiles are used.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
+    distrib_colors : list or None, optional
+        List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
+    colorblind_safe : bool, optional
+        If True, the plot will use colors suitable for colorblind individuals.
+        Default is False.
     show_plot : bool, optional
         If True, display the plot.
         Default is False.
@@ -234,7 +300,22 @@ def plot_contour_samples(distributions, n_samples, resolution=128, ranges=None, 
 
     if isinstance(distributions, Distribution):
         distributions = [distributions]
-    contour_colors = utils.get_colors(len(distributions))
+
+    # Generate colors
+    if distrib_colors is None:
+        if colorblind_safe:
+            palette = gb.create_palette(palette_size=len(distributions), colorblind_safe=colorblind_safe)
+        else:
+            palette =  utils.get_colors(len(distributions))
+    else:
+        if len(distrib_colors) < len(distributions):
+            if colorblind_safe:
+                additional_colors = gb.create_palette(palette_size=len(distributions) - len(distrib_colors), colorblind_safe=colorblind_safe)
+            else:
+                additional_colors = utils.get_colors(len(distributions) - len(distrib_colors))
+            distrib_colors.extend(additional_colors)
+        palette = distrib_colors
+
     # Create matrix
     n_dims = distributions[0].n_dims
     if ranges is None:
@@ -287,7 +368,7 @@ def plot_contour_samples(distributions, n_samples, resolution=128, ranges=None, 
 
         for i, j in zip(*np.triu_indices_from(axes, k=1)):
             for x, y in [(i, j), (j, i)]:
-                color = contour_colors[k]
+                color = palette[k]
                 indices = list(np.arange(d.n_dims))
                 indices.remove(x)
                 indices.remove(y)
@@ -295,7 +376,7 @@ def plot_contour_samples(distributions, n_samples, resolution=128, ranges=None, 
                 if x < y:
                     axes[x,y].contour(dims[x], dims[y], pdf_agg, levels=isovalues, colors=[color])
                 else:
-                    axes[x, y].scatter(samples[:, y], y=samples[:, x], color=contour_colors[k])
+                    axes[x, y].scatter(samples[:, y], y=samples[:, x], color=palette[k])
                     axes[x, y].set_xlim(ranges[x][0], ranges[x][1])
                     axes[x, y].set_ylim(ranges[y][0], ranges[y][1])
 

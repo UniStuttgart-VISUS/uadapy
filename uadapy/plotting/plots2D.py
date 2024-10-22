@@ -3,8 +3,17 @@ import numpy as np
 from uadapy import Distribution
 from matplotlib.colors import ListedColormap
 import uadapy.plotting.utils as utils
+import glasbey as gb
 
-def plot_samples(distributions, n_samples, seed=55, xlabel=None, ylabel=None, title=None, show_plot=False):
+def plot_samples(distributions,
+                 n_samples,
+                 seed=55,
+                 xlabel=None,
+                 ylabel=None,
+                 title=None,
+                 distrib_colors=None,
+                 colorblind_safe=False,
+                 show_plot=False):
     """
     Plot samples from the given distribution. If several distributions should be
     plotted together, an array can be passed to this function.
@@ -23,6 +32,11 @@ def plot_samples(distributions, n_samples, seed=55, xlabel=None, ylabel=None, ti
         label for y-axis.
     title : string, optional
         title for the plot.
+    distrib_colors : list or None, optional
+        List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
+    colorblind_safe : bool, optional
+        If True, the plot will use colors suitable for colorblind individuals.
+        Default is False.
     show_plot : bool, optional
         If True, display the plot.
         Default is False.
@@ -38,11 +52,24 @@ def plot_samples(distributions, n_samples, seed=55, xlabel=None, ylabel=None, ti
     if isinstance(distributions, Distribution):
         distributions = [distributions]
 
-    colors = utils.get_colors(len(distributions))
+    # Generate colors
+    if distrib_colors is None:
+        if colorblind_safe:
+            palette = gb.create_palette(palette_size=len(distributions), colorblind_safe=colorblind_safe)
+        else:
+            palette =  utils.get_colors(len(distributions))
+    else:
+        if len(distrib_colors) < len(distributions):
+            if colorblind_safe:
+                additional_colors = gb.create_palette(palette_size=len(distributions) - len(distrib_colors), colorblind_safe=colorblind_safe)
+            else:
+                additional_colors = utils.get_colors(len(distributions) - len(distrib_colors))
+            distrib_colors.extend(additional_colors)
+        palette = distrib_colors
 
     for i, d in enumerate(distributions):
         samples = d.sample(n_samples, seed)
-        plt.scatter(x=samples[:,0], y=samples[:,1], color=colors[i])
+        plt.scatter(x=samples[:,0], y=samples[:,1], color=palette[i])
     if xlabel:
         plt.xlabel(xlabel)
     if ylabel:
@@ -60,7 +87,14 @@ def plot_samples(distributions, n_samples, seed=55, xlabel=None, ylabel=None, ti
 
     return fig, axs
 
-def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None, seed=55, show_plot=False):
+def plot_contour(distributions,
+                 resolution=128,
+                 ranges=None,
+                 quantiles:list=None,
+                 seed=55,
+                 distrib_colors=None,
+                 colorblind_safe=False,
+                 show_plot=False):
     """
     Plot contour plots for samples drawn from given distributions.
 
@@ -76,6 +110,11 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
         List of quantiles to use for determining isovalues. If None, the 99.7%, 95%, and 68% quantiles are used.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
+    distrib_colors : list or None, optional
+        List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
+    colorblind_safe : bool, optional
+        If True, the plot will use colors suitable for colorblind individuals.
+        Default is False.
     show_plot : bool, optional
         If True, display the plot.
         Default is False.
@@ -96,7 +135,20 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
     if isinstance(distributions, Distribution):
         distributions = [distributions]
 
-    contour_colors = utils.get_colors(len(distributions))
+    # Generate colors
+    if distrib_colors is None:
+        if colorblind_safe:
+            palette = gb.create_palette(palette_size=len(distributions), colorblind_safe=colorblind_safe)
+        else:
+            palette =  utils.get_colors(len(distributions))
+    else:
+        if len(distrib_colors) < len(distributions):
+            if colorblind_safe:
+                additional_colors = gb.create_palette(palette_size=len(distributions) - len(distrib_colors), colorblind_safe=colorblind_safe)
+            else:
+                additional_colors = utils.get_colors(len(distributions) - len(distrib_colors))
+            distrib_colors.extend(additional_colors)
+        palette = distrib_colors
 
     if ranges is None:
         min_val = np.zeros(distributions[0].mean().shape)+1000
@@ -118,7 +170,7 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
         coordinates = coordinates.reshape((-1, 2))
         pdf = d.pdf(coordinates)
         pdf = pdf.reshape(xv.shape)
-        color = contour_colors[i]
+        color = palette[i]
 
         # Monte Carlo approach for determining isovalues
         isovalues = []
@@ -151,7 +203,12 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
 
     return fig, axs
 
-def plot_contour_bands(distributions, n_samples, resolution=128, ranges=None, quantiles: list = None, seed=55,
+def plot_contour_bands(distributions,
+                       n_samples,
+                       resolution=128,
+                       ranges=None,
+                       quantiles: list = None,
+                       seed=55,
                        show_plot=False):
     """
     Plot contour bands for samples drawn from given distributions.

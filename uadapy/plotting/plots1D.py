@@ -43,7 +43,7 @@ def _setup_plot(distributions, n_samples, seed, fig=None, axs=None, colors=None,
     axs : matplotlib.axes.Axes or array of Axes or None, optional
         Axes object(s) to use for plotting. If None, new axes will be created.
     colors : list or None, optional
-        List of colors to use for each distribution. If None, Glasbey colors will be used.
+        List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
     colorblind_safe : bool, optional
         If True, the plot will use colors suitable for colorblind individuals.
         Default is False.
@@ -152,7 +152,7 @@ def plot_1d_distribution(
     dim_labels : list or None, optional
         Titles for each subplot.
     distrib_colors : list or None, optional
-        List of colors to use for each distribution. If None, Glasbey colors will be used.
+        List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
     vert : bool, optional
         If True, plots will be drawn vertically. If False, plots will be drawn horizontally.
         Default is True.
@@ -343,7 +343,7 @@ def generate_boxplot(distributions,
     dim_labels : list or None, optional
         Titles for each subplot.
     distrib_colors : list or None, optional
-        List of colors to use for each distribution. If None, Glasbey colors will be used.
+        List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
     vert : bool, optional
         If True, plots will be drawn vertically. If False, plots will be drawn horizontally.
         Default is True.
@@ -402,7 +402,7 @@ def generate_violinplot(distributions,
     dim_labels : list or None, optional
         Titles for each subplot.
     distrib_colors : list or None, optional
-        List of colors to use for each distribution. If None, Glasbey colors will be used.
+        List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
     vert : bool, optional
         If True, plots will be drawn vertically. If False, plots will be drawn horizontally.
         Default is True.
@@ -458,7 +458,7 @@ def generate_dotplot(distributions,
     dim_labels : list or None, optional
         Titles for each subplot.
     distrib_colors : list or None, optional
-        List of colors to use for each distribution. If None, Glasbey colors will be used.
+        List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
     vert : bool, optional
         If True, plots will be drawn vertically. If False, plots will be drawn horizontally.
         Default is True.
@@ -518,7 +518,7 @@ def generate_stripplot(distributions,
     dim_labels : list or None, optional
         Titles for each subplot.
     distrib_colors : list or None, optional
-        List of colors to use for each distribution. If None, Glasbey colors will be used.
+        List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
     vert : bool, optional
         If True, plots will be drawn vertically. If False, plots will be drawn horizontally.
         Default is True.
@@ -578,7 +578,7 @@ def generate_swarmplot(distributions,
     dim_labels : list or None, optional
         Titles for each subplot.
     distrib_colors : list or None, optional
-        List of colors to use for each distribution. If None, Glasbey colors will be used.
+        List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
     vert : bool, optional
         If True, plots will be drawn vertically. If False, plots will be drawn horizontally.
         Default is True.
