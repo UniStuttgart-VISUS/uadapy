@@ -1,10 +1,19 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from uadapy import Distribution
-from numpy import ma
-from matplotlib import ticker
+from matplotlib.colors import ListedColormap
+import uadapy.plotting.utils as utils
+import glasbey as gb
 
-def plot_samples(distributions, n_samples, seed=55, **kwargs):
+def plot_samples(distributions,
+                 n_samples,
+                 seed=55,
+                 xlabel=None,
+                 ylabel=None,
+                 title=None,
+                 distrib_colors=None,
+                 colorblind_safe=False,
+                 show_plot=False):
     """
     Plot samples from the given distribution. If several distributions should be
     plotted together, an array can be passed to this function.
@@ -17,15 +26,20 @@ def plot_samples(distributions, n_samples, seed=55, **kwargs):
         Number of samples per distribution.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
-    **kwargs : additional keyword arguments
-        Additional optional plotting arguments.
-        - xlabel : string, optional
-            label for x-axis.
-        - ylabel : string, optional
-            label for y-axis.
-        - show_plot : bool, optional
-            If True, display the plot.
-            Default is False.
+    xlabel : string, optional
+        label for x-axis.
+    ylabel : string, optional
+        label for y-axis.
+    title : string, optional
+        title for the plot.
+    distrib_colors : list or None, optional
+        List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
+    colorblind_safe : bool, optional
+        If True, the plot will use colors suitable for colorblind individuals.
+        Default is False.
+    show_plot : bool, optional
+        If True, display the plot.
+        Default is False.
 
     Returns
     -------
@@ -37,28 +51,50 @@ def plot_samples(distributions, n_samples, seed=55, **kwargs):
 
     if isinstance(distributions, Distribution):
         distributions = [distributions]
-    for d in distributions:
+
+    # Generate colors
+    if distrib_colors is None:
+        if colorblind_safe:
+            palette = gb.create_palette(palette_size=len(distributions), colorblind_safe=colorblind_safe)
+        else:
+            palette =  utils.get_colors(len(distributions))
+    else:
+        if len(distrib_colors) < len(distributions):
+            if colorblind_safe:
+                additional_colors = gb.create_palette(palette_size=len(distributions) - len(distrib_colors), colorblind_safe=colorblind_safe)
+            else:
+                additional_colors = utils.get_colors(len(distributions) - len(distrib_colors))
+            distrib_colors.extend(additional_colors)
+        palette = distrib_colors
+
+    for i, d in enumerate(distributions):
         samples = d.sample(n_samples, seed)
-        plt.scatter(x=samples[:,0], y=samples[:,1])
-    if 'xlabel' in kwargs:
-        plt.xlabel(kwargs['xlabel'])
-    if 'ylabel' in kwargs:
-        plt.ylabel(kwargs['ylabel'])
-    if 'title' in kwargs:
-        plt.title(kwargs['title'])
+        plt.scatter(x=samples[:,0], y=samples[:,1], color=palette[i])
+    if xlabel:
+        plt.xlabel(xlabel)
+    if ylabel:
+        plt.ylabel(ylabel)
+    if title:
+        plt.title(title)
 
     # Get the current figure and axes
     fig = plt.gcf()
     axs = plt.gca()
 
-    show_plot = kwargs.get('show_plot', False)
     if show_plot:
         fig.tight_layout()
         plt.show()
 
     return fig, axs
 
-def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None, seed=55, **kwargs):
+def plot_contour(distributions,
+                 resolution=128,
+                 ranges=None,
+                 quantiles:list=None,
+                 seed=55,
+                 distrib_colors=None,
+                 colorblind_safe=False,
+                 show_plot=False):
     """
     Plot contour plots for samples drawn from given distributions.
 
@@ -74,11 +110,14 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
         List of quantiles to use for determining isovalues. If None, the 95%, 75%, and 25% quantiles are used.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
-    **kwargs : additional keyword arguments
-        Additional optional plotting arguments.
-        - show_plot : bool, optional
-            If True, display the plot.
-            Default is False.
+    distrib_colors : list or None, optional
+        List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
+    colorblind_safe : bool, optional
+        If True, the plot will use colors suitable for colorblind individuals.
+        Default is False.
+    show_plot : bool, optional
+        If True, display the plot.
+        Default is False.
 
     Returns
     -------
@@ -95,7 +134,21 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
 
     if isinstance(distributions, Distribution):
         distributions = [distributions]
-    contour_colors = generate_spectrum_colors(len(distributions))
+
+    # Generate colors
+    if distrib_colors is None:
+        if colorblind_safe:
+            palette = gb.create_palette(palette_size=len(distributions), colorblind_safe=colorblind_safe)
+        else:
+            palette =  utils.get_colors(len(distributions))
+    else:
+        if len(distrib_colors) < len(distributions):
+            if colorblind_safe:
+                additional_colors = gb.create_palette(palette_size=len(distributions) - len(distrib_colors), colorblind_safe=colorblind_safe)
+            else:
+                additional_colors = utils.get_colors(len(distributions) - len(distrib_colors))
+            distrib_colors.extend(additional_colors)
+        palette = distrib_colors
 
     # Determine default quantiles: 25%, 75%, and 95%
     if quantiles is None:
@@ -135,7 +188,7 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
         coordinates = coordinates.reshape((-1, 2))
         pdf = d.pdf(coordinates)
         pdf = pdf.reshape(xv.shape)
-        color = contour_colors[i]
+        color = palette[i]
 
         # Monte Carlo approach for determining isovalues
         isovalues = []
@@ -157,15 +210,19 @@ def plot_contour(distributions, resolution=128, ranges=None, quantiles:list=None
     fig = plt.gcf()
     axs = plt.gca()
 
-    show_plot = kwargs.get('show_plot', False)
     if show_plot:
         fig.tight_layout()
         plt.show()
 
     return fig, axs
 
-def plot_contour_bands(distributions, n_samples, resolution=128, ranges=None, quantiles: list = None, seed=55,
-                       **kwargs):
+def plot_contour_bands(distributions,
+                       n_samples,
+                       resolution=128,
+                       ranges=None,
+                       quantiles: list = None,
+                       seed=55,
+                       show_plot=False):
     """
     Plot contour bands for samples drawn from given distributions.
 
@@ -183,11 +240,9 @@ def plot_contour_bands(distributions, n_samples, resolution=128, ranges=None, qu
         List of quantiles to use for determining isovalues. If None, the 95%, 75%, and 25% quantiles are used.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
-    **kwargs : additional keyword arguments
-        Additional optional plotting arguments.
-        - show_plot : bool, optional
-            If True, display the plot.
-            Default is False.
+    show_plot : bool, optional
+        If True, display the plot.
+        Default is False.
 
     Returns
     -------
@@ -205,13 +260,9 @@ def plot_contour_bands(distributions, n_samples, resolution=128, ranges=None, qu
     if isinstance(distributions, Distribution):
         distributions = [distributions]
 
-    # Sequential and perceptually uniform colormaps
-    colormaps = [
-        'Reds', 'Blues', 'Greens', 'Greys', 'Oranges', 'Purples',
-        'YlOrBr', 'YlOrRd', 'OrRd', 'PuRd', 'RdPu', 'BuPu',
-        'GnBu', 'PuBu', 'YlGnBu', 'PuBuGn', 'BuGn', 'YlGn',
-        'viridis', 'plasma', 'inferno', 'magma', 'cividis'
-    ]
+    n_quantiles = len(quantiles)
+    alpha_values = np.linspace(1/n_quantiles, 1.0, n_quantiles)  # Creates alpha values from 1/n to 1.0
+    custom_cmap = utils.create_shaded_set2_colormap(alpha_values)
 
     # Determine default quantiles: 25%, 75%, and 95%
     if quantiles is None:
@@ -258,6 +309,7 @@ def plot_contour_bands(distributions, n_samples, resolution=128, ranges=None, qu
         samples = d.sample(n_samples, seed)
         densities = d.pdf(samples)
         densities.sort()
+        
         quantiles.sort(reverse=True)
         for quantile in quantiles:
             if not 0 < quantile < 100:
@@ -266,24 +318,23 @@ def plot_contour_bands(distributions, n_samples, resolution=128, ranges=None, qu
                 raise ValueError(f"Quantile {quantile} results in an index that is out of bounds.")
             isovalues.append(densities[int((1 - quantile/100) * n_samples)])
 
-        # Generate logarithmic levels and create the contour plot with different colormap for each distribution
-        plt.contourf(xv, yv, pdf, levels=isovalues, locator=ticker.LogLocator(), cmap=colormaps[i % len(colormaps)])
+        # Extract the subset of colors corresponding to the current Set2 color and its 3 alpha variations
+        start_idx = i * n_quantiles
+        end_idx = start_idx + n_quantiles
+        color_subset = custom_cmap.colors[start_idx:end_idx]
+
+        # Create a ListedColormap for the current color and its alpha variations
+        cmap_subset = ListedColormap(color_subset)
+
+        # Generate the filled contour plot with transparency and better visibility
+        plt.contourf(xv, yv, pdf, levels=isovalues, cmap=cmap_subset)
 
     # Get the current figure and axes
     fig = plt.gcf()
     axs = plt.gca()
 
-    show_plot = kwargs.get('show_plot', False)
     if show_plot:
         fig.tight_layout()
         plt.show()
 
     return fig, axs
-
-# HELPER FUNCTIONS
-def generate_random_colors(length):
-    return ["#"+''.join([np.random.choice('0123456789ABCDEF') for j in range(6)]) for _ in range(length)]
-
-def generate_spectrum_colors(length):
-    cmap = plt.cm.get_cmap('viridis', length)  # You can choose different colormaps like 'jet', 'hsv', 'rainbow', etc.
-    return np.array([cmap(i) for i in range(length)])
