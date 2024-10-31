@@ -169,27 +169,39 @@ def plot_contour(distributions,
 
     # Create matrix
     n_dims = distributions[0].n_dims
+
+    distrib_samples = []
+    for d in distributions:
+        samples = d.sample(n_samples, seed)
+        distrib_samples.append(samples)
+
+    # Dynamically determine ranges using samples
     if ranges is None:
-        min_val = np.zeros(distributions[0].mean().shape)+1000
-        max_val = np.zeros(distributions[0].mean().shape)-1000
-        cov_max = np.zeros(np.diagonal(distributions[0].cov()).shape)
+        all_samples = np.concatenate(distrib_samples, axis=0)
+        initial_ranges = [
+            (np.percentile(all_samples[:, dim], 0), np.percentile(all_samples[:, dim], 100))
+            for dim in range(all_samples.shape[1])
+        ]
 
-        # Dynamically set the expansion factor based on the largest quantile
-        if largest_quantile >= 99.99:
-            ef = 6  # 6 standard deviations for 99.9% quantiles
+        # Dynamically adjust the expansion factor based on the largest quantile
+        ranges = []
+        base_expansion = 0.05  # Base expansion factor for moderate quantiles
+        if largest_quantile >= 99.999:
+            expansion_factor = 0.15  # Larger expansion for extreme quantiles
         elif largest_quantile >= 99.9:
-            ef = 5  # 5 standard deviations for 99.9% quantiles
+            expansion_factor = 0.10
         elif largest_quantile >= 99:
-            ef = 4  # 4 standard deviations for 99% quantiles
+            expansion_factor = 0.08
         else:
-            ef = 3  # Default to 3 standard deviations
+            expansion_factor = base_expansion
 
-        for d in distributions:
-            min_val=np.min(np.array([d.mean(), min_val]), axis=0)
-            max_val=np.max(np.array([d.mean(), max_val]), axis=0)
-            cov_max = np.max(np.array([np.diagonal(d.cov()), cov_max]), axis=0)
-        cov_max = np.sqrt(cov_max)
-        ranges = [(mi-ef*co, ma+ef*co) for mi,ma, co in zip(min_val, max_val, cov_max)]
+        # Expand the range slightly based on the data spread to ensure no cutoff
+        for dim_range in initial_ranges:
+            min_val, max_val = dim_range
+            range_span = max_val - min_val
+            expanded_min = min_val - expansion_factor * range_span
+            expanded_max = max_val + expansion_factor * range_span
+            ranges.append((expanded_min, expanded_max))
 
     fig, axes = plt.subplots(nrows=n_dims, ncols=n_dims)
     for i, ax in enumerate(axes.flat):
@@ -214,7 +226,7 @@ def plot_contour(distributions,
 
         # Monte Carlo approach for determining isovalues
         isovalues = []
-        samples = d.sample(n_samples, seed)
+        samples = distrib_samples[k]
         densities = d.pdf(samples)
         densities.sort()
         quantiles.sort(reverse=True)
@@ -335,27 +347,39 @@ def plot_contour_samples(distributions,
 
     # Create matrix
     n_dims = distributions[0].n_dims
+
+    distrib_samples = []
+    for d in distributions:
+        samples = d.sample(n_samples, seed)
+        distrib_samples.append(samples)
+
+    # Dynamically determine ranges using samples
     if ranges is None:
-        min_val = np.zeros(distributions[0].mean().shape)+1000
-        max_val = np.zeros(distributions[0].mean().shape)-1000
-        cov_max = np.zeros(np.diagonal(distributions[0].cov()).shape)
+        all_samples = np.concatenate(distrib_samples, axis=0)
+        initial_ranges = [
+            (np.percentile(all_samples[:, dim], 0), np.percentile(all_samples[:, dim], 100))
+            for dim in range(all_samples.shape[1])
+        ]
 
-        # Dynamically set the expansion factor based on the largest quantile
-        if largest_quantile >= 99.99:
-            ef = 6  # 6 standard deviations for 99.9% quantiles
+        # Dynamically adjust the expansion factor based on the largest quantile
+        ranges = []
+        base_expansion = 0.05  # Base expansion factor for moderate quantiles
+        if largest_quantile >= 99.999:
+            expansion_factor = 0.15  # Larger expansion for extreme quantiles
         elif largest_quantile >= 99.9:
-            ef = 5  # 5 standard deviations for 99.9% quantiles
+            expansion_factor = 0.10
         elif largest_quantile >= 99:
-            ef = 4  # 4 standard deviations for 99% quantiles
+            expansion_factor = 0.08
         else:
-            ef = 3  # Default to 3 standard deviations
+            expansion_factor = base_expansion
 
-        for d in distributions:
-            min_val=np.min(np.array([d.mean(), min_val]), axis=0)
-            max_val=np.max(np.array([d.mean(), max_val]), axis=0)
-            cov_max = np.max(np.array([np.diagonal(d.cov()), cov_max]), axis=0)
-        cov_max = np.sqrt(cov_max)
-        ranges = [(mi-ef*co, ma+ef*co) for mi,ma, co in zip(min_val, max_val, cov_max)]
+        # Expand the range slightly based on the data spread to ensure no cutoff
+        for dim_range in initial_ranges:
+            min_val, max_val = dim_range
+            range_span = max_val - min_val
+            expanded_min = min_val - expansion_factor * range_span
+            expanded_max = max_val + expansion_factor * range_span
+            ranges.append((expanded_min, expanded_max))
 
     fig, axes = plt.subplots(nrows=n_dims, ncols=n_dims)
     for i, ax in enumerate(axes.flat):
@@ -365,7 +389,6 @@ def plot_contour_samples(distributions,
 
     # Fill matrix with data
     for k, d in enumerate(distributions):
-        samples = d.sample(n_samples, seed)
         if d.n_dims < 2:
             raise Exception('Wrong dimension of distribution')
         dims = ()
@@ -379,7 +402,7 @@ def plot_contour_samples(distributions,
 
         # Monte Carlo approach for determining isovalues
         isovalues = []
-        samples = d.sample(n_samples, seed)
+        samples = distrib_samples[k]
         densities = d.pdf(samples)
         densities.sort()
         quantiles.sort(reverse=True)
