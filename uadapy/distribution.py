@@ -88,7 +88,7 @@ class Distribution:
         Returns
         -------
         np.ndarray or float
-            Samples of the distribution.
+            Probability values of the distribution at the given sample points.
         """
         if isinstance(self.model, np.ndarray):
             return self.kde.pdf(x.T)
