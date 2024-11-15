@@ -10,7 +10,7 @@ class Distribution:
     
     Attributes
     ----------
-    model : str
+    model
         The underlying concrete distribution model, a `scipy.stats` distribution object or an array of samples
     name : str 
         Name of the distribution type, e.g. 'Normal'
