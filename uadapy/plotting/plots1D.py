@@ -26,7 +26,7 @@ def _calculate_dot_size(n_samples, scale_factor):
         dot_size = scale_factor * (50 / (4 ** np.log10(n_samples)))
     return dot_size
 
-def _setup_plot(distributions, n_samples, seed, fig=None, axs=None, colors=None, colorblind_safe=False):
+def _setup_plot(distributions, n_samples, seed, fig=None, axs=None, colors=None, colorblind_safe=False, restrict_to_1d=False):
     """
     Set up the plot for samples drawn from given distributions.
 
@@ -47,6 +47,10 @@ def _setup_plot(distributions, n_samples, seed, fig=None, axs=None, colors=None,
     colorblind_safe : bool, optional
         If True, the plot will use colors suitable for colorblind individuals.
         Default is False.
+    restrict_to_1d : bool, optional
+        If True, restricts the function to generate boxplots only for 1-dimensional distributions.
+        An error is raised for multidimensional distributions.
+        Defalut is False.
 
     Returns
     -------
@@ -86,13 +90,25 @@ def _setup_plot(distributions, n_samples, seed, fig=None, axs=None, colors=None,
         # Case 2: axs is not an array (single subplot)
         else:
             n_rows, n_cols = 1, 1
-        n_plots = n_rows + n_cols
+        n_plots = n_rows * n_cols
+
+    if distributions[0].n_dims > 1 and restrict_to_1d:
+        raise TypeError("Expected 1-dimensional distribution, but got multidimensional data.")
 
     # Ensure axs is a 2D array even if there's only one row or column
-    if n_rows == 1:
-        axs = [axs]
-    if n_cols == 1:
-        axs = [[ax] for ax in axs]
+    if not isinstance(axs, np.ndarray):
+        axs = np.array([[axs]]) # Wrap single Axes object in a 2D array
+
+    # Check if axs is already 2D
+    if axs.ndim == 1:
+        if n_rows == 1:
+            axs = axs[np.newaxis, :]  # Add a new axis for rows
+        elif n_cols == 1:
+            axs = axs[:, np.newaxis]  # Add a new axis for columns
+
+    # Ensure it has exactly two dimensions
+    if axs.ndim < 2:
+        axs = np.expand_dims(axs, axis=0)  # Default to adding a row dimension
 
     for d in distributions:
         samples.append(d.sample(n_samples, seed))
@@ -129,6 +145,7 @@ def plot_1d_distribution(
         colorblind_safe=False,
         show_plot=False,
         dot_size=0,
+        restrict_to_1d=False,
         **kwargs):
     """
     Plot box plots, violin plots and dot plots for samples drawn from given distributions.
@@ -165,6 +182,10 @@ def plot_1d_distribution(
     dot_size : float, optional
         This parameter determines the size of the dots used in the 'stripplot','swarmplot' and 'dotplot'.
         If not provided, the size is calculated based on the number of samples and the type of plot.
+    restrict_to_1d : bool, optional
+        If True, restricts the function to generate boxplots only for 1-dimensional distributions.
+        An error is raised for multidimensional distributions.
+        Defalut is False.
     **kwargs : additional matplotlib keyword arguments
         Additional optional plotting arguments.
 
@@ -176,7 +197,8 @@ def plot_1d_distribution(
         List of Axes objects used for plotting.
     """
 
-    fig, axs, samples, palette, n_plots, n_cols = _setup_plot(distributions, n_samples, seed, fig, axs, distrib_colors, colorblind_safe)
+    fig, axs, samples, palette, n_plots, n_cols = _setup_plot(distributions, n_samples, seed, fig, axs,
+                                                              distrib_colors, colorblind_safe, restrict_to_1d)
 
     # Check number of attributes
     n_attributes = 1
@@ -196,7 +218,7 @@ def plot_1d_distribution(
                 y_max = -9999
                 for k, sample in enumerate(samples):
                     if np.ndim(sample) == 1:
-                        sample = np.array(sample).reshape(1,-1)
+                        sample = np.array(sample).reshape(-1,1)
                     if 'boxplot' in plot_types:
                         boxprops = dict(facecolor=palette[k % len(palette)], edgecolor='black')
                         whiskerprops = dict(color='black', linestyle='--')
@@ -235,7 +257,7 @@ def plot_1d_distribution(
                         parts['cbars'].remove()
                         parts['cmaxes'].remove()
                         parts['cmins'].remove()
-                        if kwargs.get('showmeans', False):
+                        if 'showmeans' in kwargs:
                           parts['cmeans'].set_edgecolor('black')
                     if 'stripplot' in plot_types:
                         if dot_size  == 0:
@@ -324,7 +346,7 @@ def generate_boxplot(distributions,
         show_plot=False,
         **kwargs):
     """
-    Plot box plots for samples drawn from given distributions.
+    Plot box plot for samples drawn from given distributions.
 
     Parameters
     ----------
@@ -332,6 +354,312 @@ def generate_boxplot(distributions,
         List of distributions to plot.
     n_samples : int, optional
         Number of samples per distribution.
+        Default is 10000.
+    seed : int
+        Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
+    fig : matplotlib.figure.Figure or None, optional
+        Figure object to use for plotting. If None, a new figure will be created.
+    axs : matplotlib.axes.Axes or array of Axes or None, optional
+        Axes object(s) to use for plotting. If None, new axes will be created.
+    distrib_labels : list or None, optional
+        Labels for each distribution.
+    dim_labels : list or None, optional
+        Titles for each subplot.
+    distrib_colors : list or None, optional
+        List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
+    vert : bool, optional
+        If True, plots will be drawn vertically. If False, plots will be drawn horizontally.
+        Default is True.
+    colorblind_safe : bool, optional
+        If True, the plot will use colors suitable for colorblind individuals.
+        Default is False.
+    show_plot : bool, optional
+        If True, display the plot.
+        Default is False.
+    **kwargs : additional matplotlib.pyplot.boxplot keyword arguments
+        Additional optional plotting arguments.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The figure object containing the plot.
+    list
+        List of Axes objects used for plotting.
+    """
+
+    plot_type = 'boxplot'
+    restrict_to_1d = True
+    fig, axs = plot_1d_distribution(distributions, n_samples, plot_type, seed, fig, axs,
+                                    distrib_labels, dim_labels, distrib_colors, vert,
+                                    colorblind_safe, show_plot, 0, restrict_to_1d, **kwargs)
+    return fig, axs
+
+def generate_violinplot(distributions,
+        n_samples=10000,
+        seed=55,
+        fig=None,
+        axs=None,
+        distrib_labels=None,
+        dim_labels=None,
+        distrib_colors=None,
+        vert=True,
+        colorblind_safe=False,
+        show_plot=False,
+        **kwargs):
+    """
+    Plot violin plot for samples drawn from given distributions.
+
+    Parameters
+    ----------
+    distributions : list
+        List of distributions to plot.
+    n_samples : int, optional
+        Number of samples per distribution.
+        Default is 10000.
+    seed : int
+        Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
+    fig : matplotlib.figure.Figure or None, optional
+        Figure object to use for plotting. If None, a new figure will be created.
+    axs : matplotlib.axes.Axes or array of Axes or None, optional
+        Axes object(s) to use for plotting. If None, new axes will be created.
+    distrib_labels : list or None, optional
+        Labels for each distribution.
+    dim_labels : list or None, optional
+        Titles for each subplot.
+    distrib_colors : list or None, optional
+        List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
+    vert : bool, optional
+        If True, plots will be drawn vertically. If False, plots will be drawn horizontally.
+        Default is True.
+    colorblind_safe : bool, optional
+        If True, the plot will use colors suitable for colorblind individuals.
+        Default is False.
+    show_plot : bool, optional
+        If True, display the plot.
+        Default is False.
+    **kwargs : additional matplotlib.pyplot.violinplot keyword arguments
+        Additional optional plotting arguments.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The figure object containing the plot.
+    list
+        List of Axes objects used for plotting.
+    """
+
+    plot_type = 'violinplot'
+    restrict_to_1d = True
+    fig, axs = plot_1d_distribution(distributions, n_samples, plot_type, seed, fig, axs,
+                                    distrib_labels, dim_labels, distrib_colors, vert,
+                                    colorblind_safe, show_plot, 0, restrict_to_1d,**kwargs)
+    return fig, axs
+
+def generate_dotplot(distributions,
+        n_samples=20,
+        fig=None,
+        axs=None,
+        distrib_labels=None,
+        dim_labels=None,
+        distrib_colors=None,
+        vert=True,
+        colorblind_safe=False,
+        show_plot=False,
+        dot_size=0):
+    """
+    Plot dot plot for samples drawn from given distributions.
+
+    Parameters
+    ----------
+    distributions : list
+        List of distributions to plot.
+    n_samples : int, optional
+        Number of samples per distribution.
+        Default is 20.
+    fig : matplotlib.figure.Figure or None, optional
+        Figure object to use for plotting. If None, a new figure will be created.
+    axs : matplotlib.axes.Axes or array of Axes or None, optional
+        Axes object(s) to use for plotting. If None, new axes will be created.
+    distrib_labels : list or None, optional
+        Labels for each distribution.
+    dim_labels : list or None, optional
+        Titles for each subplot.
+    distrib_colors : list or None, optional
+        List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
+    vert : bool, optional
+        If True, plots will be drawn vertically. If False, plots will be drawn horizontally.
+        Default is True.
+    colorblind_safe : bool, optional
+        If True, the plot will use colors suitable for colorblind individuals.
+        Default is False.
+    show_plot : bool, optional
+        If True, display the plot.
+        Default is False.
+    dot_size : float, optional
+        This parameter determines the size of the dots.
+        If not provided, the size is calculated based on the number of samples and the type of plot.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The figure object containing the plot.
+    list
+        List of Axes objects used for plotting.
+    """
+
+    plot_type = 'dotplot'
+    restrict_to_1d = True
+    fig, axs = plot_1d_distribution(distributions, n_samples, plot_type, 55, fig, axs,
+                                    distrib_labels, dim_labels, distrib_colors, vert,
+                                    colorblind_safe, show_plot, dot_size, restrict_to_1d)
+    return fig, axs
+
+def generate_stripplot(distributions,
+        n_samples=20,
+        seed=55,
+        fig=None,
+        axs=None,
+        distrib_labels=None,
+        dim_labels=None,
+        distrib_colors=None,
+        vert=True,
+        colorblind_safe=False,
+        show_plot=False,
+        dot_size=0):
+    """
+    Plot strip plot for samples drawn from given distributions.
+
+    Parameters
+    ----------
+    distributions : list
+        List of distributions to plot.
+    n_samples : int, optional
+        Number of samples per distribution.
+        Default is 20.
+    seed : int
+        Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
+    fig : matplotlib.figure.Figure or None, optional
+        Figure object to use for plotting. If None, a new figure will be created.
+    axs : matplotlib.axes.Axes or array of Axes or None, optional
+        Axes object(s) to use for plotting. If None, new axes will be created.
+    distrib_labels : list or None, optional
+        Labels for each distribution.
+    dim_labels : list or None, optional
+        Titles for each subplot.
+    distrib_colors : list or None, optional
+        List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
+    vert : bool, optional
+        If True, plots will be drawn vertically. If False, plots will be drawn horizontally.
+        Default is True.
+    colorblind_safe : bool, optional
+        If True, the plot will use colors suitable for colorblind individuals.
+        Default is False.
+    show_plot : bool, optional
+        If True, display the plot.
+        Default is False.
+    dot_size : float, optional
+        This parameter determines the size of the dots.
+        If not provided, the size is calculated based on the number of samples and the type of plot.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The figure object containing the plot.
+    list
+        List of Axes objects used for plotting.
+    """
+
+    plot_type = 'stripplot'
+    restrict_to_1d = True
+    fig, axs = plot_1d_distribution(distributions, n_samples, plot_type, seed, fig, axs,
+                                    distrib_labels, dim_labels, distrib_colors, vert,
+                                    colorblind_safe, show_plot, dot_size, restrict_to_1d)
+    return fig, axs
+
+def generate_swarmplot(distributions,
+        n_samples=20,
+        seed=55,
+        fig=None,
+        axs=None,
+        distrib_labels=None,
+        dim_labels=None,
+        distrib_colors=None,
+        vert=True,
+        colorblind_safe=False,
+        show_plot=False,
+        dot_size=0):
+    """
+    Plot swarm plot for samples drawn from given distributions.
+
+    Parameters
+    ----------
+    distributions : list
+        List of distributions to plot.
+    n_samples : int, optional
+        Number of samples per distribution.
+        Default is 20.
+    seed : int
+        Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
+    fig : matplotlib.figure.Figure or None, optional
+        Figure object to use for plotting. If None, a new figure will be created.
+    axs : matplotlib.axes.Axes or array of Axes or None, optional
+        Axes object(s) to use for plotting. If None, new axes will be created.
+    distrib_labels : list or None, optional
+        Labels for each distribution.
+    dim_labels : list or None, optional
+        Titles for each subplot.
+    distrib_colors : list or None, optional
+        List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
+    vert : bool, optional
+        If True, plots will be drawn vertically. If False, plots will be drawn horizontally.
+        Default is True.
+    colorblind_safe : bool, optional
+        If True, the plot will use colors suitable for colorblind individuals.
+        Default is False.
+    show_plot : bool, optional
+        If True, display the plot.
+        Default is False.
+    dot_size : float, optional
+        This parameter determines the size of the dots.
+        If not provided, the size is calculated based on the number of samples and the type of plot.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The figure object containing the plot.
+    list
+        List of Axes objects used for plotting.
+    """
+
+    plot_type = 'swarmplot'
+    restrict_to_1d = True
+    fig, axs = plot_1d_distribution(distributions, n_samples, plot_type, seed, fig, axs,
+                                    distrib_labels, dim_labels, distrib_colors, vert,
+                                    colorblind_safe, show_plot, dot_size, restrict_to_1d)
+    return fig, axs
+
+def generate_multidim_boxplot(distributions,
+        n_samples=10000,
+        seed=55,
+        fig=None,
+        axs=None,
+        distrib_labels=None,
+        dim_labels=None,
+        distrib_colors=None,
+        vert=True,
+        colorblind_safe=False,
+        show_plot=False,
+        **kwargs):
+    """
+    Plot multidimensional box plots for samples drawn from given distributions.
+
+    Parameters
+    ----------
+    distributions : list
+        List of distributions to plot.
+    n_samples : int, optional
+        Number of samples per distribution.
+        Default is 10000.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
     fig : matplotlib.figure.Figure or None, optional
@@ -367,10 +695,10 @@ def generate_boxplot(distributions,
     plot_type = 'boxplot'
     fig, axs = plot_1d_distribution(distributions, n_samples, plot_type, seed, fig, axs,
                                     distrib_labels, dim_labels, distrib_colors, vert,
-                                    colorblind_safe, show_plot, 0, **kwargs)
+                                    colorblind_safe, show_plot, 0, False, **kwargs)
     return fig, axs
 
-def generate_violinplot(distributions,
+def generate_multidim_violinplot(distributions,
         n_samples=10000,
         seed=55,
         fig=None,
@@ -383,7 +711,7 @@ def generate_violinplot(distributions,
         show_plot=False,
         **kwargs):
     """
-    Plot violin plots for samples drawn from given distributions.
+    Plot multidimensional violin plots for samples drawn from given distributions.
 
     Parameters
     ----------
@@ -391,6 +719,7 @@ def generate_violinplot(distributions,
         List of distributions to plot.
     n_samples : int, optional
         Number of samples per distribution.
+        Default is 10000.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
     fig : matplotlib.figure.Figure or None, optional
@@ -426,10 +755,10 @@ def generate_violinplot(distributions,
     plot_type = 'violinplot'
     fig, axs = plot_1d_distribution(distributions, n_samples, plot_type, seed, fig, axs,
                                     distrib_labels, dim_labels, distrib_colors, vert,
-                                    colorblind_safe, show_plot, 0, **kwargs)
+                                    colorblind_safe, show_plot, 0, False, **kwargs)
     return fig, axs
 
-def generate_dotplot(distributions,
+def generate_multidim_dotplot(distributions,
         n_samples=20,
         fig=None,
         axs=None,
@@ -441,7 +770,7 @@ def generate_dotplot(distributions,
         show_plot=False,
         dot_size=0):
     """
-    Plot dot plots for samples drawn from given distributions.
+    Plot multidimensional dot plots for samples drawn from given distributions.
 
     Parameters
     ----------
@@ -449,6 +778,7 @@ def generate_dotplot(distributions,
         List of distributions to plot.
     n_samples : int, optional
         Number of samples per distribution.
+        Default is 20.
     fig : matplotlib.figure.Figure or None, optional
         Figure object to use for plotting. If None, a new figure will be created.
     axs : matplotlib.axes.Axes or array of Axes or None, optional
@@ -483,10 +813,10 @@ def generate_dotplot(distributions,
     plot_type = 'dotplot'
     fig, axs = plot_1d_distribution(distributions, n_samples, plot_type, 55, fig, axs,
                                     distrib_labels, dim_labels, distrib_colors, vert,
-                                    colorblind_safe, show_plot, dot_size)
+                                    colorblind_safe, show_plot, dot_size, False)
     return fig, axs
 
-def generate_stripplot(distributions,
+def generate_multidim_stripplot(distributions,
         n_samples=20,
         seed=55,
         fig=None,
@@ -499,7 +829,7 @@ def generate_stripplot(distributions,
         show_plot=False,
         dot_size=0):
     """
-    Plot strip plots for samples drawn from given distributions.
+    Plot multidimensional strip plots for samples drawn from given distributions.
 
     Parameters
     ----------
@@ -507,6 +837,7 @@ def generate_stripplot(distributions,
         List of distributions to plot.
     n_samples : int, optional
         Number of samples per distribution.
+        Default is 20.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
     fig : matplotlib.figure.Figure or None, optional
@@ -543,10 +874,10 @@ def generate_stripplot(distributions,
     plot_type = 'stripplot'
     fig, axs = plot_1d_distribution(distributions, n_samples, plot_type, seed, fig, axs,
                                     distrib_labels, dim_labels, distrib_colors, vert,
-                                    colorblind_safe, show_plot, dot_size)
+                                    colorblind_safe, show_plot, dot_size, False)
     return fig, axs
 
-def generate_swarmplot(distributions,
+def generate_multidim_swarmplot(distributions,
         n_samples=20,
         seed=55,
         fig=None,
@@ -559,7 +890,7 @@ def generate_swarmplot(distributions,
         show_plot=False,
         dot_size=0):
     """
-    Plot swarm plots for samples drawn from given distributions.
+    Plot multidimensional swarm plots for samples drawn from given distributions.
 
     Parameters
     ----------
@@ -567,6 +898,7 @@ def generate_swarmplot(distributions,
         List of distributions to plot.
     n_samples : int, optional
         Number of samples per distribution.
+        Default is 20.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
     fig : matplotlib.figure.Figure or None, optional
@@ -604,5 +936,5 @@ def generate_swarmplot(distributions,
 
     fig, axs = plot_1d_distribution(distributions, n_samples, plot_type, seed, fig, axs,
                                     distrib_labels, dim_labels, distrib_colors, vert,
-                                    colorblind_safe, show_plot, dot_size)
+                                    colorblind_safe, show_plot, dot_size, False)
     return fig, axs
