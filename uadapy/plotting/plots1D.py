@@ -26,7 +26,7 @@ def _calculate_dot_size(n_samples, scale_factor):
         dot_size = scale_factor * (50 / (4 ** np.log10(n_samples)))
     return dot_size
 
-def _setup_plot(distributions, n_samples, seed, fig=None, axs=None, colors=None, colorblind_safe=False, restrict_to_1d=False):
+def _setup_plot(distributions, n_samples, seed, fig=None, axs=None, colors=None, colorblind_safe=False, restrict_to_1d=True):
     """
     Set up the plot for samples drawn from given distributions.
 
@@ -50,7 +50,7 @@ def _setup_plot(distributions, n_samples, seed, fig=None, axs=None, colors=None,
     restrict_to_1d : bool, optional
         If True, restricts the function to generate boxplots only for 1-dimensional distributions.
         An error is raised for multidimensional distributions.
-        Defalut is False.
+        Default is True.
 
     Returns
     -------
@@ -185,7 +185,7 @@ def plot_1d_distribution(
     restrict_to_1d : bool, optional
         If True, restricts the function to generate boxplots only for 1-dimensional distributions.
         An error is raised for multidimensional distributions.
-        Defalut is True.
+        Default is True.
     **kwargs : additional matplotlib keyword arguments
         Additional optional plotting arguments.
 
