@@ -145,7 +145,7 @@ def plot_1d_distribution(
         colorblind_safe=False,
         show_plot=False,
         dot_size=0,
-        restrict_to_1d=False,
+        restrict_to_1d=True,
         **kwargs):
     """
     Plot box plots, violin plots and dot plots for samples drawn from given distributions.
@@ -185,7 +185,7 @@ def plot_1d_distribution(
     restrict_to_1d : bool, optional
         If True, restricts the function to generate boxplots only for 1-dimensional distributions.
         An error is raised for multidimensional distributions.
-        Defalut is False.
+        Defalut is True.
     **kwargs : additional matplotlib keyword arguments
         Additional optional plotting arguments.
 
