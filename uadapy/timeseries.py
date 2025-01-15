@@ -109,13 +109,15 @@ class CorrelatedDistributions:
 
     Attributes
     ----------
-    distributions : list[Distribution]
-        List of individual distributions.
+    distributions : list[Distribution] or list[Timeseries]
+        List of individual distributions or timeseries.
+    n_distributions : int
+        Number of distributions or timeseries.
     covariance_matrix : np.ndarray
         Pairwise covariance matrix of the distributions.
     """
 
-    def __init__(self, distributions: list[distribution.Distribution]):
+    def __init__(self, distributions: list[distribution.Distribution], cross_covariance=0):
         """
         Initializes the CorrelatedDistributions object.
 
@@ -123,12 +125,14 @@ class CorrelatedDistributions:
         ----------
         distributions : list[Distribution]
             A list of Distribution objects.
+        cross_covariance : float
+            Cross covariance between the distributions.
         """
         self.distributions = distributions
         self.n_distributions = len(distributions)
-        self.covariance_matrix = self._compute_covariance_matrix()
+        self.covariance_matrix = self._compute_covariance_matrix(cross_covariance)
 
-    def _compute_covariance_matrix(self) -> np.ndarray:
+    def _compute_covariance_matrix(self, cross_covariance) -> np.ndarray:
         """
         Computes the pairwise covariance matrix for the distributions.
 
@@ -145,32 +149,9 @@ class CorrelatedDistributions:
                 if i == j:
                     cov_matrix[i, j] = self.distributions[i].cov()
                 else:
-                    cov_matrix[i, j] = cov_matrix[j, i] = self._cross_covariance(i, j)
+                    cov_matrix[i, j] = cov_matrix[j, i] = cross_covariance
         
         return cov_matrix
-
-    def _cross_covariance(self, dim_i: int, dim_j: int) -> float:
-        """
-        Computes the cross-covariance between two distributions.
-        
-        Parameters
-        ----------
-        dim_i : int
-            Index of the first distribution.
-        dim_j : int
-            Index of the second distribution.
-        
-        Returns
-        -------
-        float
-            Cross-covariance between the two distributions.
-        """
-
-        cov_i = self.distributions[dim_i].cov()
-        cov_j = self.distributions[dim_j].cov()
-        cross_cov = np.sqrt(cov_i * cov_j)
-
-        return cross_cov
 
     def mean(self, dim_i: int) -> float:
         """
@@ -190,7 +171,7 @@ class CorrelatedDistributions:
 
     def cov(self, dim_i: int, dim_j: int) -> np.ndarray | float:
         """
-        Returns the covariance or cross-covariance between two distributions.
+        Returns the covariance matrix between two distributions.
 
         Parameters
         ----------
@@ -201,8 +182,8 @@ class CorrelatedDistributions:
 
         Returns
         -------
-        np.ndarray | float
-            Covariance matrix if i = j, otherwise cross-covariance value.
+        np.ndarray
+            Covariance matrix between i-th and j-th distribution.
         """
         return self.covariance_matrix[dim_i, dim_j]
 

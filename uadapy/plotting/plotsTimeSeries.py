@@ -16,15 +16,13 @@ def _compute_correlation_matrix(sigma):
     cor_mat = np.diag(c_inv_mult) @ sigma @ np.diag(c_inv_mult)
     return cor_mat
 
-def _plot_data(data, plot_type, n_samples, samples_colored, line_width):
+def _plot_data(data, plot_type, n_samples, samples_colored, colorblind_safe, line_width):
 
     smpl_width = 0.5
     sigmalvl = [0, 0.674490, 2.575829]
-    
-    # Use a built-in colormap for gradient colors
+
     cmap_gradient = plt.get_cmap('Blues')
     n_levels = len(sigmalvl) + 2
-
     color_indices = np.linspace(0, 155, n_levels).astype(int)
     col = cmap_gradient(np.flip(color_indices) / 256)[:, :3]
 
@@ -40,8 +38,11 @@ def _plot_data(data, plot_type, n_samples, samples_colored, line_width):
         plt.plot(x, data['mu'], color=col[0], linewidth=line_width)
     
     elif plot_type == "spaghetti":
-        cmap_discrete = plt.get_cmap('tab10')
-        colors = cmap_discrete(np.linspace(0, 1, max(n_samples, 10)))
+        if colorblind_safe:
+            colors = gb.create_palette(palette_size=n_samples, colorblind_safe=True)
+        else :
+            cmap_discrete = plt.get_cmap('tab10')
+            colors = cmap_discrete(np.linspace(0, 1, max(n_samples, 10)))
 
         samples_2_plot = data['samples'][:, :n_samples]
         if data['samples'].shape[1] == 2 * n_samples:
@@ -74,9 +75,9 @@ def _plot_data(data, plot_type, n_samples, samples_colored, line_width):
 
     elif plot_type == "comb":
         x = np.arange(len(data['mu']))
-        _plot_data(data, "isoband", n_samples, samples_colored, line_width)
+        _plot_data(data, "isoband", n_samples, samples_colored, colorblind_safe, line_width)
         plt.plot(x, data['mu'], color=col[0], linewidth=line_width)
-        _plot_data(data, "spaghetti", n_samples, samples_colored, line_width)
+        _plot_data(data, "spaghetti", n_samples, samples_colored, colorblind_safe, line_width)
 
 def _plot_correlation_length_data(
         timeseries,
@@ -236,6 +237,7 @@ def plot_timeseries(
         seed=55,
         fig=None,
         axs=None,
+        colorblind_safe=False,
         show_plot=False):
     """
     Plot single uncertain timeseries data.
@@ -252,6 +254,9 @@ def plot_timeseries(
         Figure object to use for plotting. If None, a new figure will be created.
     axs : matplotlib.axes.Axes or array of Axes or None, optional
         Axes object(s) to use for plotting. If None, new axes will be created.
+    colorblind_safe : bool, optional
+        If True, the plot will use colors suitable for colorblind individuals.
+        Default is False.
     show_plot : bool, optional
         If True, display the plot.
         Default is False.
@@ -273,7 +278,7 @@ def plot_timeseries(
 
     plot_type = 'comb'
     samples_colored = True
-    line_width = 1.5
+    line_width = 2.5
     time_stamp = [0, timeseries.timesteps]
 
     samples = timeseries.sample(n_samples, seed).transpose()
@@ -282,7 +287,7 @@ def plot_timeseries(
     y['sigma_sq'] = np.sqrt(np.maximum(np.diag(sigma[time_stamp[0]:time_stamp[1], time_stamp[0]:time_stamp[1]]), 0))
     y['sigma'] = sigma[time_stamp[0]:time_stamp[1], time_stamp[0]:time_stamp[1]]
 
-    _plot_data(y, plot_type, n_samples, samples_colored, line_width)
+    _plot_data(y, plot_type, n_samples, samples_colored, colorblind_safe, line_width)
     plt.xlabel('timesteps')
 
     axs = plt.gca()
@@ -299,6 +304,7 @@ def plot_correlated_timeseries(
         seed=55,
         fig=None,
         axs=None,
+        colorblind_safe=False,
         show_plot=False):
     """
     Plot correlated uncertain timeseries data.
@@ -317,6 +323,9 @@ def plot_correlated_timeseries(
         Figure object to use for plotting. If None, a new figure will be created.
     axs : matplotlib.axes.Axes or array of Axes or None, optional
         Axes object(s) to use for plotting. If None, new axes will be created.
+    colorblind_safe : bool, optional
+        If True, the plot will use colors suitable for colorblind individuals.
+        Default is False.
     show_plot : bool, optional
         If True, display the plot.
         Default is False.
@@ -503,11 +512,11 @@ def plot_correlated_timeseries(
                 plt.subplot(3 + num_periods, 1, j + 1)
 
     plt.subplot(3 + num_periods, 1, 1)
-    _plot_data(y, plot_type, n_samples, samples_colored, line_width)
+    _plot_data(y, plot_type, n_samples, samples_colored, colorblind_safe, line_width)
     plt.title("input data")
 
     plt.subplot(3 + num_periods, 1, 2)
-    _plot_data(LT, plot_type, n_samples, samples_colored, line_width)
+    _plot_data(LT, plot_type, n_samples, samples_colored, colorblind_safe, line_width)
     plt.title("trend component")
 
     for i in range(num_periods):
@@ -515,11 +524,11 @@ def plot_correlated_timeseries(
         temp = {'mu': ST['mu'][:, i], 'sigma_sq': ST['sigma_sq'][:, i], 'sigma': ST['sigma'][:, :, i]}
         if plot_type in ["comb", "spaghetti"]:
             temp['samples'] = ST['samples'][:, :, i]
-        _plot_data(temp, plot_type, n_samples, samples_colored, line_width)
+        _plot_data(temp, plot_type, n_samples, samples_colored, colorblind_safe, line_width)
         plt.title(f"seasonal component {i + 1}")
 
     plt.subplot(3 + num_periods, 1, 3 + num_periods)
-    _plot_data(R, plot_type, n_samples, samples_colored, line_width)
+    _plot_data(R, plot_type, n_samples, samples_colored, colorblind_safe, line_width)
     plt.title("residual component")
 
     fig = plt.gcf()
@@ -589,7 +598,11 @@ def plot_correlation_matrix(
 
     return fig, axs
 
-def plot_corr_length(timeseries, fig=None, axs=None, show_plot=False):
+def plot_corr_length(
+        timeseries,
+        fig=None,
+        axs=None,
+        show_plot=False):
     """
     Plot correlation length for single uncertain timeseries data.
 
@@ -617,7 +630,11 @@ def plot_corr_length(timeseries, fig=None, axs=None, show_plot=False):
 
     return fig, axs
 
-def plot_correlated_corr_length(timeseries, fig=None, axs=None, show_plot=False):
+def plot_correlated_corr_length(
+        timeseries,
+        fig=None,
+        axs=None,
+        show_plot=False):
     """
     Plot correlation length for correlated uncertain timeseries data.
 
