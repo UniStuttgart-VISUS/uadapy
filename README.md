@@ -22,13 +22,14 @@ You can find the documentation here: https://unistuttgart-visus.github.io/uadapy
 If you use this software in your work, please cite it using the following metadata
 
 ```
-@misc{UADAPy,
-      title={UADAPy: An Uncertainty-Aware Visualization and Analysis Toolbox}, 
-      author={Patrick Paetzold and David Hägele and Marina Evers and Daniel Weiskopf and Oliver Deussen},
-      year={2024},
-      eprint={2409.10217},
-      archivePrefix={arXiv},
-      primaryClass={cs.HC},
-      url={https://arxiv.org/abs/2409.10217}, 
-}
+@INPROCEEDINGS{UADAPy,
+  author={Paetzold, Patrick and Hägele, David and Evers, Marina and Weiskopf, Daniel and Deussen, Oliver},
+  booktitle={2024 IEEE Workshop on Uncertainty Visualization: Applications, Techniques, Software, and Decision Frameworks}, 
+  title={UADAPy: An Uncertainty-Aware Visualization and Analysis Toolbox}, 
+  year={2024},
+  volume={},
+  number={},
+  pages={48-50},
+  keywords={Uncertainty;Data analysis;Software packages;Conferences;Software algorithms;Pipelines;Data visualization;Python;Uncertainty visualization;software toolbox},
+  doi={10.1109/UncertaintyVisualization63963.2024.00011}}
 ```
