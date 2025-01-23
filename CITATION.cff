@@ -20,7 +20,7 @@ title: "UADAPy: An Uncertainty-Aware Visualization and Analysis Toolbox"
 repository-code: "https://github.com/UniStuttgart-VISUS/uadapy"
 type: software
 preferred-citation:
-  type: generic
+  type: conference-paper
   authors:
   - family-names: "Paetzold"
     given-names: "Patrick"
@@ -39,6 +39,8 @@ preferred-citation:
     orcid: "https://orcid.org/0000-0001-5803-2185"
   title: "UADAPy: An Uncertainty-Aware Visualization and Analysis Toolbox"
   year: 2024
-  url: "https://arxiv.org/abs/2409.10217"
-  eprint: "2409.10217"
-  archivePrefix: "arXiv"
+  url: "https://ieeexplore.ieee.org/document/10750138"
+  doi: "10.1109/UncertaintyVisualization63963.2024.00011"
+  start: 48
+  end: 50
+  booktitle: "2024 IEEE Workshop on Uncertainty Visualization: Applications, Techniques, Software, and Decision Frameworks"
