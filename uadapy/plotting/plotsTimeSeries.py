@@ -3,10 +3,13 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib import cm
 from matplotlib.colors import Normalize
+from uadapy import CorrelatedDistributions
 import glasbey as gb
 
 def _compute_correlation_matrix(sigma):
+
     c_inv_mult = np.zeros(sigma.shape[0])
+
     for k in range(sigma.shape[0]):
         c = sigma[k, k]
         if c < 1e-12:
@@ -14,7 +17,14 @@ def _compute_correlation_matrix(sigma):
         else:
             c_inv_mult[k] = 1 / np.sqrt(c)
     cor_mat = np.diag(c_inv_mult) @ sigma @ np.diag(c_inv_mult)
+
     return cor_mat
+
+def _reconstruct_covariance_matrix(block_cov):
+
+    block_rows = [np.concatenate(row, axis=1) for row in block_cov]
+    cov_mat = np.concatenate(block_rows, axis=0)
+    return cov_mat
 
 def _plot_data(data, plot_type, n_samples, samples_colored, colorblind_safe, line_width):
 
@@ -90,8 +100,8 @@ def _plot_correlation_length_data(
 
     Parameters
     ----------
-    timeseries : Timeseries object
-        An instance of the TimeSeries class, which represents a univariate time series.
+    timeseries : Timeseries object or CorrelatedDistributions object
+        An instance of the TimeSeries class or CorrelatedDistributions class.
     multi_distr_present : bool, optional
         if True, plots correlation length for correlated uncertain timeseries data.
         Default is False.
@@ -111,20 +121,23 @@ def _plot_correlation_length_data(
         List of Axes objects used for plotting.
     """
 
-    mu = timeseries.mean()
-    sigma = timeseries.cov()
-    num_periods = 1
+    discr_nmb = 13
 
     if multi_distr_present:
-        sb_plot_nmb = num_periods + 3
+        cov_mat = timeseries.covariance_matrix
+        sb_plot_nmb = timeseries.n_distributions
+        length_data = len(timeseries.distributions[0].mean())
+        cov_mat = _reconstruct_covariance_matrix(cov_mat)
+        cor_mat = _compute_correlation_matrix(cov_mat)
     else:
+        mu = timeseries.mean()
+        sigma = timeseries.cov()
         sb_plot_nmb = 1
-    length_data = len(mu) // sb_plot_nmb
-    cor_mat = _compute_correlation_matrix(sigma)
-    discr_nmb = 13
-    time_stamp = [0, timeseries.timesteps]
+        length_data = len(mu)
+        cor_mat = _compute_correlation_matrix(sigma)
+    time_stamp = [0, length_data]
     stamp_length = time_stamp[1] - time_stamp[0]
-    stamp_indices = list(range(len(mu)))
+    stamp_indices = list(range(length_data * sb_plot_nmb))
 
     if fig is None:
         if multi_distr_present:
@@ -298,7 +311,7 @@ def plot_timeseries(
     return fig, axs
 
 def plot_correlated_timeseries(
-        timeseries,
+        corr_timeseries  : CorrelatedDistributions,
         n_samples,
         co_point,
         seed=55,
@@ -311,8 +324,8 @@ def plot_correlated_timeseries(
 
     Parameters
     ----------
-    timeseries : Timeseries object
-        An instance of the TimeSeries class, which represents a univariate time series.
+    corr_timeseries : CorrelatedDistributions object
+        An instance of the CorrelatedDistributions class.
     n_samples : int
         The number of samples to draw from the given timeseries distribution.
     co_point : int
@@ -338,62 +351,62 @@ def plot_correlated_timeseries(
         List of Axes objects used for plotting.
     """
 
-    mean = timeseries.mean()
-    cov = timeseries.cov()
     discr_nmb = 13
     samples_colored=True
     line_width = 2.5
     plot_type = 'comb'
-    num_periods = 1
+    samples = {}
+    mu = {}
+    sigma_sq = {}
+    sigma = {}
+    num_periods = corr_timeseries.n_distributions - 3
+    ts_means = [x.mean() for x in corr_timeseries.distributions]
+    cov_mat = corr_timeseries.covariance_matrix
 
     if fig is None:
         fig = plt.figure(figsize=(12, 8))
-    
+
     plt.suptitle('Uncertainty-Aware Seasonal-Trend Decomposition')
 
-    if (len(mean) == cov.shape[0]) and (len(mean) == cov.shape[1]):
-        ylen = len(mean) // (3 + num_periods)
-    else:
-        raise ValueError("Size of mu and sigma are not concise")
+    timesteps = len(ts_means[0])
+    time_stamp = [0, timesteps]
+    stamp_indices = list(range(len(ts_means[0]) * corr_timeseries.n_distributions))
 
-    time_stamp = [0, ylen]
-    stamp_indices = list(range(len(mean)))
+    samples = corr_timeseries.sample(n_samples, seed).T
+    samples = np.split(samples, corr_timeseries.n_distributions, axis=0)
 
-    samples = timeseries.sample(n_samples, seed).transpose()
-    y = {'samples': samples[time_stamp[0]:time_stamp[1], :]}
-    LT = {'samples': samples[ylen + time_stamp[0]:ylen + time_stamp[1], :]}
-    ST = {'samples': np.zeros((time_stamp[1] - time_stamp[0], n_samples, num_periods))}
-    for i in range(num_periods):
-        ST['samples'][:, :, i] = samples[(i + 2) * ylen + time_stamp[0]:(i + 2) * ylen + time_stamp[1], :]
-    R = {'samples': samples[(2 + num_periods) * ylen + time_stamp[0]:(2 + num_periods) * ylen + time_stamp[1], :]}
+    for i in range(corr_timeseries.n_distributions):
+        mu[i] = ts_means[i]
+        sigma_sq[i] = np.sqrt(np.maximum(np.diag(cov_mat[i][i]), 0))
+        sigma[i] = cov_mat[i][i]
 
-    y['mu'] = mean[time_stamp[0]:time_stamp[1]]
-    y['sigma_sq'] = np.sqrt(np.maximum(np.diag(cov[time_stamp[0]:time_stamp[1], time_stamp[0]:time_stamp[1]]), 0))
-    y['sigma'] = cov[time_stamp[0]:time_stamp[1], time_stamp[0]:time_stamp[1]]
+    y = {'samples': samples[0], 'mu': mu[0], 'sigma_sq': sigma_sq[0], 'sigma': sigma[0]}
+    LT = {'samples': samples[1], 'mu': mu[1], 'sigma_sq': sigma_sq[1], 'sigma': sigma[1]}
 
-    LT['mu'] = mean[ylen + time_stamp[0]:ylen + time_stamp[1]]
-    LT['sigma_sq'] = np.sqrt(np.maximum(np.diag(cov[ylen + time_stamp[0]:ylen + time_stamp[1], ylen + time_stamp[0]:ylen + time_stamp[1]]), 0))
-    LT['sigma'] = cov[ylen + time_stamp[0]:ylen + time_stamp[1], ylen + time_stamp[0]:ylen + time_stamp[1]]
-
-    ST['mu'] = np.zeros((time_stamp[1] - time_stamp[0], num_periods))
-    ST['sigma_sq'] =  np.zeros((time_stamp[1] - time_stamp[0], num_periods))
-    ST['sigma'] = np.zeros((time_stamp[1] - time_stamp[0], time_stamp[1] - time_stamp[0], num_periods))
+    ST = {
+        'samples': np.zeros((time_stamp[1] - time_stamp[0], n_samples, num_periods)),
+        'mu': np.zeros((time_stamp[1] - time_stamp[0], num_periods)),
+        'sigma_sq': np.zeros((time_stamp[1] - time_stamp[0], num_periods)),
+        'sigma': np.zeros((time_stamp[1] - time_stamp[0], time_stamp[1] - time_stamp[0], num_periods)),
+    }
 
     for i in range(num_periods):
-        ST['mu'][:, i] = mean[(i + 2) * ylen + time_stamp[0]:(i + 2) * ylen + time_stamp[1]].flatten()
-        ST['sigma_sq'][:, i] = np.sqrt(np.maximum(np.diag(cov[(i + 2) * ylen + time_stamp[0]:(i + 2) * ylen + time_stamp[1], (i + 2) * ylen + time_stamp[0]:(i + 2) * ylen + time_stamp[1]]), 0))
-        ST['sigma'][:, :, i] = cov[(i + 2) * ylen + time_stamp[0]:(i + 2) * ylen + time_stamp[1], (i + 2) * ylen + time_stamp[0]:(i + 2) * ylen + time_stamp[1]]
+        ST['samples'][:, :, i] = samples[2 + i]
+        ST['mu'][:, i] = mu[2 + i]
+        ST['sigma_sq'][:, i] = sigma_sq[2 + i]
+        ST['sigma'][:, :, i] = sigma[2 + i]
 
-    R['mu'] = mean[(2 + num_periods) * ylen + time_stamp[0]:(2 + num_periods) * ylen + time_stamp[1]]
-    R['sigma_sq'] =  np.sqrt(np.maximum(np.diag(cov[(2 + num_periods) * ylen + time_stamp[0]:(2 + num_periods) * ylen + time_stamp[1], (2 + num_periods) * ylen + time_stamp[0]:(2 + num_periods) * ylen + time_stamp[1]]), 0))
-    R['sigma'] = cov[(2 + num_periods) * ylen + time_stamp[0]:(2 + num_periods) * ylen + time_stamp[1], (2 + num_periods) * ylen + time_stamp[0]:(2 + num_periods) * ylen + time_stamp[1]]
+    R = {'samples': samples[corr_timeseries.n_distributions - 1],
+         'mu': mu[corr_timeseries.n_distributions - 1],
+         'sigma_sq': sigma_sq[corr_timeseries.n_distributions - 1],
+         'sigma': sigma[corr_timeseries.n_distributions - 1]}
 
     cmap = cm.get_cmap('coolwarm', discr_nmb)
     norm = Normalize(vmin=-(discr_nmb // 2), vmax=(discr_nmb // 2))
 
     if co_point == 0:
         helper_co_dep = 0
-    elif abs(co_point) > len(mean):
+    elif abs(co_point) > len(ts_means[0]) * corr_timeseries.n_distributions:
         print('Covariance point set too high, plotting without dependency plot.\n')
         helper_co_dep = 0
     elif co_point in stamp_indices:
@@ -404,7 +417,8 @@ def plot_correlated_timeseries(
 
     if helper_co_dep == 1:
         interactive_pointer = co_point
-        cor_mat = _compute_correlation_matrix(cov)
+        cov_mat = _reconstruct_covariance_matrix(cov_mat)
+        cor_mat = _compute_correlation_matrix(cov_mat)
         plot_back = cor_mat[interactive_pointer, :]
 
     sigmalvl = [0, 0.674490, 2.575829]
@@ -442,14 +456,14 @@ def plot_correlated_timeseries(
     maxyheight.append((R['lims'][3] - R['lims'][2]) / (part_factor + 1) / 2)
     ymid.append(R['lims'][2] + maxyheight[-1])
 
-    x = np.linspace(0, ylen, ylen + 1)
+    x = np.linspace(0, timesteps, timesteps + 1)
 
     plt.subplot(3 + num_periods, 1, 1)
     if helper_co_dep == 1:
         j = 0
         for i in range(1, len(plot_back) + 1):
-            if i - 1 == co_point and (i % ylen) > time_stamp[0] and (i % ylen) < time_stamp[1]:
-                k = (i % ylen) - time_stamp[0]
+            if i - 1 == co_point and (i % timesteps) > time_stamp[0] and (i % timesteps) < time_stamp[1]:
+                k = (i % timesteps) - time_stamp[0]
                 thickness = (time_stamp[1] - time_stamp[0]) / 500
                 xdif = x[k] - x[k -1]
                 xp = [x[k-1] - thickness * xdif, x[k-1] + thickness * xdif, x[k-1] + thickness * xdif, x[k-1] - thickness * xdif]
@@ -458,8 +472,8 @@ def plot_correlated_timeseries(
                 yp = [yss - diff, yss - diff, yss + diff + part_factor * diff * 2, yss + diff + part_factor * diff * 2]
                 plt.fill(xp, yp, color=[0, 0, 0], edgecolor='none', alpha=1)
 
-            if (i % ylen) != 0 and (i % ylen) > time_stamp[0] and (i % ylen) <= time_stamp[1]:
-                maxc = max(abs(plot_back[(j) * ylen: (j + 1) * ylen]))
+            if (i % timesteps) != 0 and (i % timesteps) > time_stamp[0] and (i % timesteps) <= time_stamp[1]:
+                maxc = max(abs(plot_back[(j) * timesteps: (j + 1) * timesteps]))
                 if maxc > 0:
                     yss = ymid[j]
                     diff = maxyheight[j]
@@ -476,14 +490,14 @@ def plot_correlated_timeseries(
                     pos_cont = yss
                     col_ind = 0
                 color = cmap(norm(col_ind))
-                k = (i % ylen) - time_stamp[0]
+                k = (i % timesteps) - time_stamp[0]
                 xdif = x[k] - x[k-1]
                 xp = [x[k-1] - 1 / 2 * xdif, x[k-1] + 1 / 2 * xdif, x[k-1] + 1 / 2 * xdif, x[k-1] - 1 / 2 * xdif]
                 yp = [neg_cont, neg_cont, pos_cont, pos_cont]
                 plt.fill(xp, yp, color=color, edgecolor=color, alpha=1)
 
-            elif i % ylen == 0 and ylen == time_stamp[1]:
-                maxc = max(abs(plot_back[(j) * ylen: (j + 1) * ylen]))
+            elif i % timesteps == 0 and timesteps == time_stamp[1]:
+                maxc = max(abs(plot_back[(j) * timesteps: (j + 1) * timesteps]))
                 if maxc > 0:
                     yss = ymid[j]
                     diff = maxyheight[j]
@@ -507,7 +521,7 @@ def plot_correlated_timeseries(
                 plt.fill(xp, yp, color=color, edgecolor=color, alpha=1)
 
 
-            if i % ylen == 0 and i < len(plot_back):
+            if i % timesteps == 0 and i < len(plot_back):
                 j += 1
                 plt.subplot(3 + num_periods, 1, j + 1)
 
@@ -541,21 +555,24 @@ def plot_correlated_timeseries(
     return fig, axs
 
 def plot_correlation_matrix(
-        timeseries,
+        corr_timeseries : CorrelatedDistributions,
         fig=None,
         axs=None,
+        discretize=True,
         show_plot=False):
     """
     Plot correlation matrix for the timeseries data.
 
     Parameters
     ----------
-    timeseries : Timeseries object
-        An instance of the TimeSeries class, which represents a univariate time series.
+    corr_timeseries : CorrelatedDistributions object
+        An instance of the CorrelatedDistributions class.
     fig : matplotlib.figure.Figure or None, optional
         Figure object to use for plotting. If None, a new figure will be created.
     axs : matplotlib.axes.Axes or array of Axes or None, optional
         Axes object(s) to use for plotting. If None, new axes will be created.
+    discretize : bool, optional
+        If True, discretize the colormap. Default is True.
     show_plot : bool, optional
         If True, display the plot.
         Default is False.
@@ -568,24 +585,32 @@ def plot_correlation_matrix(
         List of Axes objects used for plotting.
     """
 
-    mu = timeseries.mean()
-    sigma = timeseries.cov()
-    num_periods  = 1
     line_width = 2.5
-    cor_mat = _compute_correlation_matrix(sigma)
+    discr_nmb = 13
+    ts_length = len(corr_timeseries.distributions[0].mean())
+    total_len = ts_length * corr_timeseries.n_distributions
+    cov_mat = corr_timeseries.covariance_matrix
+    cov_mat = _reconstruct_covariance_matrix(cov_mat)
+    cor_mat = _compute_correlation_matrix(cov_mat)
 
     if fig is None:
         fig = plt.figure(figsize=(8, 8))
 
     plt.suptitle('Correlation Matrix')
-    plt.imshow(cor_mat, cmap='coolwarm')
+
+    cmap = 'coolwarm' if not discretize else mcolors.ListedColormap(plt.cm.coolwarm(np.linspace(0, 1, discr_nmb)))
+
+    if discretize:
+        norm = mcolors.BoundaryNorm(np.linspace(-1, 1, discr_nmb + 1), cmap.N)
+        plt.imshow(cor_mat, cmap=cmap, norm=norm)
+    else:
+        plt.imshow(cor_mat, cmap=cmap)
+
     plt.colorbar()
 
-    sublength = len(mu) // (num_periods + 3)
-
-    for i in range(1, num_periods + 3):
-        plt.plot([(i - 1) * sublength + 0.5 + sublength] * len(mu), ':', color='white', linewidth=line_width)
-        plt.plot([(i - 1) * sublength + sublength + 0.5] * len(mu), np.linspace(0, len(mu) - 1, len(mu)), ':', color='white', linewidth=line_width)
+    for i in range(1, corr_timeseries.n_distributions):
+        plt.plot([(i - 1) * ts_length + 0.5 + ts_length] * total_len, ':', color='white', linewidth=line_width)
+        plt.plot([(i - 1) * ts_length + ts_length + 0.5] * total_len, np.linspace(0, total_len - 1, total_len), ':', color='white', linewidth=line_width)
 
     plt.clim(-1, 1)
 
@@ -631,7 +656,7 @@ def plot_corr_length(
     return fig, axs
 
 def plot_correlated_corr_length(
-        timeseries,
+        corr_timeseries,
         fig=None,
         axs=None,
         show_plot=False):
@@ -640,8 +665,8 @@ def plot_correlated_corr_length(
 
     Parameters
     ----------
-    timeseries : Timeseries object
-        An instance of the TimeSeries class, which represents a univariate time series.
+    corr_timeseries : CorrelatedDistributions object
+        An instance of the CorrelatedDistributions class.
     fig : matplotlib.figure.Figure or None, optional
         Figure object to use for plotting. If None, a new figure will be created.
     axs : matplotlib.axes.Axes or array of Axes or None, optional
@@ -658,6 +683,6 @@ def plot_correlated_corr_length(
         List of Axes objects used for plotting.
     """
     multi_distr_present = True
-    fig, axs = _plot_correlation_length_data(timeseries, multi_distr_present, fig, axs, show_plot)
+    fig, axs = _plot_correlation_length_data(corr_timeseries, multi_distr_present, fig, axs, show_plot)
 
     return fig, axs

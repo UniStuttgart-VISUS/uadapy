@@ -12,11 +12,11 @@ class TimeSeries:
     ----------
     distribution: Distribution
         The underlying distribution of the time series
-    timesteps: np.ndarray
+    timesteps: int
         The time steps of the time series
     """
 
-    def __init__(self, model, timesteps=None, name="", n_dims=1):
+    def __init__(self, model, timesteps, name="", n_dims=1):
         """
         Creates a time series object. 
         The underlying distribution is created in agreement with the Distribution class.
@@ -25,8 +25,8 @@ class TimeSeries:
         ----------
         model: 
             A scipy.stats distribution or samples
-        timesteps: np.ndarray, optional
-            The time steps of the time series. If none is provided, the time steps are assumed to be [0, 1, 2, ...].
+        timesteps: int
+            The time steps of the time series.
         name: str, optional
             The name of the distribution
         n_dims: int, optional
@@ -117,7 +117,7 @@ class CorrelatedDistributions:
         Pairwise covariance matrix of the distributions.
     """
 
-    def __init__(self, distributions: list[distribution.Distribution], cross_covariance=0):
+    def __init__(self, distributions: list[distribution.Distribution], covariance_matrix=None):
         """
         Initializes the CorrelatedDistributions object.
 
@@ -125,33 +125,35 @@ class CorrelatedDistributions:
         ----------
         distributions : list[Distribution]
             A list of Distribution objects.
-        cross_covariance : float
-            Cross covariance between the distributions.
+        covariance_matrix : np.ndarray
+            Pairwise covariance matrix of the distributions.
         """
         self.distributions = distributions
         self.n_distributions = len(distributions)
-        self.covariance_matrix = self._compute_covariance_matrix(cross_covariance)
+        self._check_covariance_matrix_consistency(covariance_matrix)
+        self.covariance_matrix = covariance_matrix
 
-    def _compute_covariance_matrix(self, cross_covariance) -> np.ndarray:
+    def _check_covariance_matrix_consistency(self, covariance_matrix) -> bool:
         """
-        Computes the pairwise covariance matrix for the distributions.
+        Checks if the provided covariance matrix matches the covariances computed from the distributions.
 
         Returns
         -------
-        np.ndarray
-            Pairwise covariance matrix.
+        bool
+            True if the covariance matrix matches, False otherwise.
         """
-        n = self.n_distributions
-        cov_matrix = np.zeros((n, n))
-        
-        for i in range(n):
-            for j in range(i, n):
-                if i == j:
-                    cov_matrix[i, j] = self.distributions[i].cov()
-                else:
-                    cov_matrix[i, j] = cov_matrix[j, i] = cross_covariance
-        
-        return cov_matrix
+
+        if covariance_matrix is None:
+            raise ValueError("Covariance matrix must be provided to validate the distributions.")
+
+        for i in range(self.n_distributions):
+            computed_variance = self.distributions[i].cov()
+            if not all(np.allclose(arr1, arr2, atol=1e-8) for arr1, arr2 in zip(computed_variance, covariance_matrix[i][i])):
+                raise ValueError(
+                    f"Variance of distribution {i} does not match the provided covariance matrix."
+                )
+
+        return True
 
     def mean(self, dim_i: int) -> float:
         """
@@ -185,11 +187,11 @@ class CorrelatedDistributions:
         np.ndarray
             Covariance matrix between i-th and j-th distribution.
         """
-        return self.covariance_matrix[dim_i, dim_j]
+        return self.covariance_matrix[dim_i][dim_j]
 
     def sample(self, n_samples: int, seed: int = None) -> np.ndarray:
         """
-        Samples from the joint distribution of all correlated distributions.
+        Samples from the joint distribution of all correlated distributions in block structure.
 
         Parameters
         ----------
@@ -204,6 +206,9 @@ class CorrelatedDistributions:
             Samples from the joint distribution.
         """
         np.random.seed(seed)
-        means = [dist.mean() for dist in self.distributions]
-        joint_samples = np.random.multivariate_normal(means, self.covariance_matrix, size=n_samples)
+        means = np.concatenate([dist.mean() for dist in self.distributions])
+        block_rows = [np.concatenate(row, axis=1) for row in self.covariance_matrix]
+        covariance_matrix = np.concatenate(block_rows, axis=0)
+        joint_samples = np.random.multivariate_normal(means, covariance_matrix, size=n_samples)
+
         return joint_samples

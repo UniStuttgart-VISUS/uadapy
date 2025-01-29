@@ -1,6 +1,5 @@
 import numpy as np
-from scipy.linalg import kron
-from uadapy import TimeSeries
+from uadapy import TimeSeries, CorrelatedDistributions
 from scipy.stats import multivariate_normal
 
 def _convmtx(h, n):
@@ -72,7 +71,52 @@ def _loessmtx(a, s, d, omega=None):
     
     return B
 
-def apply_uastl(mean, cov):
+def _decompose_distribution(result, timesteps, num_periods):
+    """
+    Decomposes the result dictionary into a list of time series and a block-structured covariance matrix.
+
+    Parameters
+    ----------
+    result : dict
+        Dictionary containing 'mu_new' (means) and 'sigma_new' (covariance matrix).
+    timesteps : int
+        Number of timesteps in each component.
+    num_periods : int
+        Number of independent periods (or components).
+
+    Returns
+    -------
+    tuple
+        A list of time series (TimeSeries objects) and a block-structured covariance matrix.
+    """
+    means = result['means']
+    cov = result['covs']
+    num_components = num_periods + 3
+
+    # Create a list to hold time series objects
+    ts_list = []
+    for i in range(num_components):
+        start = i * timesteps
+        end = (i + 1) * timesteps
+        mean_vec = means[start:end].flatten()
+        comp_cov = cov[start:end, start:end]
+        ts_list.append(TimeSeries(multivariate_normal(mean_vec, comp_cov, allow_singular=True), timesteps))
+
+    # Create a block-structured covariance matrix
+    block_cov = []
+    for i in range(num_components):
+        row = []
+        for j in range(num_components):
+            start_i = i * timesteps
+            end_i = (i + 1) * timesteps
+            start_j = j * timesteps
+            end_j = (j + 1) * timesteps
+            row.append(cov[start_i:end_i, start_j:end_j])
+        block_cov.append(row)
+
+    return ts_list, block_cov
+
+def apply_uastl(mean, cov, periods, timesteps):
     """
     Applies UAMDS to the specified normal distributions (given as means and covariance matrices).
 
@@ -82,6 +126,10 @@ def apply_uastl(mean, cov):
         Vectors that resemble the mean of the normal distributions
     cov : list
         Matrix that resemble the covariance of the normal distributions
+    periods : list
+        Periods for STL
+    timesteps : int
+        The time steps of the time series
 
     Returns
     -------
@@ -91,27 +139,23 @@ def apply_uastl(mean, cov):
             ['means']: list of projected means
             ['covs']: list of projected covariances
     """
-    p = 100
-    n = 200
-    L = 1
 
+    n = timesteps
+    l = len(periods)
     robust = False
     n_o = 1
     n_i = 2
     n_t = 5
-    n_s = np.maximum(2 * (np.ceil(n / p).astype(int) // 2) + 1, 5)
-    n_l = np.maximum(2 * (p // 2) + 1, 5)
-    n_t = 2 * (int((1.5 * p) / (1 - 1.5 / max(np.ceil(n / p), 5))) // 2) + 1
+    n_s = [np.maximum(2 * (np.ceil(n / p).astype(int) // 2) + 1, 5) for p in periods]
+    n_l = [np.maximum(2 * (p // 2) + 1, 5) for p in periods]
+    n_t = [2 * (int((1.5 * p) / (1 - 1.5 / max(np.ceil(n / p), 5))) // 2) + 1 for p in periods]
     post_smoothing_seasonal = True
     post_smoothing_trend = True
     post_smoothing_trend_n = 5
-    post_smoothing_seasonal_n = np.maximum(2 * (p // 2 // 2) + 1, 5)
+    post_smoothing_seasonal_n = [np.maximum(2 * (p // 2 // 2) + 1, 5) for p in periods]
     post_smoothing_trend_n = np.maximum(2 * (n // 2 // 2) + 1, 5)
 
-    q = []
-    q.append(p)
-
-    n_hat = (3 + L) * n
+    n_hat = (3 + l) * n
     mu_new = np.zeros((n_hat, 1))
     mu_new[:n] = np.array(mean).reshape(-1, 1)
     sigma_new = np.zeros((n_hat, n_hat))
@@ -124,85 +168,76 @@ def apply_uastl(mean, cov):
         a_hat = np.eye(n_hat)
         for inner_loop in range(n_i):
 
-            for k in range(L):
-                # Line 7: Update a_hat regarding seasonal trends --- Steps 1-4
-                
-                # ------- Step 1: detrending()
-                a_delta_t = np.zeros((3+L, 3+L))
+            for k in range(l):
+                a_delta_t = np.zeros((3+l, 3+l))
                 a_delta_t[2+k, 0] = 1
-                a_delta_t[2+k, 1] = -1 # 1+k+1
+                a_delta_t[2+k, 1:2+k] = -1
                 a_delta_t[2+k, 2+k] = 0
                 
-                # ------- Step 2: cycle_subseries_smoothing(p_k, n_s, omega)
-                e_ext = np.zeros((n+2*q[k], n))
-                e_ext[q[k]:q[k]+n, :n] = np.eye(n)
-                e_ext[:q[k], :q[k]] = np.eye(q[k])
-                e_ext[-q[k]:, -q[k]:] = np.eye(q[k])
+                e_ext = np.zeros((n+2*periods[k], n))
+                e_ext[periods[k]:periods[k]+n, :n] = np.eye(n)
+                e_ext[:periods[k], :periods[k]] = np.eye(periods[k])
+                e_ext[-periods[k]:, -periods[k]:] = np.eye(periods[k])
 
-
-                e_split = np.zeros((n+2*q[k], n+2*q[k]))
-                b_ns = np.zeros((n+2*q[k], n+2*q[k]))
+                e_split = np.zeros((n+2*periods[k], n+2*periods[k]))
+                b_ns = np.zeros((n+2*periods[k], n+2*periods[k]))
                 indx = 0
-                for i in range(0, q[k]):
-                    cycle_subseries = np.arange(i-q[k], i+np.floor((n-i -1)/q[k])*q[k]+q[k] + 1, q[k]) + q[k]
+                for i in range(0, periods[k]):
+                    cycle_subseries = np.arange(i-periods[k], i+np.floor((n-i -1)/periods[k])*periods[k]+periods[k] + 1, periods[k]) + periods[k]
                     len_cs = len(cycle_subseries)
-                    cycle_subseries = cycle_subseries.astype(int)  # Ensure integer indices
-                    cycle_subseries_weights = weights[i::q[k]]
+                    cycle_subseries = cycle_subseries.astype(int)
+                    cycle_subseries_weights = weights[i::periods[k]]
                     f_e = np.array([cycle_subseries_weights[0]])
                     l_e = np.array([cycle_subseries_weights[-1]])
-                    b_ns[indx:indx+len_cs, indx:indx+len_cs] = _loessmtx(len_cs, n_s, 2, np.concatenate((f_e, cycle_subseries_weights, l_e)))
+                    b_ns[indx:indx+len_cs, indx:indx+len_cs] = _loessmtx(len_cs, n_s[k], 2, np.concatenate((f_e, cycle_subseries_weights, l_e)))
                     e_split[indx:indx+len_cs, cycle_subseries] = np.eye(len_cs)
                     indx += len_cs
 
-                # ------- Step 3: cycle_subseries_low_pass_filtering(p_k, n_l)
-                h = 3 * np.arange(q[k]+1).reshape(-1, 1)
+                h = 3 * np.arange(periods[k]+1).reshape(-1, 1)
                 h[[0, -1]] += np.array([1, -2]).reshape(-1, 1)
-                h = np.concatenate((h, h[-2::-1])) / (q[k]**2 * 3)
+                h = np.concatenate((h, h[-2::-1])) / (periods[k]**2 * 3)
 
                 a_l = _convmtx(h, n)
-                b_nl = _loessmtx(n, n_l, 1)
-                
+                b_nl = _loessmtx(n, n_l[k], 1)
 
-                # ------- Step 4: cycle_subseries_detrending()
-                p_1n = np.zeros((n, n+2*q[k]))
-                p_1n[:, q[k]:q[k]+n] = np.eye(n)
+                p_1n = np.zeros((n, n+2*periods[k]))
+                p_1n[:, periods[k]:periods[k]+n] = np.eye(n)
 
                 a_p = (p_1n - b_nl @ a_l.T) @ e_split.T @ b_ns @ e_split @ e_ext
 
-                # update STL matrix a_hat regarding seasonal trends
-                a_s_id = np.eye(3+L)
+                a_s_id = np.eye(3+l)
                 a_s_id[2+k, 2+k] = 0
 
                 a_hat = (np.kron(a_s_id, np.eye(n)) + np.kron(a_delta_t, a_p)) @ a_hat
 
-            a_t_dash = np.zeros((3+L, 3+L))
+            a_t_dash = np.zeros((3+l, 3+l))
             a_t_dash[1, 0] = 1
-            a_t_dash[1, 2] = -1
+            a_t_dash[1, 2:2+l] = -1
             a_t_dash[1, 1] = 0
-            a_t_id = np.eye(3+L)
+            a_t_id = np.eye(3+l)
             a_t_id[1, 1] = 0
-            a_hat = (np.kron(a_t_id, np.eye(n)) + np.kron(a_t_dash, _loessmtx(n, n_t, 1))) @ a_hat
+            a_hat = (np.kron(a_t_id, np.eye(n)) + np.kron(a_t_dash, _loessmtx(n, n_t[0], 1))) @ a_hat
 
         if post_smoothing_seasonal:
-            for k in range(L):
-                a_s_post = np.zeros((L+3, L+3))
+            for k in range(l):
+                a_s_post = np.zeros((l+3, l+3))
                 a_s_post[2+k, 2+k] = 1
-                a_hat = (kron(np.eye(L+3) - a_s_post, np.eye(n)) + kron(a_s_post, _loessmtx(n, post_smoothing_seasonal_n, 2))) @ a_hat
+                a_hat = (np.kron(np.eye(l+3) - a_s_post, np.eye(n)) + np.kron(a_s_post, _loessmtx(n, post_smoothing_seasonal_n[k], 2))) @ a_hat
 
         if post_smoothing_trend:
-            a_hat = (kron(a_t_id, np.eye(n)) + kron(a_t_dash, _loessmtx(n, post_smoothing_trend_n, 2))) @ a_hat
+            a_hat = (np.kron(a_t_id, np.eye(n)) + np.kron(a_t_dash, _loessmtx(n, post_smoothing_trend_n, 2))) @ a_hat
 
-        tmpmtx = np.eye(L+3)
-        tmpmtx[L+3-1, 0] = 1
-        tmpmtx[L+3-1, 1:L+2] = -1
-        tmpmtx[L+3-1, L+3-1] = 0
-        a_hat = kron(tmpmtx, np.eye(n)) @ a_hat
+        tmpmtx = np.eye(l+3)
+        tmpmtx[l+3-1, 0] = 1
+        tmpmtx[l+3-1, 1:l+2] = -1
+        tmpmtx[l+3-1, l+3-1] = 0
+        a_hat = np.kron(tmpmtx, np.eye(n)) @ a_hat
         mu_new = a_hat @ mu_new
         sigma_new = a_hat @ sigma_new @ a_hat.T
         a_hat_global = a_hat @ a_hat_global
 
         if robust and outer_loop < n_o - 1:
-            r = np.random.multivariate_normal(mu_new, sigma_new, n)
+            r = np.random.multivariate_normal(mu_new.flatten(), sigma_new, n)
             r = r[:, -n:]
             h = 6 * np.median(np.abs(r), axis=0)
             u = np.abs(r) / h
@@ -210,12 +245,10 @@ def apply_uastl(mean, cov):
             u2[u > 1] = 0
             weights = np.mean(u2, axis=0)
 
-    return {
-        'means': mu_new,
-        'covs': sigma_new,
-    }
+    return {'means': mu_new, 'covs': sigma_new}
 
-def uastl(timeseries : TimeSeries, seed: int = 0):
+
+def uastl(timeseries : TimeSeries, periods : list, seed: int = 0):
     """
     Applies the Uncertainty-Aware Seasonal-Trend Decomposition based on Loess for Gaussian distributed data.
 
@@ -223,20 +256,23 @@ def uastl(timeseries : TimeSeries, seed: int = 0):
     ----------
     timeseries : Timeseries object
         An instance of the TimeSeries class, which represents a univariate time series.
+    periods : list
+        Periods of STL
     seed : int
         Set the random seed for the initialization, 0 by default
 
     Returns
     -------
-    Timeseries object
-        Univariate time series living in projection space (i.e. of provided dimensionality)
+    CorrelatedDistributions object
+        List of time series or distributions with covariance matrix
     """
     try:
         np.random.seed(seed)
         mean = timeseries.mean()
         cov = timeseries.cov()
-        result = apply_uastl(mean, cov)
-        timeseries_lo = TimeSeries(multivariate_normal(result['means'].flatten(), result['covs'], allow_singular=True), timeseries.timesteps)
-        return timeseries_lo
+        result = apply_uastl(mean, cov, periods, timeseries.timesteps)
+        ts_list, block_cov = _decompose_distribution(result, timeseries.timesteps, len(periods))
+        corr_timeseries = CorrelatedDistributions(ts_list, block_cov)
+        return corr_timeseries
     except Exception as e:
         raise Exception(f'Something went wrong. Did you input normal distributions? Exception:{e}')
