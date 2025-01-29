@@ -9,9 +9,6 @@ def load_iris_normal():
     :return:
     """
     iris = datasets.load_iris()
-    print(type(iris))
-    print(iris)
-    print(type(iris.target))
     dist = []
     for c in np.unique(iris.target):
         dist.append(Distribution(np.array(iris.data[iris.target == c]), "Normal"))
