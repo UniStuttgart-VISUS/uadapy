@@ -16,7 +16,7 @@ class TimeSeries:
         The time steps of the time series
     """
 
-    def __init__(self, model, timesteps, name="", n_dims=1):
+    def __init__(self, model, timesteps=None, name="", n_dims=1):
         """
         Creates a time series object. 
         The underlying distribution is created in agreement with the Distribution class.
@@ -25,7 +25,7 @@ class TimeSeries:
         ----------
         model: 
             A scipy.stats distribution or samples
-        timesteps: int
+        timesteps: np.ndarray, optional
             The time steps of the time series.
         name: str, optional
             The name of the distribution
@@ -33,7 +33,10 @@ class TimeSeries:
             The dimensionality of the distribution (default is 1)
         """
         self.distribution = distribution.Distribution(model, name, n_dims)
-        self.timesteps = timesteps
+        if np.any(timesteps):
+            self.timesteps = timesteps
+        else:
+            self.timesteps = np.arange(0, len(self.distribution.mean()))
 
     def sample(self, n: int, seed: int = None) -> np.ndarray:
         """
