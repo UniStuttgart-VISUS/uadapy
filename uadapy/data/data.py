@@ -1,6 +1,6 @@
 from sklearn import datasets
 import numpy as np
-from uadapy import Distribution
+from uadapy import Distribution, TimeSeries
 from scipy import stats
 
 def load_iris_normal():
@@ -25,27 +25,38 @@ def load_iris():
         dist.append(Distribution(np.array(iris.data[iris.target == c])))
     return dist
 
-def generate_synthetic_data(n=200):
+def generate_synthetic_timeseries(timesteps=200):
     """
     Generates synthetic time series data by modeling a combination of trend,
     periodic patterns, and noise using a multivariate normal distribution
     with an exponential quadratic kernel for covariance.
+
+    Parameters
+    ----------
+    timesteps : int
+        The time steps of the time series.
+        Default value is 200.
+
+    Returns
+    -------
+    timeseries : Timeseries object
+        An instance of the TimeSeries class, which represents a univariate time series.
     """
     np.random.seed(0)
-    t = np.arange(1, n + 1)
+    t = np.arange(1, timesteps + 1)
     trend = t / 10
     periodic = 10 * np.sin(2 * np.pi * t / 100)
-    noise = 2 * (np.random.rand(n) - 0.5)
+    noise = 2 * (np.random.rand(timesteps) - 0.5)
     mu = trend + periodic + noise
-    sigma2 = 20 * np.ones(n)
+    sigma2 = 20 * np.ones(timesteps)
     sigma_sq = np.sqrt(sigma2)
-    sigma = np.zeros((n, n))
+    sigma = np.zeros((timesteps, timesteps))
 
     def ex_qu_kernel(x, y, sigma_i, sigma_j, l):
         return sigma_i * sigma_j * np.exp(-0.5 * np.linalg.norm(x - y)**2 / l**2)
     
-    for i in range(n):
-        for j in range(n):
+    for i in range(timesteps):
+        for j in range(timesteps):
             sigma[i, j] = ex_qu_kernel(t[i], t[j], sigma_sq[i], sigma_sq[j], 5)
 
     # Ensure symmetry
@@ -55,5 +66,6 @@ def generate_synthetic_data(n=200):
     epsilon = 1e-6
     sigma += np.eye(sigma.shape[0]) * epsilon
     model = stats.multivariate_normal(mu, sigma)
+    timeseries = TimeSeries(model, timesteps)
 
-    return model
+    return timeseries
