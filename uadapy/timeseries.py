@@ -15,7 +15,6 @@ class TimeSeries:
     timesteps: int
         The time steps of the time series
     """
-
     def __init__(self, model, timesteps=None, name="", n_dims=1):
         """
         Creates a time series object. 
