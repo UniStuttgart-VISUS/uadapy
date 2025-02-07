@@ -5,6 +5,8 @@ from matplotlib import cm
 from matplotlib.colors import Normalize
 from uadapy import CorrelatedDistributions
 import glasbey as gb
+from uadapy.temporal.spectralAnalysis import compute_percentiles_complex
+
 
 def _compute_correlation_matrix(sigma):
 
@@ -29,23 +31,16 @@ def _reconstruct_covariance_matrix(block_cov):
 def _plot_data(data, plot_type, n_samples, samples_colored, colorblind_safe, line_width):
 
     smpl_width = 0.5
-    sigmalvl = [0, 0.674490, 2.575829]
 
     cmap_gradient = plt.get_cmap('Blues')
-    n_levels = len(sigmalvl) + 2
-    color_indices = np.linspace(0, 155, n_levels).astype(int)
+    color_indices = np.linspace(0, 155, 5).astype(int)
     col = cmap_gradient(np.flip(color_indices) / 256)[:, :3]
 
     if plot_type == "isoband":
-        x = np.arange(len(data['mu']))
-        for j in range(len(sigmalvl) - 1, 0, -1):
-            pos_cont = data['mu'] + sigmalvl[j] * data['sigma_sq']
-            neg_cont = data['mu'] - sigmalvl[j] * data['sigma_sq']
-            for i in range(len(data['mu']) - 1):
-                xp = [x[i], x[i + 1], x[i + 1], x[i]]
-                yp = [neg_cont[i], neg_cont[i + 1], pos_cont[i + 1], pos_cont[i]]
-                plt.fill(xp, yp, color=col[j], edgecolor='none')
-        plt.plot(x, data['mu'], color=col[0], linewidth=line_width)
+        x = data['x']
+        plt.fill_between(x, data['light_band'][0], data['light_band'][1], color=col[2], alpha=0.5)
+        plt.fill_between(x, data['dark_band'][0], data['dark_band'][1], color=col[1], alpha=0.5)
+        plt.plot(x, data['central'], color=col[0], linewidth=line_width)
     
     elif plot_type == "spaghetti":
         if colorblind_safe:
@@ -63,9 +58,9 @@ def _plot_data(data, plot_type, n_samples, samples_colored, colorblind_safe, lin
                 h2a_shift_dot = plt.plot(samples_2_plot_shift, color=colors[1], linewidth=line_width * smpl_width, linestyle=':')
             else:
                 for i in range(n_samples):
-                    plt.plot(samples_2_plot[:, i], linewidth=line_width * smpl_width, color=colors[i])
-                    plt.plot(samples_2_plot_shift[:, i], linewidth=line_width * smpl_width * 0.2, color=colors[i], linestyle='-')
-                    plt.plot(samples_2_plot_shift[:, i], linewidth=line_width * smpl_width, color=colors[i], linestyle=':')
+                    plt.plot(data['x'], samples_2_plot[:, i], linewidth=line_width * smpl_width, color=colors[i])
+                    plt.plot(data['x'], samples_2_plot_shift[:, i], linewidth=line_width * smpl_width * 0.2, color=colors[i], linestyle='-')
+                    plt.plot(data['x'], samples_2_plot_shift[:, i], linewidth=line_width * smpl_width, color=colors[i], linestyle=':')
             if not samples_colored and n_samples > 1:
                 for h in h2a:
                     h.set_alpha(0.5)
@@ -75,18 +70,17 @@ def _plot_data(data, plot_type, n_samples, samples_colored, colorblind_safe, lin
                     h.set_alpha(0.5)
         else:
             if not samples_colored:
-                h2a = plt.plot(samples_2_plot, color=colors[1], linewidth=line_width * smpl_width)
+                h2a = plt.plot(data['x'], samples_2_plot, color=colors[1], linewidth=line_width * smpl_width)
             else:
                 for i in range(n_samples):
-                    plt.plot(samples_2_plot[:, i], linewidth=line_width * smpl_width, color=colors[i])
+                    plt.plot(data['x'], samples_2_plot[:, i], linewidth=line_width * smpl_width, color=colors[i])
             if not samples_colored and n_samples > 1:
                 for h in h2a:
                     h.set_alpha(0.5)
 
     elif plot_type == "comb":
-        x = np.arange(len(data['mu']))
+        x = data['x']
         _plot_data(data, "isoband", n_samples, samples_colored, colorblind_safe, line_width)
-        plt.plot(x, data['mu'], color=col[0], linewidth=line_width)
         _plot_data(data, "spaghetti", n_samples, samples_colored, colorblind_safe, line_width)
 
 def _plot_correlation_length_data(
@@ -247,6 +241,7 @@ def _plot_correlation_length_data(
 def plot_timeseries(
         timeseries,
         n_samples,
+        percentiles = False,
         seed=55,
         fig=None,
         axs=None,
@@ -261,6 +256,8 @@ def plot_timeseries(
         An instance of the TimeSeries class, which represents a univariate time series.
     n_samples : int
         The number of samples to draw from the given timeseries distribution.
+    percentiles : bool, optional
+        If True, plot the 50th, and 95th percentiles of the distribution.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
     fig : matplotlib.figure.Figure or None, optional
@@ -292,13 +289,19 @@ def plot_timeseries(
     plot_type = 'comb'
     samples_colored = True
     line_width = 2.5
-    time_stamp = [0, timeseries.timesteps]
 
     samples = timeseries.sample(n_samples, seed).transpose()
     y = {'samples': samples}
-    y['mu'] = mu[time_stamp[0]:time_stamp[1]]
-    y['sigma_sq'] = np.sqrt(np.maximum(np.diag(sigma[time_stamp[0]:time_stamp[1], time_stamp[0]:time_stamp[1]]), 0))
-    y['sigma'] = sigma[time_stamp[0]:time_stamp[1], time_stamp[0]:time_stamp[1]]
+    y['x'] = timeseries.timesteps
+    if not percentiles or timeseries.distribution == 'Normal':
+        y['central'] = mu
+        y['dark_band'] = [mu - 0.674490*np.sqrt(np.maximum(np.diag(sigma), 0)), mu + 0.674490*np.sqrt(np.maximum(np.diag(sigma), 0))]#np.sqrt(np.maximum(np.diag(sigma), 0))
+        y['light_band'] = [mu - 2.575829*np.sqrt(np.maximum(np.diag(sigma), 0)), mu + 2.575829*np.sqrt(np.maximum(np.diag(sigma), 0))]#sigma
+    else:
+        p2_5, p25, median, p75, p97_5 = compute_percentiles_complex(timeseries, [2.5, 25, 50, 75, 97.5])
+        y['light_band'] = [p2_5, p97_5]
+        y['dark_band'] = [p25, p75]
+        y['central'] = median
 
     _plot_data(y, plot_type, n_samples, samples_colored, colorblind_safe, line_width)
     plt.xlabel('timesteps')

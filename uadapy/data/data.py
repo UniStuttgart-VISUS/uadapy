@@ -66,6 +66,6 @@ def generate_synthetic_timeseries(timesteps=200):
     epsilon = 1e-6
     sigma += np.eye(sigma.shape[0]) * epsilon
     model = stats.multivariate_normal(mu, sigma)
-    timeseries = TimeSeries(model, timesteps)
+    timeseries = TimeSeries(model, None)
 
     return timeseries
