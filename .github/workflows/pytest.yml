@@ -26,4 +26,10 @@ jobs:
         pip install pytest pytest-mpl  # Ensure pytest and pytest-mpl are installed
 
     - name: Run Pytest
-      run: pytest --mpl  # Run pytest with Matplotlib image comparison
+      run: pytest --mpl --mpl-results-path=tests/mpl-results --mpl-generate-summary -s --tb=short
+
+    - name: Upload Test Images (Debugging)
+      uses: actions/upload-artifact@v4
+      with:
+        name: mpl-results
+        path: tests/mpl-results/
