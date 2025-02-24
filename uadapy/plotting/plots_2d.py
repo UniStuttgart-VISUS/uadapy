@@ -271,14 +271,14 @@ def plot_contour_bands(distributions,
     if isinstance(distributions, Distribution):
         distributions = [distributions]
 
-    n_quantiles = len(quantiles)
-    alpha_values = np.linspace(1/n_quantiles, 1.0, n_quantiles)  # Creates alpha values from 1/n to 1.0
-    custom_cmap = utils.create_shaded_set2_colormap(alpha_values)
-
     # Determine default quantiles: 25%, 75%, and 95%
     if quantiles is None:
         quantiles = [25, 75, 95]
     largest_quantile = max(quantiles)
+
+    n_quantiles = len(quantiles)
+    alpha_values = np.linspace(1/n_quantiles, 1.0, n_quantiles)  # Creates alpha values from 1/n to 1.0
+    custom_cmap = utils.create_shaded_set2_colormap(alpha_values)
 
     distrib_samples = []
     for d in distributions:
