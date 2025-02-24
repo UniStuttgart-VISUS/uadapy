@@ -26,7 +26,7 @@ jobs:
         pip install pytest pytest-mpl  # Ensure pytest and pytest-mpl are installed
 
     - name: Run Pytest
-      run: pytest --mpl --mpl-results-path=tests/mpl-results --mpl-generate-summary -s --tb=short
+      run: pytest --mpl --mpl-results-path=tests/mpl-results --mpl-generate-summary=tests/mpl-results/summary.json -s --tb=short
 
     - name: Upload Test Images (Debugging)
       uses: actions/upload-artifact@v4
