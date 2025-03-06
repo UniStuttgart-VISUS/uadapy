@@ -1,5 +1,4 @@
 import numpy as np
-
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 import matplotlib.transforms as transforms
@@ -12,19 +11,25 @@ def confidence_ellipse(mean: np.ndarray, cov: np.ndarray, ax: plt.Axes, n_std: f
 
     Parameters
     ----------
+    mean : np.ndarray
+        Mean vector of the distribution.
+    cov : np.ndarray
+        Covariance matrix.
     ax : matplotlib.axes.Axes
         The axes object to draw the ellipse into.
-
-    n_std : float
-        The number of standard deviations to determine the ellipse's radiuses.
-
-    **kwargs
-        Forwarded to `~matplotlib.patches.Ellipse`
+    n_std : float, optional
+        The number of standard deviations to determine the ellipse's radiuses. Default is 3.0.
+    facecolor : str, optional
+        The fill color of the ellipse. Default is 'blue'.
+    **kwargs : additional matplotlib.patches.Ellipse keyword arguments
+        Additional optional plotting arguments.
 
     Returns
     -------
     matplotlib.patches.Ellipse
+        The confidence ellipse patch added to the axis.
     """
+
     assert len(mean) == 2
     assert cov.shape[-1] == 2
 
@@ -56,8 +61,57 @@ def confidence_ellipse(mean: np.ndarray, cov: np.ndarray, ax: plt.Axes, n_std: f
 
 
 class InteractiveNormal:
+    """
+    A class for interactive visualization of a bivariate normal distribution.
+
+    Attributes
+    ----------
+    mean : np.ndarray
+        Mean vector of the normal distribution.
+    cov : np.ndarray
+        Covariance matrix.
+    ax : matplotlib.axes.Axes
+        The axes object where the distribution is plotted.
+    n_std : float, optional
+        The number of standard deviations for the confidence ellipse. Default is 1.0.
+    extends : float, optional
+        Extension factor for the plot limits. Default is 10.
+    epsilon : float, optional
+        Selection tolerance for interactive manipulation. Default is 10.
+    x_label : str, optional
+        Label for the x-axis.
+    y_label : str, optional
+        Label for the y-axis.
+    points : np.ndarray
+        Eigenvector points for visualization.
+    eigenvectors : np.ndarray
+        Eigenvectors computed from the covariance matrix.
+    """
     def __init__(self, mean: np.ndarray, cov: np.ndarray, ax: plt.Axes, n_std: float = 1.0, extends: float = 10,
                  epsilon: float = 10, x_label: str = "", y_label: str = ""):
+        """
+        Initializes the interactive normal distribution visualization.
+
+        Parameters
+        ----------
+        mean : np.ndarray
+            Mean vector of the normal distribution.
+        cov : np.ndarray
+            Covariance matrix.
+        ax : matplotlib.axes.Axes
+            The axes object for visualization.
+        n_std : float, optional
+            The number of standard deviations for the confidence ellipse. Default is 1.0.
+        extends : float, optional
+            Extension factor for the plot limits. Default is 10.
+        epsilon : float, optional
+            Selection tolerance for interactive manipulation. Default is 10.
+        x_label : str, optional
+            Label for the x-axis.
+        y_label : str, optional
+            Label for the y-axis.
+        """
+
         self.mean = mean
         self.cov = cov
         self.ax = ax
@@ -76,6 +130,11 @@ class InteractiveNormal:
         self.update()
 
     def init_points(self):
+        """
+        Computes eigenvectors and eigenvalues of the covariance matrix and
+        initializes points for visualization.
+        """
+
         eigenvalues, eigenvectors = np.linalg.eig(self.cov)
         self.points = self.mean + (np.sign(eigenvalues) * np.sqrt(np.abs(eigenvalues)) * eigenvectors).T
         self.points = np.row_stack([self.points, 2 * self.mean - self.points])
@@ -85,6 +144,15 @@ class InteractiveNormal:
             self.extends = self.extends + 4 * np.linalg.norm(self.points - self.mean, axis=0).max()
 
     def update(self, plot_int: bool = False):
+        """
+        Updates the plot with the confidence ellipse and eigenvector lines.
+
+        Parameters
+        ----------
+        plot_int : bool, optional
+            Whether to plot eigenvectors and key points interactively (default: False).
+        """
+
         self.ax.clear()
 
         # self.ax.autoscale(False)
@@ -138,7 +206,19 @@ class InteractiveNormal:
         # self.ax.get_figure().canvas.draw_idle()
 
     def get_ind_under_point(self, event):
-        'get the index of the vertex under point if within epsilon tolerance'
+        """
+        Returns the index of the point under the given event coordinates.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            Mouse event with x and y coordinates.
+
+        Returns
+        -------
+        int or None
+            Index of the closest point within the tolerance, or None if no point is close enough.
+        """
         tinv = self.ax.transData
         xyt = tinv.transform(self.points)
         xt, yt = xyt[:, 0], xyt[:, 1]
