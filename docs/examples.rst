@@ -14,6 +14,11 @@ Uncertainty-aware principal component analysis
 
 `Load data, reduce the dimensionality with UAPCA, visualize the output <https://github.com/UniStuttgart-VISUS/uadapy/blob/main/examples/uapca.ipynb>`_
 
+Uncertainty-aware seasonal trend decomposition with LOESS
+----------------------------------------------
+
+`Load data, reduce the dimensionality with UAPCA, visualize the output <https://github.com/UniStuttgart-VISUS/uadapy/blob/main/examples/uastl.ipynb>`_
+
 Working with own data
 ---------------------
 
