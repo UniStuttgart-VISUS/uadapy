@@ -9,6 +9,23 @@ import matplotlib.pyplot as plt
 
 
 def compute_scaling_factor_at_axis(axis: np.ndarray, a: np.ndarray, b: np.ndarray) -> float:
+    """
+    Compute the scaling factor along a specified axis for a given transformation.
+
+    Parameters
+    ----------
+    axis : np.ndarray
+        The reference axis for scaling computation.
+    a : np.ndarray
+        The first vector.
+    b : np.ndarray
+        The second vector.
+
+    Returns
+    -------
+    float
+        The computed scaling factor.
+    """
     # return the scaling factor s for a = s * b along the specified axis
 
     # angle of axis
@@ -34,9 +51,26 @@ def compute_scaling_factor_at_axis(axis: np.ndarray, a: np.ndarray, b: np.ndarra
 
 def compute_rotation_scaling_matrix__along_axis(axis: np.ndarray, a: np.ndarray, b: np.ndarray):
     """
-    Returns a rotation_scale matrix that transforms a
-        vector/matrix by the scale factor s for a = s * b along the specified axis.
+    Compute a rotation and scaling matrix along a specified axis.
+
+    Parameters
+    ----------
+    axis : np.ndarray
+        The reference axis for transformation.
+    a : np.ndarray
+        The first vector.
+    b : np.ndarray
+        The second vector.
+
+    Returns
+    -------
+    np.ndarray
+        The transformation matrix combining rotation and scaling.
     """
+
+    # Returns a rotation_scale matrix that transforms a
+    # Vector/matrix by the scale factor s for a = s * b along the specified axis.
+
     # angle of axis
     angle = compute_angle(axis, np.array([1, 0]))
 
@@ -63,6 +97,22 @@ def compute_rotation_scaling_matrix__along_axis(axis: np.ndarray, a: np.ndarray,
 
 
 def compute_scaling(a: np.ndarray, b: np.ndarray) -> float:
+    """
+    Compute the overall scaling factor between two vectors.
+
+    Parameters
+    ----------
+    a : np.ndarray
+        The first vector.
+    b : np.ndarray
+        The second vector.
+
+    Returns
+    -------
+    float
+        The computed scaling factor.
+    """
+
     # return the scaling factor s for a = s * b
 
     # x-value is length on axis
@@ -77,6 +127,22 @@ def compute_scaling(a: np.ndarray, b: np.ndarray) -> float:
 
 
 def compute_angle(a: np.ndarray, b: np.ndarray) -> float:
+    """
+    Compute the angle between two vectors in radians.
+
+    Parameters
+    ----------
+    a : np.ndarray
+        The first vector.
+    b : np.ndarray
+        The second vector.
+
+    Returns
+    -------
+    float
+        The angle in radians.
+    """
+
     dot = np.dot(a, b)
     det = np.cross(a, b)
     angle = np.arctan2(det, dot)
@@ -85,6 +151,20 @@ def compute_angle(a: np.ndarray, b: np.ndarray) -> float:
 
 
 def make_2d_rotation_matrix(angle: float):
+    """
+    Generate a 2D rotation matrix for a given angle.
+
+    Parameters
+    ----------
+    angle : float
+        The rotation angle in radians.
+
+    Returns
+    -------
+    np.ndarray
+        The 2x2 rotation matrix.
+    """
+
     cos_angle = np.cos(angle)
     sin_angle = np.sin(angle)
 
@@ -95,8 +175,52 @@ def make_2d_rotation_matrix(angle: float):
 
 
 class InteractiveSplom:
+    """
+    Interactive scatterplot matrix (SPLOM) visualization for multivariate normal distributions.
+
+    Attributes
+    ----------
+    mean : np.ndarray
+        Mean vector of the multivariate normal distribution.
+    cov : np.ndarray
+        Covariance matrix of the distribution.
+    n_std : float
+        Number of standard deviations for confidence ellipses.
+    extends : float
+        Scaling factor for plot extension.
+    epsilon : float
+        Sensitivity for interactive modifications.
+    dim : int
+        Dimensionality of the data.
+    fig : matplotlib.figure.Figure
+        The main figure object.
+    axes : np.ndarray
+        Array of subplot axes.
+    subplots : np.ndarray
+        Array of InteractiveNormal instances for visualization.
+    """
+
     def __init__(self, mean: np.ndarray, cov: np.ndarray, fig_args: dict = None, n_std: float = 1.0,
                  extends: float = 10, epsilon: float = 5):
+        """
+        Initializes the interactive SPLOM visualization.
+
+        Parameters
+        ----------
+        mean : np.ndarray
+            Mean vector of the multivariate normal distribution.
+        cov : np.ndarray
+            Covariance matrix of the distribution.
+        fig_args : dict, optional
+            Arguments for configuring the figure.
+        n_std : float, optional
+            Number of standard deviations for confidence ellipses.
+        extends : float, optional
+            Scaling factor for plot extension.
+        epsilon : float, optional
+            Sensitivity for interactive modifications.
+        """
+
         self.mean = mean
         self.cov = cov
 
@@ -155,12 +279,28 @@ class InteractiveSplom:
         self.currently_selected_point = None
 
     def get_current_subplot(self, event) -> InteractiveNormal:
+        """
+        Retrieves the subplot corresponding to the given event.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            The mouse event.
+
+        Returns
+        -------
+        InteractiveNormal or None
+            The corresponding subplot, if found.
+        """
         for subplot in self.subplots.flat:
             if subplot is not None and subplot.ax is event.inaxes:
                 return subplot
         return None
 
     def get_current_subplot_idx(self, current_subplot):
+        """
+        Returns the index of the given subplot in the subplots array.
+        """
         for row_i, row in enumerate(self.subplots):
             for col_i, subplot in enumerate(row):
                 if subplot is current_subplot:
@@ -169,7 +309,10 @@ class InteractiveSplom:
         return None, None
 
     def button_press_callback(self, event):
-        'whenever a mouse button is pressed'
+        """
+        Handles mouse button press events.
+        """
+        #'whenever a mouse button is pressed'
         if event.inaxes is None:
             return
         if event.button != 1:
@@ -183,7 +326,10 @@ class InteractiveSplom:
         self.currently_selected_point = point_idx
 
     def button_release_callback(self, event):
-        'whenever a mouse button is released'
+        """
+        Handles mouse button release events.
+        """
+        #'whenever a mouse button is released'
         if event.button != 1:
             return
         self.current_pressed_subplot = None
@@ -192,6 +338,9 @@ class InteractiveSplom:
         self.update_all_plots()
 
     def update_mean_cov(self):
+        """
+        Updates the mean and covariance values for all subplots.
+        """
         for row_i, row in enumerate(self.axes):
             row_i += 1
             for col_i, ax in enumerate(row):
@@ -210,6 +359,9 @@ class InteractiveSplom:
                     # self.subplots[row_i - 1, col_i].adjust_points(0, self.subplots[row_i - 1, col_i].points[0])
 
     def update_plots(self, row_i_, col_i_):
+        """
+        Updates all plots.
+        """
         updated = []
         for i in range(len(self.subplots)):
             if self.subplots[i, col_i_] is not None and (i, col_i_) not in updated:
@@ -232,12 +384,18 @@ class InteractiveSplom:
                     updated.append((col_i_-1, i))
 
     def update_all_plots(self):
+        """
+        Updates all subplots.
+        """
         for subplot in self.subplots.flat:
             if subplot is not None:
                 subplot.update(True)
 
     def motion_notify_callback(self, event):
-        'on mouse movement'
+        """
+        Handles mouse movement events.
+        """
+        #'on mouse movement'
         if event.inaxes is None:
             return
         if event.button != 1:
@@ -306,6 +464,9 @@ class InteractiveSplom:
         self.last_local_mouse_pos = np.array([event.xdata, event.ydata])
 
     def show(self):
+        """
+        Displays the interactive visualization.
+        """
         self.fig.show()
 
 
