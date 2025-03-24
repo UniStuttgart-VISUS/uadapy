@@ -2,7 +2,9 @@ from uadapy import TimeSeries
 import numpy as np
 import math
 import uadapy.distributions.chi_square_comb as chi_square_comb
-# from chi2comb import chi2comb_cdf, ChiSquared
+import os
+os.add_dll_directory("C:/Users/Marina/Desktop/uadapy/chi2comb-0.0.3/build/Release")
+from chi2comb import chi2comb_cdf, ChiSquared
 import scipy.optimize as optimize
 
 def _fourier(i, j, N):
