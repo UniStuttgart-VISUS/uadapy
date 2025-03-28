@@ -4,7 +4,7 @@ matplotlib.use('Agg')  # Use a non-GUI backend
 import pytest
 from uadapy.dr import uamds
 import uadapy.data as data
-from uadapy.plotting import plotsND
+from uadapy.plotting import plots_2d
 
 @pytest.fixture
 def sample_distributions():
@@ -14,19 +14,19 @@ def sample_distributions():
     return distribs_lo
 
 @pytest.mark.mpl_image_compare(baseline_dir="baseline")
-def test_plot_samples_nd(sample_distributions):
+def test_plot_samples(sample_distributions):
     """Test plot_samples function."""
-    fig, axs = plotsND.plot_samples(sample_distributions, n_samples=10000)
+    fig, axs = plots_2d.plot_samples(sample_distributions, n_samples=10000)
     return fig
 
 @pytest.mark.mpl_image_compare(baseline_dir="baseline")
-def test_plot_contour_nd(sample_distributions):
+def test_plot_contour(sample_distributions):
     """Test plot_contour function."""
-    fig, axs = plotsND.plot_contour(sample_distributions,n_samples=10000)
+    fig, axs = plots_2d.plot_contour(sample_distributions)
     return fig
 
 @pytest.mark.mpl_image_compare(baseline_dir="baseline")
-def test_plot_contour_samples_nd(sample_distributions):
-    """Test plot_contour_samples function."""
-    fig, axs = plotsND.plot_contour_samples(sample_distributions, n_samples=10000)
+def test_plot_contour_bands(sample_distributions):
+    """Test plot_contour_bands function."""
+    fig, axs = plots_2d.plot_contour_bands(sample_distributions, n_samples=10000)
     return fig

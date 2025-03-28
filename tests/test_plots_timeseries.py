@@ -3,7 +3,7 @@ matplotlib.use('Agg')  # Use a non-GUI backend
 
 import pytest
 from uadapy.temporal.uastl import uastl
-from uadapy.plotting.plotsTimeSeries import plot_timeseries, plot_correlated_timeseries, plot_correlation_matrix, plot_corr_length, plot_correlated_corr_length
+from uadapy.plotting.plots_timeseries import plot_timeseries, plot_correlated_timeseries, plot_correlation_matrix, plot_corr_length, plot_correlated_corr_length
 from uadapy.data import generate_synthetic_timeseries
 
 @pytest.fixture
