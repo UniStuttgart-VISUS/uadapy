@@ -11,7 +11,7 @@ def _convmtx(h, n):
     for i in range(m + n - 1):
         for j in range(n):
             if i - j >= 0 and i - j < m:
-                H[i, j] = h[i - j]
+                H[i, j] = h[i - j].item()
     
     return H
 
