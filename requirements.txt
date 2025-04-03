@@ -5,3 +5,4 @@ scikit-learn
 numba
 glasbey
 seaborn
+chi2comb @ git+https://github.com/marinaevers/chi2comb-py.git
