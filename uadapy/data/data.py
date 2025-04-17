@@ -45,7 +45,7 @@ def generate_synthetic_timeseries(timesteps=200):
     np.random.seed(0)
     t = np.arange(1, timesteps + 1)
     trend = t / 10
-    periodic = 10 * np.sin(2 * np.pi * t / 100)
+    periodic = 10 * np.sin(2 * np.pi * t / 50)
     noise = 2 * (np.random.rand(timesteps) - 0.5)
     mu = trend + periodic + noise
     sigma2 = 20 * np.ones(timesteps)
@@ -66,6 +66,6 @@ def generate_synthetic_timeseries(timesteps=200):
     epsilon = 1e-6
     sigma += np.eye(sigma.shape[0]) * epsilon
     model = stats.multivariate_normal(mu, sigma)
-    timeseries = TimeSeries(model, None)
+    timeseries = TimeSeries(model, np.arange(timesteps)/10)
 
     return timeseries

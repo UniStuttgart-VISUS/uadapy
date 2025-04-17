@@ -2,10 +2,10 @@ from uadapy import TimeSeries
 import numpy as np
 import math
 import uadapy.distributions.chi_square_comb as chi_square_comb
-import os
-os.add_dll_directory("C:/Users/Marina/Desktop/uadapy/chi2comb-0.0.3/build/Release")
+from uadapy import distribution
 from chi2comb import chi2comb_cdf, ChiSquared
 import scipy.optimize as optimize
+import scipy.stats
 
 def _fourier(i, j, N):
     """
@@ -52,7 +52,27 @@ def _ua_fourier_transform(timeseries: TimeSeries) -> np.ndarray:
     fftC = np.dot(W, np.dot(timeseries.cov(), W.T))
     return fftMu, fftGamma, fftC
 
-def ua_fourier_spectrum(timeseries: TimeSeries) -> np.ndarray:
+def _normalize_timeseries(timeseries: TimeSeries) -> TimeSeries:
+    """
+    Normalizes the time series data.
+
+    Parameters
+    ----------
+    timeseries : TimeSeries
+        Time series data.
+
+    Returns
+    -------
+    TimeSeries
+        Normalized time series.
+    """
+    mean = timeseries.mean().mean()
+    maxVar = timeseries.cov().diagonal().max()
+    normalized_mean = (timeseries.mean() - mean)/np.sqrt(maxVar)
+    normalized_cov = timeseries.cov() / maxVar
+    timeseries.distribution = distribution.Distribution(scipy.stats.multivariate_normal(normalized_mean, normalized_cov))
+    return timeseries
+def ua_fourier_spectrum(timeseries: TimeSeries, normalized: bool = True) -> np.ndarray:
     """
     Computes the Fourier spectrum for the given time series.
 
@@ -64,12 +84,18 @@ def ua_fourier_spectrum(timeseries: TimeSeries) -> np.ndarray:
     ----------
     timeseries : TimeSeries
         Time series data.
+    normalized : bool, optional
+        If True, the Fourier spectrum is normalized. Default is True.
 
     Returns
     -------
     TimeSeries
         Fourier spectrum (energy spectral density)
     """
+    # Normalize the time series if required
+    if normalized:
+        timeseries = _normalize_timeseries(timeseries)
+    # Compute the Fourier transform 
     fftMu, fftGamma, fftC = _ua_fourier_transform(timeseries)
     dt = timeseries.timesteps[1]-timeseries.timesteps[0]
     frequencies = (np.arange(len(timeseries.timesteps)) + 2) / len(timeseries.timesteps) / (2*dt)
@@ -94,7 +120,6 @@ def compute_percentiles_complex(timeseries, p):
         Percentiles of the spectrum.
     """
     mu = timeseries.distribution.model.mu_complex
-    print(mu.shape)
     gamma = timeseries.distribution.model.covariance
     c = timeseries.distribution.model.pseudo_covariance
     mu_re = np.real(mu)
@@ -154,6 +179,9 @@ def _percentiles_over_time(l1, l2, b1, b2, min=0.01, max=100, p = None):
     # Iterate over each set of parameters and compute the percentiles
     for i, (l1, l2, b1, b2) in enumerate(zip(l1, l2, b1, b2)):
         percentiles[:,i] = _get_percentiles(l1, l2, b1, b2, min=min, max=max, p=p)
+    # Assume symmetry of real time series and remove the second half of the spectrum
+    percentiles = percentiles[:, :len(percentiles[0])//2]
+    print(np.max(percentiles))
     return percentiles
 
 def cdfSingular(x, l, b, c):
@@ -161,6 +189,24 @@ def cdfSingular(x, l, b, c):
     chi2s = [ChiSquared(l, (b/l)**2, 1)]
     r, _, _ = chi2comb_cdf(x-c, chi2s, gcoef)
     return r
+
+def cdf(x, l1, l2, b1, b2):
+  CHI2COMBTOL = 1e-3
+  #return integrate.quad(pdf, 0, x, args=(l1, l2, b1, b2))[0]
+  gcoef = 0
+  ncents = [b1**2, b2**2]
+  dofs = [1, 1]
+  coefs = [l1, l2]
+  chi2s = [ChiSquared(coefs[i], ncents[i], dofs[i]) for i in range(2)]
+  r, _, _ = chi2comb_cdf(x, chi2s, gcoef, atol=CHI2COMBTOL)
+  if r < 0:
+        if np.abs(r) < CHI2COMBTOL:
+            r = 0
+        else:
+            print("wrong " + str(r))
+            print(ncents)
+            print(coefs)
+  return r
 
 def _get_percentiles(l1, l2, b1, b2, min=0.00001, max=100, p=None):
   EPS = 10e-8
@@ -177,6 +223,7 @@ def _get_percentiles(l1, l2, b1, b2, min=0.00001, max=100, p=None):
         res[i] = optimize.bisect(lambda x: cdfVal(x) - percentile, min, max)#, rtol=0.000001)
       except:
         print("Did not work for " + str(percentile))
-        print(str(cdfVal(min)) + " " + str(cdfVal(max)))
+        print(str(cdfVal(min) - percentile) + " " + str(cdfVal(max) - percentile))
+        print(str(min) + " " + str(max))
   return res
     
