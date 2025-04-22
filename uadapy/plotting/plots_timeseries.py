@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-from matplotlib import cm
+from matplotlib import colormaps
 from matplotlib.colors import Normalize
 from uadapy import CorrelatedDistributions
 import glasbey as gb
@@ -55,33 +55,14 @@ def _plot_data(data, plot_type, n_samples, samples_colored, colorblind_safe, lin
             colors = cmap_discrete(np.linspace(0, 1, max(n_samples, 10)))
 
         samples_2_plot = data['samples'][:, :n_samples]
-        if data['samples'].shape[1] == 2 * n_samples:
-            samples_2_plot_shift = data['samples'][:, n_samples:2 * n_samples]
-            if not samples_colored:
-                h2a = plt.plot(samples_2_plot, color=colors[1], linewidth=line_width * smpl_width)
-                h2a_shift = plt.plot(samples_2_plot_shift, color=colors[1], linewidth=line_width * smpl_width * 0.2, linestyle='-')
-                h2a_shift_dot = plt.plot(samples_2_plot_shift, color=colors[1], linewidth=line_width * smpl_width, linestyle=':')
-            else:
-                for i in range(n_samples):
-                    plt.plot(samples_2_plot[:, i], linewidth=line_width * smpl_width, color=colors[i])
-                    plt.plot(samples_2_plot_shift[:, i], linewidth=line_width * smpl_width * 0.2, color=colors[i], linestyle='-')
-                    plt.plot(samples_2_plot_shift[:, i], linewidth=line_width * smpl_width, color=colors[i], linestyle=':')
-            if not samples_colored and n_samples > 1:
-                for h in h2a:
-                    h.set_alpha(0.5)
-                for h in h2a_shift:
-                    h.set_alpha(0.5)
-                for h in h2a_shift_dot:
-                    h.set_alpha(0.5)
+        if not samples_colored:
+            h2a = plt.plot(samples_2_plot, color=colors[1], linewidth=line_width * smpl_width)
         else:
-            if not samples_colored:
-                h2a = plt.plot(samples_2_plot, color=colors[1], linewidth=line_width * smpl_width)
-            else:
-                for i in range(n_samples):
-                    plt.plot(samples_2_plot[:, i], linewidth=line_width * smpl_width, color=colors[i])
-            if not samples_colored and n_samples > 1:
-                for h in h2a:
-                    h.set_alpha(0.5)
+            for i in range(n_samples):
+                plt.plot(samples_2_plot[:, i], linewidth=line_width * smpl_width, color=colors[i])
+        if not samples_colored and n_samples > 1:
+            for h in h2a:
+                h.set_alpha(0.5)
 
     elif plot_type == "comb":
         x = np.arange(len(data['mu']))
@@ -208,7 +189,7 @@ def _plot_correlation_length_data(
             ysize[i] = len(insert)
             plot_mat[i, :len(insert)] = insert
     plot_mat = np.flipud(plot_mat.T)
-    cmap_full = cm.get_cmap('coolwarm', 256)
+    cmap_full = colormaps.get_cmap('coolwarm').resampled(256)
     colors_upper_half = cmap_full(np.linspace(0.5, 1, nmb_colors - 1))
     colors = np.vstack(([1, 1, 1, 1], colors_upper_half))
 
@@ -401,7 +382,7 @@ def plot_correlated_timeseries(
          'sigma_sq': sigma_sq[corr_timeseries.n_distributions - 1],
          'sigma': sigma[corr_timeseries.n_distributions - 1]}
 
-    cmap = cm.get_cmap('coolwarm', discr_nmb)
+    cmap = colormaps.get_cmap('coolwarm').resampled(discr_nmb)
     norm = Normalize(vmin=-(discr_nmb // 2), vmax=(discr_nmb // 2))
 
     if co_point == 0:
@@ -598,12 +579,12 @@ def plot_correlation_matrix(
 
     plt.suptitle('Correlation Matrix')
 
-    cmap = 'coolwarm' if not discretize else mcolors.ListedColormap(plt.cm.coolwarm(np.linspace(0, 1, discr_nmb)))
-
     if discretize:
+        cmap = mcolors.ListedColormap(colormaps.get_cmap('coolwarm')(np.linspace(0, 1, discr_nmb)))
         norm = mcolors.BoundaryNorm(np.linspace(-1, 1, discr_nmb + 1), cmap.N)
         plt.imshow(cor_mat, cmap=cmap, norm=norm)
     else:
+        cmap = 'coolwarm'
         plt.imshow(cor_mat, cmap=cmap)
 
     plt.colorbar()
