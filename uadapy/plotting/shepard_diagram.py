@@ -4,7 +4,29 @@ from scipy.stats import wasserstein_distance
 from sklearn import datasets
 from itertools import combinations
 from uadapy import Distribution
-from uadapy.dr import uamds, uapca
+from uadapy.dr import uamds
+
+METRIC_LABELS = {
+    "kl": "KL Divergence",
+    "wasserstein": "Wasserstein Distance",
+    "mean": "Euclidean Distance (Means)"
+}
+
+def get_metric_name(metric):
+    if isinstance(metric, str):
+        return METRIC_LABELS.get(metric, metric)
+    elif callable(metric):
+        return getattr(metric, "__name__", "custom")
+    else:
+        return str(metric)
+
+def custom_wasserstein(dist1, dist2):
+    n_samples = 10000
+    seed = 55
+    samples1 = dist1.sample(n_samples, seed)
+    samples2 = dist2.sample(n_samples, seed)
+    return np.mean([wasserstein_distance(samples1[:, k], samples2[:, k])
+                    for k in range(samples1.shape[1])])
 
 def _load_iris():
     iris = datasets.load_iris()
@@ -24,8 +46,9 @@ def _compute_distances(dists, metric="kl", n_samples=1000, seed=55):
     distances = []
     for i, j in combinations(range(len(dists)), 2):
         dist1, dist2 = dists[i], dists[j]
-        
-        if metric == "kl":
+        if callable(metric):
+            d = metric(dist1, dist2)
+        elif metric == "kl":
             mA, cA = dist1.mean(), dist1.cov()
             mB, cB = dist2.mean(), dist2.cov()
             d = _kl_gaussian(mA, cA, mB, cB)
@@ -52,6 +75,7 @@ def plot_shepard_diagram(distributions_hi,
     """
     Plot a Shepard diagram to assess how well pairwise distances between distributions 
     in a high-dimensional space are preserved in a reduced (low-dimensional) space.
+    Supports predefined or custom distance metrics.
 
     Parameters
     ----------
@@ -65,12 +89,16 @@ def plot_shepard_diagram(distributions_hi,
     seed : int, optional
         Seed for the random number generator to ensure reproducibility of sampling. 
         Default is 55.
-    metric : str, optional
-        Distance metric to use for computing pairwise distances between distributions. 
-        Options:
+    metric : str or callable, optional
+        Distance metric to use for computing pairwise distances between distributions.
+        If a string, choose from:
         - "kl"           : KL divergence between Gaussian approximations.
         - "wasserstein"  : Average Wasserstein distance across dimensions.
         - "mean"         : Euclidean distance between distribution means.
+        If a callable, it must accept the following arguments:
+            - dist1: uadapy.Distribution
+            - dist2: uadapy.Distribution
+        and return a scalar distance value.
         Default is "kl".
     labels : list of str, optional
         List of class names for the distributions. If provided, labels like 
@@ -110,9 +138,10 @@ def plot_shepard_diagram(distributions_hi,
         plt.annotate(label, (xi, yi), textcoords="offset points", xytext=(5, 5), fontsize=9)
     plt.plot([min(orig_dists), max(orig_dists)],
              [min(orig_dists), max(orig_dists)], 'r--', label="Ideal: y = x")
-    plt.xlabel(f"{metric} in Original Space")
-    plt.ylabel(f"{metric} in Reduced Space")
-    plt.title(f"Shepard Diagram ({metric})")
+    metric_name = get_metric_name(metric)
+    plt.xlabel(f"{metric_name} in Original Space")
+    plt.ylabel(f"{metric_name} in Reduced Space")
+    plt.title(f"Shepard Diagram ({metric_name})")
     plt.grid(True)
     plt.legend()
 
@@ -128,4 +157,10 @@ def plot_shepard_diagram(distributions_hi,
 # Example usage
 distribs_hi, labels = _load_iris()
 distribs_lo = uamds(distribs_hi, n_dims=2)
-plot_shepard_diagram(distribs_hi, distribs_lo, 10000, 55, "kl", labels, True)
+plot_shepard_diagram(distribs_hi,
+                     distribs_lo,
+                     n_samples=10000,
+                     seed=55,
+                     metric=custom_wasserstein,
+                     labels=labels,
+                     show_plot=True)
