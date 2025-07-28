@@ -12,14 +12,6 @@ METRIC_LABELS = {
     "mean": "Euclidean Distance (Means)"
 }
 
-def get_metric_name(metric):
-    if isinstance(metric, str):
-        return METRIC_LABELS.get(metric, metric)
-    elif callable(metric):
-        return getattr(metric, "__name__", "custom")
-    else:
-        return str(metric)
-
 def custom_wasserstein(dist1, dist2):
     n_samples = 10000
     seed = 55
@@ -34,6 +26,14 @@ def _load_iris():
     for c in np.unique(iris.target):
         dists.append(Distribution(iris.data[iris.target == c]))
     return dists, iris.target_names
+
+def _get_metric_name(metric):
+    if isinstance(metric, str):
+        return METRIC_LABELS.get(metric, metric)
+    elif callable(metric):
+        return getattr(metric, "__name__", "custom")
+    else:
+        return str(metric)
 
 def _kl_gaussian(p_mean, p_cov, q_mean, q_cov):
     p_var = np.diag(p_cov)
@@ -138,7 +138,7 @@ def plot_shepard_diagram(distributions_hi,
         plt.annotate(label, (xi, yi), textcoords="offset points", xytext=(5, 5), fontsize=9)
     plt.plot([min(orig_dists), max(orig_dists)],
              [min(orig_dists), max(orig_dists)], 'r--', label="Ideal: y = x")
-    metric_name = get_metric_name(metric)
+    metric_name = _get_metric_name(metric)
     plt.xlabel(f"{metric_name} in Original Space")
     plt.ylabel(f"{metric_name} in Reduced Space")
     plt.title(f"Shepard Diagram ({metric_name})")
