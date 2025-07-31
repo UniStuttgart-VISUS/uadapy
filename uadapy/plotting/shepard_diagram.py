@@ -1,31 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import wasserstein_distance
-from sklearn import datasets
 from itertools import combinations
 from uadapy import Distribution
-from uadapy.dr import uamds
 
 METRIC_LABELS = {
     "kl": "KL Divergence",
     "wasserstein": "Wasserstein Distance",
     "mean": "Euclidean Distance (Means)"
 }
-
-def custom_wasserstein(dist1, dist2):
-    n_samples = 10000
-    seed = 55
-    samples1 = dist1.sample(n_samples, seed)
-    samples2 = dist2.sample(n_samples, seed)
-    return np.mean([wasserstein_distance(samples1[:, k], samples2[:, k])
-                    for k in range(samples1.shape[1])])
-
-def _load_iris():
-    iris = datasets.load_iris()
-    dists = []
-    for c in np.unique(iris.target):
-        dists.append(Distribution(iris.data[iris.target == c]))
-    return dists, iris.target_names
 
 def _get_metric_name(metric):
     if isinstance(metric, str):
@@ -155,7 +138,26 @@ def plot_shepard_diagram(distributions_hi,
     return fig, axs
 
 # Example usage
-distribs_hi, labels = _load_iris()
+from sklearn import datasets
+from uadapy.dr import uamds
+from scipy.stats import wasserstein_distance
+
+def load_iris():
+    iris = datasets.load_iris()
+    dists = []
+    for c in np.unique(iris.target):
+        dists.append(Distribution(iris.data[iris.target == c]))
+    return dists, iris.target_names
+
+def custom_wasserstein(dist1, dist2):
+    n_samples = 10000
+    seed = 55
+    samples1 = dist1.sample(n_samples, seed)
+    samples2 = dist2.sample(n_samples, seed)
+    return np.mean([wasserstein_distance(samples1[:, k], samples2[:, k])
+                    for k in range(samples1.shape[1])])
+
+distribs_hi, labels = load_iris()
 distribs_lo = uamds(distribs_hi, n_dims=2)
 plot_shepard_diagram(distribs_hi,
                      distribs_lo,
