@@ -25,6 +25,9 @@ dynamic = ["dependencies"]
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
 
+[tool.setuptools.package-data]
+"uadapy.temporal.chi2comb" = ["*.dll", "*.h"]
+
 [project.urls]
 "Homepage" = "https://github.com/UniStuttgart-VISUS/uadapy"
 "Bug Tracker" = "https://github.com/UniStuttgart-VISUS/uadapy/issues"

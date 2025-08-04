@@ -246,7 +246,9 @@ def plot_timeseries(
         fig=None,
         axs=None,
         colorblind_safe=False,
-        show_plot=False):
+        show_plot=False,
+        x_label='timesteps',
+        y_label='value'):
     """
     Plot single uncertain timeseries data.
 
@@ -270,6 +272,10 @@ def plot_timeseries(
     show_plot : bool, optional
         If True, display the plot.
         Default is False.
+    x_label : str, optional
+        Label for the x-axis. Default is 'timesteps'.
+    y_label : str, optional
+        Label for the y-axis. Default is 'value'.
 
     Returns
     -------
@@ -298,13 +304,14 @@ def plot_timeseries(
         y['dark_band'] = [mu - 0.674490*np.sqrt(np.maximum(np.diag(sigma), 0)), mu + 0.674490*np.sqrt(np.maximum(np.diag(sigma), 0))]#np.sqrt(np.maximum(np.diag(sigma), 0))
         y['light_band'] = [mu - 2.575829*np.sqrt(np.maximum(np.diag(sigma), 0)), mu + 2.575829*np.sqrt(np.maximum(np.diag(sigma), 0))]#sigma
     else:
-        p2_5, p25, median, p75, p97_5 = compute_percentiles_complex(timeseries, [2.5, 25, 50, 75, 97.5])
+        p2_5, p25, median, p75, p97_5 = compute_percentiles_complex(timeseries, [0.025, 0.25, 0.5, 0.75, 0.975])
         y['light_band'] = [p2_5, p97_5]
         y['dark_band'] = [p25, p75]
         y['central'] = median
 
     _plot_data(y, plot_type, n_samples, samples_colored, colorblind_safe, line_width)
-    plt.xlabel('timesteps')
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
 
     axs = plt.gca()
     if show_plot:
