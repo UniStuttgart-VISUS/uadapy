@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-from matplotlib import cm
+from matplotlib import colormaps
 from matplotlib.colors import Normalize
 from uadapy import CorrelatedDistributions
 import glasbey as gb
@@ -202,7 +202,7 @@ def _plot_correlation_length_data(
             ysize[i] = len(insert)
             plot_mat[i, :len(insert)] = insert
     plot_mat = np.flipud(plot_mat.T)
-    cmap_full = cm.get_cmap('coolwarm', 256)
+    cmap_full = colormaps.get_cmap('coolwarm').resampled(256)
     colors_upper_half = cmap_full(np.linspace(0.5, 1, nmb_colors - 1))
     colors = np.vstack(([1, 1, 1, 1], colors_upper_half))
 
@@ -411,7 +411,7 @@ def plot_correlated_timeseries(
          'sigma_sq': sigma_sq[corr_timeseries.n_distributions - 1],
          'sigma': sigma[corr_timeseries.n_distributions - 1]}
 
-    cmap = cm.get_cmap('coolwarm', discr_nmb)
+    cmap = colormaps.get_cmap('coolwarm').resampled(discr_nmb)
     norm = Normalize(vmin=-(discr_nmb // 2), vmax=(discr_nmb // 2))
 
     if co_point == 0:
@@ -608,12 +608,12 @@ def plot_correlation_matrix(
 
     plt.suptitle('Correlation Matrix')
 
-    cmap = 'coolwarm' if not discretize else mcolors.ListedColormap(plt.cm.coolwarm(np.linspace(0, 1, discr_nmb)))
-
     if discretize:
+        cmap = mcolors.ListedColormap(colormaps.get_cmap('coolwarm')(np.linspace(0, 1, discr_nmb)))
         norm = mcolors.BoundaryNorm(np.linspace(-1, 1, discr_nmb + 1), cmap.N)
         plt.imshow(cor_mat, cmap=cmap, norm=norm)
     else:
+        cmap = 'coolwarm'
         plt.imshow(cor_mat, cmap=cmap)
 
     plt.colorbar()
