@@ -3,9 +3,23 @@ import numpy as np
 import math
 import uadapy.distributions.chi_square_comb as chi_square_comb
 from uadapy import distribution
-from chi2comb import chi2comb_cdf, ChiSquared
+#from chi2comb import chi2comb_cdf, ChiSquared
 import scipy.optimize as optimize
-import scipy.stats
+from scipy import stats
+
+import rpy2.robjects.packages as rpackages
+from rpy2.robjects import FloatVector
+from rpy2.robjects.packages import importr
+
+# Select R repository (CRAN mirror)
+utils = rpackages.importr('utils')
+utils.chooseCRANmirror(ind=1)
+
+# Check if already installed
+if not rpackages.isinstalled('CompQuadForm'):
+    utils.install_packages('CompQuadForm')
+
+cqf = importr("CompQuadForm")
 
 def _fourier(i, j, N):
     """
@@ -70,8 +84,9 @@ def _normalize_timeseries(timeseries: TimeSeries) -> TimeSeries:
     maxVar = timeseries.cov().diagonal().max()
     normalized_mean = (timeseries.mean() - mean)/np.sqrt(maxVar)
     normalized_cov = timeseries.cov() / maxVar
-    timeseries.distribution = distribution.Distribution(scipy.stats.multivariate_normal(normalized_mean, normalized_cov))
-    return timeseries
+    timeseries_normalized = TimeSeries(stats.multivariate_normal(normalized_mean, normalized_cov), timeseries.timesteps)
+    return timeseries_normalized
+
 def ua_fourier_spectrum(timeseries: TimeSeries, normalized: bool = True) -> np.ndarray:
     """
     Computes the Fourier spectrum for the given time series.
@@ -94,11 +109,13 @@ def ua_fourier_spectrum(timeseries: TimeSeries, normalized: bool = True) -> np.n
     """
     # Normalize the time series if required
     if normalized:
-        timeseries = _normalize_timeseries(timeseries)
+        timeseries_preprocessed = _normalize_timeseries(timeseries)
+    else:
+        timeseries_preprocessed = timeseries
     # Compute the Fourier transform 
-    fftMu, fftGamma, fftC = _ua_fourier_transform(timeseries)
-    dt = timeseries.timesteps[1]-timeseries.timesteps[0]
-    frequencies = (np.arange(len(timeseries.timesteps)) + 2) / len(timeseries.timesteps) / (2*dt)
+    fftMu, fftGamma, fftC = _ua_fourier_transform(timeseries_preprocessed)
+    dt = timeseries_preprocessed.timesteps[1]-timeseries_preprocessed.timesteps[0]
+    frequencies = (np.arange(len(timeseries_preprocessed.timesteps)) + 2) / len(timeseries_preprocessed.timesteps) / (2*dt)
     frequencies = frequencies[:len(frequencies)//2]
     return TimeSeries(chi_square_comb.ChiSquareComb(fftMu, fftGamma, fftC), frequencies)
 
@@ -152,8 +169,9 @@ def _compute_percentiles_diagonals(mu1, mu2, a, b, d, p=None):
             b1[l2 >= EPS] = (mu1[l2 >= EPS] * p11 + mu2[l2 >= EPS] * p12) / np.sqrt(l1[l2 >= EPS])
         if np.any(a + d < EPS):
             l1[a + d < EPS] = 0
-        mask = np.logical_and(l2<EPS, a+d>=EPS)
-        b2[mask] = mu1[mask]**2+mu2[mask]**2-(b1[mask])**2/(a[mask]+d[mask])
+        mask = l2<EPS#np.logical_and(l2<EPS, a+d>=EPS)
+        #b2[mask] = mu1[mask]**2+mu2[mask]**2-(b1[mask])**2/(a[mask]+d[mask])
+        b2[mask] = mu1[mask]**2+mu2[mask]**2-b1[mask]**2/l1[mask]
     else:
         p11 = 1 / np.sqrt((b ** 2 + (l1 - a) ** 2)) * b
         p21 = 1 / np.sqrt((b ** 2 + (l2 - a) ** 2)) * b
@@ -166,7 +184,7 @@ def _compute_percentiles_diagonals(mu1, mu2, a, b, d, p=None):
             p22[b < EPS] = 1
         b1 = (mu1 * p11 + mu2 * p12) / np.sqrt(l1)
         b2 = (mu1 * p21 + mu2 * p22) / np.sqrt(l2)
-    return _percentiles_over_time(l1, l2, b1, b2, min=0, max=max(1000, np.max((mu1**2+mu2**2)*10)), p=p)
+    return _percentiles_over_time(l1, l2, b1, b2, min=0, max=max(1000, np.max((mu1**2+mu2**2)*5)), p=p)
 
 def _percentiles_over_time(l1, l2, b1, b2, min=0.01, max=100, p = None):
     THRESHOLD = 0.01
@@ -181,32 +199,66 @@ def _percentiles_over_time(l1, l2, b1, b2, min=0.01, max=100, p = None):
         percentiles[:,i] = _get_percentiles(l1, l2, b1, b2, min=min, max=max, p=p)
     # Assume symmetry of real time series and remove the second half of the spectrum
     percentiles = percentiles[:, :len(percentiles[0])//2]
-    print(np.max(percentiles))
     return percentiles
 
-def cdfSingular(x, l, b, c):
-    gcoef = 0
-    chi2s = [ChiSquared(l, (b/l)**2, 1)]
-    r, _, _ = chi2comb_cdf(x-c, chi2s, gcoef)
-    return r
+# def cdfSingular(x, l, b, c):
+#     gcoef = 0
+#     chi2s = [ChiSquared(l, (b/l)**2, 1)]
+#     r, _, _ = chi2comb_cdf(x-c, chi2s, gcoef)
+#     return r
 
-def cdf(x, l1, l2, b1, b2):
-  CHI2COMBTOL = 1e-3
-  #return integrate.quad(pdf, 0, x, args=(l1, l2, b1, b2))[0]
-  gcoef = 0
-  ncents = [b1**2, b2**2]
-  dofs = [1, 1]
-  coefs = [l1, l2]
-  chi2s = [ChiSquared(coefs[i], ncents[i], dofs[i]) for i in range(2)]
-  r, _, _ = chi2comb_cdf(x, chi2s, gcoef, atol=CHI2COMBTOL)
-  if r < 0:
-        if np.abs(r) < CHI2COMBTOL:
-            r = 0
-        else:
-            print("wrong " + str(r))
-            print(ncents)
-            print(coefs)
-  return r
+def cdfSingular_r(x, l, b, c):
+    # Davies requires: q = value, lambda = weights
+    weight = l#(b / l) ** 2
+    lambda_vec = FloatVector([weight])
+    delta_vec = FloatVector([b**2])
+    q = x - c
+    res = cqf.davies(float(q), lambda_vec, delta=delta_vec, acc=float(1e-3))
+    return res.rx2("Qq")[0]
+
+# def cdf(x, l1, l2, b1, b2):
+#   CHI2COMBTOL = 1e-3
+#   #return integrate.quad(pdf, 0, x, args=(l1, l2, b1, b2))[0]
+#   gcoef = 0
+#   ncents = [b1**2, b2**2]
+#   dofs = [1, 1]
+#   coefs = [l1, l2]
+#   chi2s = [ChiSquared(coefs[i], ncents[i], dofs[i]) for i in range(2)]
+#   r, _, _ = chi2comb_cdf(x, chi2s, gcoef, atol=CHI2COMBTOL)
+#   if r < 0:
+#         if np.abs(r) < CHI2COMBTOL:
+#             r = 0
+#         else:
+#             print("wrong " + str(r))
+#             print(ncents)
+#             print(coefs)
+#   return r
+
+def cdf_r(x, l1, l2, b1, b2):
+    CHI2COMBTOL = 1e-3
+
+    # Prepare parameters for Davies
+    coefs = [l1, l2]
+    ncents = [b1 ** 2, b2 ** 2]
+    dofs = [1, 1]  # fixed
+
+    lambda_vec = FloatVector(coefs)
+    delta_vec = FloatVector(ncents)
+    q = x
+
+    # Call Davies
+    res = cqf.davies(float(q), lambda_vec, delta=delta_vec, acc=float(CHI2COMBTOL))
+    r = res.rx2("Qq")[0]
+
+    # Handle numerical issues
+    if r < 0 and abs(r) < CHI2COMBTOL:
+        r = 0
+    elif r < 0:
+        print("wrong", r)
+        print("ncents:", ncents)
+        print("coefs:", coefs)
+
+    return r
 
 def _get_percentiles(l1, l2, b1, b2, min=0.00001, max=100, p=None):
   EPS = 10e-8
@@ -214,9 +266,9 @@ def _get_percentiles(l1, l2, b1, b2, min=0.00001, max=100, p=None):
       if l1 < EPS:
           cdfVal = lambda x: 0
       else:
-          cdfVal = lambda x: cdfSingular(x, l=l1, b=b1, c=b2)
+          cdfVal = lambda x: cdfSingular_r(x, l=l1, b=b1, c=b2)
   else:
-      cdfVal = lambda x: cdf(x, l1=l1, l2=l2, b1=b1, b2=b2)
+      cdfVal = lambda x: cdf_r(x, l1=l1, l2=l2, b1=b1, b2=b2)
   res = np.zeros((len(p)))
   for i, percentile in enumerate(p):
       try:

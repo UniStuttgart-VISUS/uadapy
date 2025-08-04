@@ -58,10 +58,10 @@ class ChiSquareComb:
         np.ndarray
             The samples
         """
+        np.random.seed(seed)
         # Sample from (real) multivariate normal and square
         samples = np.random.multivariate_normal(self.mu_real, self.cov_real, size)
         N = int(len(self.mu_complex)/2)
-        print(N)
         return samples[:,:N]**2 + samples[:,N:]**2
     
     def mean(self) -> np.ndarray:
@@ -74,7 +74,7 @@ class ChiSquareComb:
             The mean of the distribution
         """
         N = len(self.mu_complex)
-        return np.diag(self.cov_real)[:int(N/2)]+np.diag(self.cov_real)[int(N/2):]+self.mu_real[:int(N/2)]+self.mu_real[int(N/2):]
+        return np.diag(self.cov_real)[:int(N/2)]+np.diag(self.cov_real)[int(N/2):]+self.mu_real[:int(N/2)]**2+self.mu_real[int(N/2):]**2
 
     def cov(self) -> np.ndarray:
         """

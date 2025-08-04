@@ -25,7 +25,7 @@ def load_iris():
         dist.append(Distribution(np.array(iris.data[iris.target == c])))
     return dist
 
-def generate_synthetic_timeseries(timesteps=200):
+def generate_synthetic_timeseries(timesteps=200, trend = 1/10):
     """
     Generates synthetic time series data by modeling a combination of trend,
     periodic patterns, and noise using a multivariate normal distribution
@@ -36,6 +36,9 @@ def generate_synthetic_timeseries(timesteps=200):
     timesteps : int
         The time steps of the time series.
         Default value is 200.
+    trend : float
+        The trend component of the time series.
+        Default value is 1/10.
 
     Returns
     -------
@@ -44,7 +47,7 @@ def generate_synthetic_timeseries(timesteps=200):
     """
     np.random.seed(0)
     t = np.arange(1, timesteps + 1)
-    trend = t / 10
+    trend = t * trend
     periodic = 10 * np.sin(2 * np.pi * t / 50)
     noise = 2 * (np.random.rand(timesteps) - 0.5)
     mu = trend + periodic + noise
