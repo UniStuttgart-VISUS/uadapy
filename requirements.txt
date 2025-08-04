@@ -1,6 +1,6 @@
 numpy
 scipy
-matplotlib==3.8.3
+matplotlib
 scikit-learn
 numba
 glasbey

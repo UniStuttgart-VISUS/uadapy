@@ -5,6 +5,7 @@ import uadapy.distributions.chi_square_comb as chi_square_comb
 import os
 import scipy.optimize as optimize
 from array import array
+import platform
 
 from cffi import FFI
 ffibuilder = FFI()
@@ -12,12 +13,25 @@ ffibuilder = FFI()
 # Get the directory where this module is located
 current_dir = os.path.dirname(os.path.abspath(__file__))
 header_path = os.path.join(current_dir, "chi2comb", "interface.h")
-dll_path = os.path.join(current_dir, "chi2comb", "chi2comb.dll")
+
+# Platform-specific library loading
+if platform.system() == "Windows":
+    lib_path = os.path.join(current_dir, "chi2comb", "chi2comb.dll")
+elif platform.system() == "Linux":
+    lib_path = os.path.join(current_dir, "chi2comb", "libchi2comb.so")
+elif platform.system() == "Darwin":  # macOS
+    lib_path = os.path.join(current_dir, "chi2comb", "libchi2comb.dylib")
+else:
+    raise OSError(f"chi2comb library is not available for {platform.system()} systems.")
+
+# Check if library file exists
+if not os.path.exists(lib_path):
+    raise OSError(f"chi2comb library not found at {lib_path}")
 
 with open(header_path, "r") as f:
     ffibuilder.cdef(f.read())
 
-lib = ffibuilder.dlopen(dll_path)
+lib = ffibuilder.dlopen(lib_path)
 
 # Copied over from chi2comb python bindings
 class ChiSquared(object):
