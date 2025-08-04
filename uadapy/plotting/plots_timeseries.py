@@ -36,11 +36,33 @@ def _plot_data(data, plot_type, n_samples, samples_colored, colorblind_safe, lin
     color_indices = np.linspace(0, 155, 5).astype(int)
     col = cmap_gradient(np.flip(color_indices) / 256)[:, :3]
 
-    if plot_type == "isoband":
+    if 'x' in data:
         x = data['x']
-        plt.fill_between(x, data['light_band'][0], data['light_band'][1], color=col[2], alpha=0.5)
-        plt.fill_between(x, data['dark_band'][0], data['dark_band'][1], color=col[1], alpha=0.5)
-        plt.plot(x, data['central'], color=col[0], linewidth=line_width)
+    elif 'central' in data:
+        x = np.arange(len(data['central']))
+    elif 'samples' in data:
+        x = np.arange(len(data['samples']))
+    elif 'mu' in data:
+        x = np.arange(len(data['mu']))
+    else:
+        x = np.arange(100)
+
+    if plot_type == "isoband":
+        if 'light_band' in data:
+            plt.fill_between(x, data['light_band'][0], data['light_band'][1], color=col[2], alpha=0.5)
+            plt.fill_between(x, data['dark_band'][0], data['dark_band'][1], color=col[1], alpha=0.5)
+            plt.plot(x, data['central'], color=col[0], linewidth=line_width)
+        else:
+            sigmalvl = [0, 0.674490, 2.575829]
+            #x = np.arange(len(data['mu']))
+            for j in range(len(sigmalvl) - 1, 0, -1):
+                pos_cont = data['mu'] + sigmalvl[j] * data['sigma_sq']
+                neg_cont = data['mu'] - sigmalvl[j] * data['sigma_sq']
+                for i in range(len(data['mu']) - 1):
+                    xp = [x[i], x[i + 1], x[i + 1], x[i]]
+                    yp = [neg_cont[i], neg_cont[i + 1], pos_cont[i + 1], pos_cont[i]]
+                    plt.fill(xp, yp, color=col[j], edgecolor='none')
+            plt.plot(x, data['mu'], color=col[0], linewidth=line_width)
     
     elif plot_type == "spaghetti":
         if colorblind_safe:
@@ -58,9 +80,9 @@ def _plot_data(data, plot_type, n_samples, samples_colored, colorblind_safe, lin
                 h2a_shift_dot = plt.plot(samples_2_plot_shift, color=colors[1], linewidth=line_width * smpl_width, linestyle=':')
             else:
                 for i in range(n_samples):
-                    plt.plot(data['x'], samples_2_plot[:, i], linewidth=line_width * smpl_width, color=colors[i])
-                    plt.plot(data['x'], samples_2_plot_shift[:, i], linewidth=line_width * smpl_width * 0.2, color=colors[i], linestyle='-')
-                    plt.plot(data['x'], samples_2_plot_shift[:, i], linewidth=line_width * smpl_width, color=colors[i], linestyle=':')
+                    plt.plot(x, samples_2_plot[:, i], linewidth=line_width * smpl_width, color=colors[i])
+                    plt.plot(x, samples_2_plot_shift[:, i], linewidth=line_width * smpl_width * 0.2, color=colors[i], linestyle='-')
+                    plt.plot(x, samples_2_plot_shift[:, i], linewidth=line_width * smpl_width, color=colors[i], linestyle=':')
             if not samples_colored and n_samples > 1:
                 for h in h2a:
                     h.set_alpha(0.5)
@@ -70,16 +92,15 @@ def _plot_data(data, plot_type, n_samples, samples_colored, colorblind_safe, lin
                     h.set_alpha(0.5)
         else:
             if not samples_colored:
-                h2a = plt.plot(data['x'], samples_2_plot, color=colors[1], linewidth=line_width * smpl_width)
+                h2a = plt.plot(x, samples_2_plot, color=colors[1], linewidth=line_width * smpl_width)
             else:
                 for i in range(n_samples):
-                    plt.plot(data['x'], samples_2_plot[:, i], linewidth=line_width * smpl_width, color=colors[i])
+                    plt.plot(x, samples_2_plot[:, i], linewidth=line_width * smpl_width, color=colors[i])
             if not samples_colored and n_samples > 1:
                 for h in h2a:
                     h.set_alpha(0.5)
 
     elif plot_type == "comb":
-        x = data['x']
         _plot_data(data, "isoband", n_samples, samples_colored, colorblind_safe, line_width)
         _plot_data(data, "spaghetti", n_samples, samples_colored, colorblind_safe, line_width)
 

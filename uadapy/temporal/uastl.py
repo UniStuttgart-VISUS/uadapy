@@ -270,8 +270,8 @@ def uastl(timeseries : TimeSeries, periods : list, seed: int = 0):
         np.random.seed(seed)
         mean = timeseries.mean()
         cov = timeseries.cov()
-        result = apply_uastl(mean, cov, periods, timeseries.timesteps)
-        ts_list, block_cov = _decompose_distribution(result, timeseries.timesteps, len(periods))
+        result = apply_uastl(mean, cov, periods, len(timeseries.timesteps))
+        ts_list, block_cov = _decompose_distribution(result, len(timeseries.timesteps), len(periods))
         corr_timeseries = CorrelatedDistributions(ts_list, block_cov)
         return corr_timeseries
     except Exception as e:
