@@ -325,8 +325,9 @@ def _get_percentiles(l1, l2, b1, b2, min=0.00001, max=100, p=None):
   for i, percentile in enumerate(p):
       try:
         res[i] = optimize.bisect(lambda x: cdfVal(x) - percentile, min, max)#, rtol=0.000001)
-      except:
+      except Exception as e:
         print("Did not work for " + str(percentile))
         print(str(cdfVal(min) - percentile) + " " + str(cdfVal(max) - percentile))
         print(str(min) + " " + str(max))
+        print(f"Exception: {e}")
   return res
