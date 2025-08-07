@@ -1,6 +1,21 @@
 =========
 Changelog
 =========
+0.1
+---- 
+
+* Reorganization of plotting interface: input parameters are now more consistent across different plotting functions, default parameters changed
+* Set default colors for all the plots
+* Add distribution colors and colorblind safe option for high dimensional plots
+* Bug fix in default computation of ranges in contour plots
+* Dynamic computation of ranges based on samples
+* Support for time series analysis:
+    * Time series plotting functions
+    * Uncertainty-aware seasonal trend decomposition based on loess (UASTL)
+    * Uncertainty-aware Fourier analysis
+* Use pytest for regression tests
+* Add Shepard plots for quality evaluation
+
 
 0.0.2
 ---- 
