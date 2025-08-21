@@ -8,8 +8,10 @@ import glasbey as gb
 def plot_samples(distributions,
                  n_samples,
                  seed=55,
-                 xlabel=None,
-                 ylabel=None,
+                 fig=None,
+                 axs=None,
+                 x_label=None,
+                 y_label=None,
                  title=None,
                  distrib_colors=None,
                  colorblind_safe=False,
@@ -26,9 +28,13 @@ def plot_samples(distributions,
         Number of samples per distribution.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
-    xlabel : string, optional
+    fig : matplotlib.figure.Figure or None, optional
+        Figure object to use for plotting. If None, a new figure will be created.
+    axs : matplotlib.axes.Axes or None, optional
+        Axes object to use for plotting. If None, new axes will be created.
+    x_label : string, optional
         label for x-axis.
-    ylabel : string, optional
+    y_label : string, optional
         label for y-axis.
     title : string, optional
         title for the plot.
@@ -52,6 +58,18 @@ def plot_samples(distributions,
     if isinstance(distributions, Distribution):
         distributions = [distributions]
 
+    if axs is None:
+        if fig is None:
+            fig, axs = plt.subplots()
+        else:
+            if fig.axes is not None:
+                axs = fig.axes[0]
+            else:
+                raise ValueError("The provided figure has no axes. Pass an Axes or create subplots first.")
+    else:
+        if fig is None:
+            fig = axs.figure
+
     # Generate colors
     if distrib_colors is None:
         if colorblind_safe:
@@ -69,17 +87,13 @@ def plot_samples(distributions,
 
     for i, d in enumerate(distributions):
         samples = d.sample(n_samples, seed)
-        plt.scatter(x=samples[:,0], y=samples[:,1], color=palette[i])
-    if xlabel:
-        plt.xlabel(xlabel)
-    if ylabel:
-        plt.ylabel(ylabel)
+        axs.scatter(x=samples[:,0], y=samples[:,1], color=palette[i])
+    if x_label:
+        axs.set_xlabel(x_label)
+    if y_label:
+        axs.set_ylabel(y_label)
     if title:
-        plt.title(title)
-
-    # Get the current figure and axes
-    fig = plt.gcf()
-    axs = plt.gca()
+        axs.set_title(title)
 
     if show_plot:
         fig.tight_layout()
@@ -92,6 +106,8 @@ def plot_contour(distributions,
                  ranges=None,
                  quantiles:list=None,
                  seed=55,
+                 fig=None,
+                 axs=None,
                  distrib_colors=None,
                  colorblind_safe=False,
                  show_plot=False):
@@ -110,6 +126,10 @@ def plot_contour(distributions,
         List of quantiles to use for determining isovalues. If None, the 95%, 75%, and 25% quantiles are used.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
+    fig : matplotlib.figure.Figure or None, optional
+        Figure object to use for plotting. If None, a new figure will be created.
+    axs : matplotlib.axes.Axes or None, optional
+        Axes object to use for plotting. If None, new axes will be created.
     distrib_colors : list or None, optional
         List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
     colorblind_safe : bool, optional
@@ -134,6 +154,18 @@ def plot_contour(distributions,
 
     if isinstance(distributions, Distribution):
         distributions = [distributions]
+
+    if axs is None:
+        if fig is None:
+            fig, axs = plt.subplots()
+        else:
+            if fig.axes is not None:
+                axs = fig.axes[0]
+            else:
+                raise ValueError("The provided figure has no axes. Pass an Axes or create subplots first.")
+    else:
+        if fig is None:
+            fig = axs.figure
 
     # Generate colors
     if distrib_colors is None:
@@ -215,11 +247,7 @@ def plot_contour(distributions,
                 raise ValueError(f"Quantile {quantile} results in an index that is out of bounds.")
             isovalues.append(densities[int((1 - quantile/100) * n_samples)])
 
-        plt.contour(xv, yv, pdf, levels=isovalues, colors = [color])
-
-    # Get the current figure and axes
-    fig = plt.gcf()
-    axs = plt.gca()
+        axs.contour(xv, yv, pdf, levels=isovalues, colors = [color])
 
     if show_plot:
         fig.tight_layout()
@@ -233,6 +261,8 @@ def plot_contour_bands(distributions,
                        ranges=None,
                        quantiles: list = None,
                        seed=55,
+                       fig=None,
+                       axs=None,
                        show_plot=False):
     """
     Plot contour bands for samples drawn from given distributions.
@@ -251,6 +281,10 @@ def plot_contour_bands(distributions,
         List of quantiles to use for determining isovalues. If None, the 95%, 75%, and 25% quantiles are used.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
+    fig : matplotlib.figure.Figure or None, optional
+        Figure object to use for plotting. If None, a new figure will be created.
+    axs : matplotlib.axes.Axes or None, optional
+        Axes object to use for plotting. If None, new axes will be created.
     show_plot : bool, optional
         If True, display the plot.
         Default is False.
@@ -270,6 +304,18 @@ def plot_contour_bands(distributions,
 
     if isinstance(distributions, Distribution):
         distributions = [distributions]
+
+    if axs is None:
+        if fig is None:
+            fig, axs = plt.subplots()
+        else:
+            if fig.axes is not None:
+                axs = fig.axes[0]
+            else:
+                raise ValueError("The provided figure has no axes. Pass an Axes or create subplots first.")
+    else:
+        if fig is None:
+            fig = axs.figure
 
     # Determine default quantiles: 25%, 75%, and 95%
     if quantiles is None:
@@ -350,11 +396,7 @@ def plot_contour_bands(distributions,
         cmap_subset = ListedColormap(color_subset)
 
         # Generate the filled contour plot with transparency and better visibility
-        plt.contourf(xv, yv, pdf, levels=isovalues, cmap=cmap_subset)
-
-    # Get the current figure and axes
-    fig = plt.gcf()
-    axs = plt.gca()
+        axs.contourf(xv, yv, pdf, levels=isovalues, cmap=cmap_subset)
 
     if show_plot:
         fig.tight_layout()
