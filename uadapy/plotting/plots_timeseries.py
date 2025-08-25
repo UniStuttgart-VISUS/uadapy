@@ -101,8 +101,8 @@ def _plot_data(data, plot_type, n_samples, axs, samples_colored, colorblind_safe
                     h.set_alpha(0.5)
 
     elif plot_type == "comb":
-        _plot_data(data, "isoband", n_samples, axs, samples_colored, colorblind_safe, line_width)
-        _plot_data(data, "spaghetti", n_samples, axs, samples_colored, colorblind_safe, line_width)
+        axs = _plot_data(data, "isoband", n_samples, axs, samples_colored, colorblind_safe, line_width)
+        axs = _plot_data(data, "spaghetti", n_samples, axs, samples_colored, colorblind_safe, line_width)
 
     return axs
 
@@ -592,20 +592,20 @@ def plot_correlated_timeseries(
             if i % timesteps == 0 and i < len(plot_back):
                 j += 1
 
-    _plot_data(y, plot_type, n_samples, axs[0], samples_colored, colorblind_safe, line_width)
+    axs[0] = _plot_data(y, plot_type, n_samples, axs[0], samples_colored, colorblind_safe, line_width)
     axs[0].set_title("input data")
 
-    _plot_data(LT, plot_type, n_samples, axs[1], samples_colored, colorblind_safe, line_width)
+    axs[1] = _plot_data(LT, plot_type, n_samples, axs[1], samples_colored, colorblind_safe, line_width)
     axs[1].set_title("trend component")
 
     for i in range(num_periods):
         temp = {'mu': ST['mu'][:, i], 'sigma_sq': ST['sigma_sq'][:, i], 'sigma': ST['sigma'][:, :, i]}
         if plot_type in ["comb", "spaghetti"]:
             temp['samples'] = ST['samples'][:, :, i]
-        _plot_data(temp, plot_type, n_samples, axs[2 + i], samples_colored, colorblind_safe, line_width)
+        axs[2 + i] = _plot_data(temp, plot_type, n_samples, axs[2 + i], samples_colored, colorblind_safe, line_width)
         axs[2 + i].set_title(f"seasonal component {i + 1}")
 
-    _plot_data(R, plot_type, n_samples, axs[n_distributions - 1], samples_colored, colorblind_safe, line_width)
+    axs[n_distributions - 1] = _plot_data(R, plot_type, n_samples, axs[n_distributions - 1], samples_colored, colorblind_safe, line_width)
     axs[n_distributions - 1].set_title("residual component")
 
     fig.suptitle('Uncertainty-Aware Seasonal-Trend Decomposition')
