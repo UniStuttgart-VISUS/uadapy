@@ -28,7 +28,7 @@ def _reconstruct_covariance_matrix(block_cov):
     cov_mat = np.concatenate(block_rows, axis=0)
     return cov_mat
 
-def _plot_data(data, plot_type, n_samples, samples_colored, colorblind_safe, line_width):
+def _plot_data(data, plot_type, n_samples, axs, samples_colored, colorblind_safe, line_width):
 
     smpl_width = 0.5
 
@@ -49,9 +49,9 @@ def _plot_data(data, plot_type, n_samples, samples_colored, colorblind_safe, lin
 
     if plot_type == "isoband":
         if 'light_band' in data:
-            plt.fill_between(x, data['light_band'][0], data['light_band'][1], color=col[2], alpha=0.5)
-            plt.fill_between(x, data['dark_band'][0], data['dark_band'][1], color=col[1], alpha=0.5)
-            plt.plot(x, data['central'], color=col[0], linewidth=line_width)
+            axs.fill_between(x, data['light_band'][0], data['light_band'][1], color=col[2], alpha=0.5)
+            axs.fill_between(x, data['dark_band'][0], data['dark_band'][1], color=col[1], alpha=0.5)
+            axs.plot(x, data['central'], color=col[0], linewidth=line_width)
         else:
             sigmalvl = [0, 0.674490, 2.575829]
             #x = np.arange(len(data['mu']))
@@ -61,8 +61,8 @@ def _plot_data(data, plot_type, n_samples, samples_colored, colorblind_safe, lin
                 for i in range(len(data['mu']) - 1):
                     xp = [x[i], x[i + 1], x[i + 1], x[i]]
                     yp = [neg_cont[i], neg_cont[i + 1], pos_cont[i + 1], pos_cont[i]]
-                    plt.fill(xp, yp, color=col[j], edgecolor='none')
-            plt.plot(x, data['mu'], color=col[0], linewidth=line_width)
+                    axs.fill(xp, yp, color=col[j], edgecolor='none')
+            axs.plot(x, data['mu'], color=col[0], linewidth=line_width)
     
     elif plot_type == "spaghetti":
         if colorblind_safe:
@@ -75,14 +75,14 @@ def _plot_data(data, plot_type, n_samples, samples_colored, colorblind_safe, lin
         if data['samples'].shape[1] == 2 * n_samples:
             samples_2_plot_shift = data['samples'][:, n_samples:2 * n_samples]
             if not samples_colored:
-                h2a = plt.plot(samples_2_plot, color=colors[1], linewidth=line_width * smpl_width)
-                h2a_shift = plt.plot(samples_2_plot_shift, color=colors[1], linewidth=line_width * smpl_width * 0.2, linestyle='-')
-                h2a_shift_dot = plt.plot(samples_2_plot_shift, color=colors[1], linewidth=line_width * smpl_width, linestyle=':')
+                h2a = axs.plot(samples_2_plot, color=colors[1], linewidth=line_width * smpl_width)
+                h2a_shift = axs.plot(samples_2_plot_shift, color=colors[1], linewidth=line_width * smpl_width * 0.2, linestyle='-')
+                h2a_shift_dot = axs.plot(samples_2_plot_shift, color=colors[1], linewidth=line_width * smpl_width, linestyle=':')
             else:
                 for i in range(n_samples):
-                    plt.plot(x, samples_2_plot[:, i], linewidth=line_width * smpl_width, color=colors[i])
-                    plt.plot(x, samples_2_plot_shift[:, i], linewidth=line_width * smpl_width * 0.2, color=colors[i], linestyle='-')
-                    plt.plot(x, samples_2_plot_shift[:, i], linewidth=line_width * smpl_width, color=colors[i], linestyle=':')
+                    axs.plot(x, samples_2_plot[:, i], linewidth=line_width * smpl_width, color=colors[i])
+                    axs.plot(x, samples_2_plot_shift[:, i], linewidth=line_width * smpl_width * 0.2, color=colors[i], linestyle='-')
+                    axs.plot(x, samples_2_plot_shift[:, i], linewidth=line_width * smpl_width, color=colors[i], linestyle=':')
             if not samples_colored and n_samples > 1:
                 for h in h2a:
                     h.set_alpha(0.5)
@@ -92,17 +92,19 @@ def _plot_data(data, plot_type, n_samples, samples_colored, colorblind_safe, lin
                     h.set_alpha(0.5)
         else:
             if not samples_colored:
-                h2a = plt.plot(x, samples_2_plot, color=colors[1], linewidth=line_width * smpl_width)
+                h2a = axs.plot(x, samples_2_plot, color=colors[1], linewidth=line_width * smpl_width)
             else:
                 for i in range(n_samples):
-                    plt.plot(x, samples_2_plot[:, i], linewidth=line_width * smpl_width, color=colors[i])
+                    axs.plot(x, samples_2_plot[:, i], linewidth=line_width * smpl_width, color=colors[i])
             if not samples_colored and n_samples > 1:
                 for h in h2a:
                     h.set_alpha(0.5)
 
     elif plot_type == "comb":
-        _plot_data(data, "isoband", n_samples, samples_colored, colorblind_safe, line_width)
-        _plot_data(data, "spaghetti", n_samples, samples_colored, colorblind_safe, line_width)
+        axs = _plot_data(data, "isoband", n_samples, axs, samples_colored, colorblind_safe, line_width)
+        axs = _plot_data(data, "spaghetti", n_samples, axs, samples_colored, colorblind_safe, line_width)
+
+    return axs
 
 def _plot_correlation_length_data(
         timeseries,
@@ -154,12 +156,29 @@ def _plot_correlation_length_data(
     stamp_length = time_stamp[1] - time_stamp[0]
     stamp_indices = list(range(length_data * sb_plot_nmb))
 
-    if fig is None:
-        if multi_distr_present:
-            fig = plt.figure(figsize=(12, 8))
+    if axs is None:
+        if fig is None:
+            if multi_distr_present:
+                fig, axs = plt.subplots(sb_plot_nmb, 1, figsize=(12, 8))
+            else:
+                fig, axs = plt.subplots(figsize=(15, 3))
         else:
-            fig = plt.figure(figsize=(15, 3))
-    plt.suptitle('Correlation Length')
+            if fig.axes is not None:
+                if multi_distr_present:
+                    if len(fig.axes) != sb_plot_nmb:
+                        raise ValueError(f"Expected {sb_plot_nmb} axes in provided figure, got {len(fig.axes)}.")
+                    axs = fig.axes
+                else:
+                    axs = fig.axes[0]
+            else:
+                raise ValueError("The provided figure has no axes. Pass an Axes or create subplots first.")
+    else:
+        if fig is None:
+            fig = axs[0].figure if isinstance(axs, np.ndarray) else axs.figure
+
+    axs = np.atleast_1d(axs)
+    if axs.size != sb_plot_nmb:
+        raise ValueError(f"Expected {sb_plot_nmb} axes in provided figure, got {axs.size}.")
 
     sign_cor_mat = np.sign(cor_mat)
     maxdim = len(sign_cor_mat)
@@ -231,27 +250,24 @@ def _plot_correlation_length_data(
     cmap = mcolors.ListedColormap(colors)
 
     for i in range(sb_plot_nmb):
-        plt.subplot(sb_plot_nmb, 1, i + 1)
         max_i = max(ysize[stamp_indices[(i * stamp_length):((i + 1) * stamp_length)]])
         max_i = max_i.astype(int)
         image2plot = plot_mat[-max_i:, stamp_indices[(i * stamp_length):((i + 1) * stamp_length)]]
-        plt.imshow(image2plot, cmap=cmap, aspect='auto')
+        axs[i].imshow(image2plot, cmap=cmap, aspect='auto')
         vert_ls = np.repeat(vert_l[stamp_indices[(i * stamp_length):((i + 1) * stamp_length)]], 2)
         xs = np.repeat(np.linspace(0, stamp_length, stamp_length + 1), 2)
         xs = xs[1:-1]
-        plt.plot(xs - 0.5, max_i - vert_ls, linewidth=2, color='black', linestyle='-')
+        axs[i].plot(xs - 0.5, max_i - vert_ls, linewidth=2, color='black', linestyle='-')
         if i == 0:
-            plt.title("input data")
+            axs[i].set_title("input data")
         elif i == 1:
-            plt.title("trend component")
+            axs[i].set_title("trend component")
         elif i == sb_plot_nmb - 1:
-            plt.title("residual component")
+            axs[i].set_title("residual component")
         else:
-            plt.title(f"seasonal component {i - 1}")
-    plt.xlabel('timesteps')
-
-    fig = plt.gcf()
-    axs = plt.gca()
+            axs[i].set_title(f"seasonal component {i - 1}")
+    axs[-1].set_xlabel('timesteps')
+    fig.suptitle('Correlation Length')
 
     if show_plot:
         fig.tight_layout()
@@ -285,8 +301,8 @@ def plot_timeseries(
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
     fig : matplotlib.figure.Figure or None, optional
         Figure object to use for plotting. If None, a new figure will be created.
-    axs : matplotlib.axes.Axes or array of Axes or None, optional
-        Axes object(s) to use for plotting. If None, new axes will be created.
+    axs : matplotlib.axes.Axes or None, optional
+        Axes object to use for plotting. If None, new axes will be created.
     colorblind_safe : bool, optional
         If True, the plot will use colors suitable for colorblind individuals.
         Default is False.
@@ -309,9 +325,17 @@ def plot_timeseries(
     mu = timeseries.mean()
     sigma = timeseries.cov()
 
-    if fig is None:
-        fig = plt.figure(figsize=(15, 3))
-    plt.suptitle('Timeseries')
+    if axs is None:
+        if fig is None:
+            fig, axs = plt.subplots(figsize=(15, 3))
+        else:
+            if fig.axes is not None:
+                axs = fig.axes[0]
+            else:
+                raise ValueError("The provided figure has no axes. Pass an Axes or create subplots first.")
+    else:
+        if fig is None:
+            fig = axs.figure
 
     plot_type = 'comb'
     samples_colored = True
@@ -330,11 +354,11 @@ def plot_timeseries(
         y['dark_band'] = [p25, p75]
         y['central'] = median
 
-    _plot_data(y, plot_type, n_samples, samples_colored, colorblind_safe, line_width)
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
+    axs = _plot_data(y, plot_type, n_samples, axs, samples_colored, colorblind_safe, line_width)
+    axs.set_xlabel(x_label)
+    axs.set_ylabel(y_label)
+    fig.suptitle('Timeseries')
 
-    axs = plt.gca()
     if show_plot:
         fig.tight_layout()
         plt.show()
@@ -365,8 +389,8 @@ def plot_correlated_timeseries(
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
     fig : matplotlib.figure.Figure or None, optional
         Figure object to use for plotting. If None, a new figure will be created.
-    axs : matplotlib.axes.Axes or array of Axes or None, optional
-        Axes object(s) to use for plotting. If None, new axes will be created.
+    axs : Array of matplotlib.axes.Axes or None, optional
+        Axes objects to use for plotting. If None, new axes will be created.
     colorblind_safe : bool, optional
         If True, the plot will use colors suitable for colorblind individuals.
         Default is False.
@@ -390,14 +414,28 @@ def plot_correlated_timeseries(
     mu = {}
     sigma_sq = {}
     sigma = {}
-    num_periods = corr_timeseries.n_distributions - 3
+    n_distributions = corr_timeseries.n_distributions
+    num_periods = n_distributions - 3
     ts_means = [x.mean() for x in corr_timeseries.distributions]
     cov_mat = corr_timeseries.covariance_matrix
 
-    if fig is None:
-        fig = plt.figure(figsize=(12, 8))
+    if axs is None:
+        if fig is None:
+            fig, axs = plt.subplots(n_distributions, 1, figsize=(12, 8))
+        else:
+            if fig.axes is not None:
+                if len(fig.axes) != n_distributions:
+                    raise ValueError(f"Expected {n_distributions} axes in provided figure, got {len(fig.axes)}.")
+                axs = fig.axes
+            else:
+                raise ValueError("The provided figure has no axes. Pass an Axes or create subplots first.")
+    else:
+        if fig is None:
+            fig = axs[0].figure if isinstance(axs, np.ndarray) else axs.figure
 
-    plt.suptitle('Uncertainty-Aware Seasonal-Trend Decomposition')
+    axs = np.atleast_1d(axs)
+    if axs.size != n_distributions:
+        raise ValueError(f"Expected {n_distributions} axes in provided figure, got {axs.size}.")
 
     timesteps = len(ts_means[0])
     time_stamp = [0, timesteps]
@@ -489,7 +527,6 @@ def plot_correlated_timeseries(
 
     x = np.linspace(0, timesteps, timesteps + 1)
 
-    plt.subplot(3 + num_periods, 1, 1)
     if helper_co_dep == 1:
         j = 0
         for i in range(1, len(plot_back) + 1):
@@ -501,7 +538,7 @@ def plot_correlated_timeseries(
                 yss = ymid[j]
                 diff = maxyheight[j]
                 yp = [yss - diff, yss - diff, yss + diff + part_factor * diff * 2, yss + diff + part_factor * diff * 2]
-                plt.fill(xp, yp, color=[0, 0, 0], edgecolor='none', alpha=1)
+                axs[j].fill(xp, yp, color=[0, 0, 0], edgecolor='none', alpha=1)
 
             if (i % timesteps) != 0 and (i % timesteps) > time_stamp[0] and (i % timesteps) <= time_stamp[1]:
                 maxc = max(abs(plot_back[(j) * timesteps: (j + 1) * timesteps]))
@@ -525,7 +562,7 @@ def plot_correlated_timeseries(
                 xdif = x[k] - x[k-1]
                 xp = [x[k-1] - 1 / 2 * xdif, x[k-1] + 1 / 2 * xdif, x[k-1] + 1 / 2 * xdif, x[k-1] - 1 / 2 * xdif]
                 yp = [neg_cont, neg_cont, pos_cont, pos_cont]
-                plt.fill(xp, yp, color=color, edgecolor=color, alpha=1)
+                axs[j].fill(xp, yp, color=color, edgecolor=color, alpha=1)
 
             elif i % timesteps == 0 and timesteps == time_stamp[1]:
                 maxc = max(abs(plot_back[(j) * timesteps: (j + 1) * timesteps]))
@@ -549,36 +586,29 @@ def plot_correlated_timeseries(
                 xdif = x[k] - x[k-1]
                 xp = [x[k-1] - 1 / 2 * xdif, x[k-1] + 1 / 2 * xdif, x[k-1] + 1 / 2 * xdif, x[k-1] - 1 / 2 * xdif]
                 yp = [neg_cont, neg_cont, pos_cont, pos_cont]
-                plt.fill(xp, yp, color=color, edgecolor=color, alpha=1)
+                axs[j].fill(xp, yp, color=color, edgecolor=color, alpha=1)
 
 
             if i % timesteps == 0 and i < len(plot_back):
                 j += 1
-                plt.subplot(3 + num_periods, 1, j + 1)
 
-    plt.subplot(3 + num_periods, 1, 1)
-    _plot_data(y, plot_type, n_samples, samples_colored, colorblind_safe, line_width)
-    plt.title("input data")
+    axs[0] = _plot_data(y, plot_type, n_samples, axs[0], samples_colored, colorblind_safe, line_width)
+    axs[0].set_title("input data")
 
-    plt.subplot(3 + num_periods, 1, 2)
-    _plot_data(LT, plot_type, n_samples, samples_colored, colorblind_safe, line_width)
-    plt.title("trend component")
+    axs[1] = _plot_data(LT, plot_type, n_samples, axs[1], samples_colored, colorblind_safe, line_width)
+    axs[1].set_title("trend component")
 
     for i in range(num_periods):
-        plt.subplot(3 + num_periods, 1, 2 + i + 1)
         temp = {'mu': ST['mu'][:, i], 'sigma_sq': ST['sigma_sq'][:, i], 'sigma': ST['sigma'][:, :, i]}
         if plot_type in ["comb", "spaghetti"]:
             temp['samples'] = ST['samples'][:, :, i]
-        _plot_data(temp, plot_type, n_samples, samples_colored, colorblind_safe, line_width)
-        plt.title(f"seasonal component {i + 1}")
+        axs[2 + i] = _plot_data(temp, plot_type, n_samples, axs[2 + i], samples_colored, colorblind_safe, line_width)
+        axs[2 + i].set_title(f"seasonal component {i + 1}")
 
-    plt.subplot(3 + num_periods, 1, 3 + num_periods)
-    _plot_data(R, plot_type, n_samples, samples_colored, colorblind_safe, line_width)
-    plt.title("residual component")
+    axs[n_distributions - 1] = _plot_data(R, plot_type, n_samples, axs[n_distributions - 1], samples_colored, colorblind_safe, line_width)
+    axs[n_distributions - 1].set_title("residual component")
 
-    fig = plt.gcf()
-    axs = plt.gca()
-
+    fig.suptitle('Uncertainty-Aware Seasonal-Trend Decomposition')
     if show_plot:
         fig.tight_layout()
         plt.show()
@@ -600,8 +630,8 @@ def plot_correlation_matrix(
         An instance of the CorrelatedDistributions class.
     fig : matplotlib.figure.Figure or None, optional
         Figure object to use for plotting. If None, a new figure will be created.
-    axs : matplotlib.axes.Axes or array of Axes or None, optional
-        Axes object(s) to use for plotting. If None, new axes will be created.
+    axs : matplotlib.axes.Axes or None, optional
+        Axes object to use for plotting. If None, new axes will be created.
     discretize : bool, optional
         If True, discretize the colormap. Default is True.
     show_plot : bool, optional
@@ -624,29 +654,34 @@ def plot_correlation_matrix(
     cov_mat = _reconstruct_covariance_matrix(cov_mat)
     cor_mat = _compute_correlation_matrix(cov_mat)
 
-    if fig is None:
-        fig = plt.figure(figsize=(8, 8))
-
-    plt.suptitle('Correlation Matrix')
+    if axs is None:
+        if fig is None:
+            fig, axs = plt.subplots(figsize=(8, 8))
+        else:
+            if fig.axes is not None:
+                axs = fig.axes[0]
+            else:
+                raise ValueError("The provided figure has no axes. Pass an Axes or create subplots first.")
+    else:
+        if fig is None:
+            fig = axs.figure
 
     if discretize:
         cmap = mcolors.ListedColormap(colormaps.get_cmap('coolwarm')(np.linspace(0, 1, discr_nmb)))
         norm = mcolors.BoundaryNorm(np.linspace(-1, 1, discr_nmb + 1), cmap.N)
-        plt.imshow(cor_mat, cmap=cmap, norm=norm)
+        im = axs.imshow(cor_mat, cmap=cmap, norm=norm)
     else:
         cmap = 'coolwarm'
-        plt.imshow(cor_mat, cmap=cmap)
+        im = axs.imshow(cor_mat, cmap=cmap)
 
-    plt.colorbar()
+    fig.colorbar(im, ax=axs)
+    fig.suptitle('Correlation Matrix')
 
     for i in range(1, corr_timeseries.n_distributions):
-        plt.plot([(i - 1) * ts_length + 0.5 + ts_length] * total_len, ':', color='white', linewidth=line_width)
-        plt.plot([(i - 1) * ts_length + ts_length + 0.5] * total_len, np.linspace(0, total_len - 1, total_len), ':', color='white', linewidth=line_width)
+        axs.plot([(i - 1) * ts_length + 0.5 + ts_length] * total_len, ':', color='white', linewidth=line_width)
+        axs.plot([(i - 1) * ts_length + ts_length + 0.5] * total_len, np.linspace(0, total_len - 1, total_len), ':', color='white', linewidth=line_width)
 
-    plt.clim(-1, 1)
-
-    fig = plt.gcf()
-    axs = plt.gca()
+    im.set_clim(-1, 1)
 
     if show_plot:
         fig.tight_layout()
@@ -668,8 +703,8 @@ def plot_corr_length(
         An instance of the TimeSeries class, which represents a univariate time series.
     fig : matplotlib.figure.Figure or None, optional
         Figure object to use for plotting. If None, a new figure will be created.
-    axs : matplotlib.axes.Axes or array of Axes or None, optional
-        Axes object(s) to use for plotting. If None, new axes will be created.
+    axs : matplotlib.axes.Axes or None, optional
+        Axes object to use for plotting. If None, new axes will be created.
     show_plot : bool, optional
         If True, display the plot.
         Default is False.
@@ -700,8 +735,8 @@ def plot_correlated_corr_length(
         An instance of the CorrelatedDistributions class.
     fig : matplotlib.figure.Figure or None, optional
         Figure object to use for plotting. If None, a new figure will be created.
-    axs : matplotlib.axes.Axes or array of Axes or None, optional
-        Axes object(s) to use for plotting. If None, new axes will be created.
+    axs : Array of matplotlib.axes.Axes or None, optional
+        Axes objects to use for plotting. If None, new axes will be created.
     show_plot : bool, optional
         If True, display the plot.
         Default is False.

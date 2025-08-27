@@ -61,7 +61,6 @@ class ChiSquareComb:
         # Sample from (real) multivariate normal and square
         samples = np.random.multivariate_normal(self.mu_real, self.cov_real, size)
         N = int(len(self.mu_complex)/2)
-        print(N)
         return samples[:,:N]**2 + samples[:,N:]**2
     
     def mean(self) -> np.ndarray:
