@@ -462,17 +462,19 @@ def plot_contour_samples(distributions,
                 indices.remove(y)
                 pdf_agg = np.sum(pdf, axis=tuple(indices))
                 if x < y:
-                    axs[x,y].contour(dims[x], dims[y], pdf_agg, levels=isovalues, colors=[color])
+                    axs[x,y].contour(dims[y], dims[x], pdf_agg, levels=isovalues, colors=[color])
                 else:
                     axs[x, y].scatter(samples[:, y], y=samples[:, x], color=palette[k])
-                    axs[x, y].set_xlim(ranges[x][0], ranges[x][1])
-                    axs[x, y].set_ylim(ranges[y][0], ranges[y][1])
+
+                axs[x, y].set_xlim(ranges[y][0], ranges[y][1])
+                axs[x, y].set_ylim(ranges[x][0], ranges[x][1])
 
         # Fill diagonal
         for i in range(n_dims):
             indices = list(np.arange(d.n_dims))
             indices.remove(i)
             axs[i,i].plot(dims[i], np.sum(pdf, axis=tuple(indices)), color=color)
+            axs[i,i].set_xlim(ranges[i][0], ranges[i][1])
             axs[i,i].xaxis.set_visible(True)
             axs[i,i].yaxis.set_visible(True)
 
