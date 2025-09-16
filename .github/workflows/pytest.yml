@@ -24,18 +24,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pytest pytest-mpl
-      
-    - name: Ensure Test Results Directory Exists
-      run: mkdir -p tests/mpl-results
 
     - name: Run Pytest
-      run: pytest --mpl --mpl-results-path=tests/mpl-results -s --tb=short
-      continue-on-error: true  # Allow next steps to run even if tests fail
-
-    - name: Upload Test Images (Debugging)
-      if: always()  # Uploads even if pytest fails
-      uses: actions/upload-artifact@v4
-      with:
-        name: mpl-results
-        path: tests/mpl-results/
-        if-no-files-found: error  # Fail if no files are found
+      run: pytest --mpl
