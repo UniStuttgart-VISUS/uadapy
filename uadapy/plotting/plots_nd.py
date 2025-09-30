@@ -475,7 +475,6 @@ def plot_contour_samples(distributions,
             indices.remove(i)
             axs[i,i].plot(dims[i], np.sum(pdf, axis=tuple(indices)), color=color)
             axs[i,i].set_xlim(ranges[i][0], ranges[i][1])
-            axs[i,i].xaxis.set_visible(True)
             axs[i,i].yaxis.set_visible(True)
 
         for i in range(n_dims):
