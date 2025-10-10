@@ -23,6 +23,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        pip install --force-reinstall "matplotlib==3.8.3"
         pip install pytest pytest-mpl
 
     - name: Run Pytest
