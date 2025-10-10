@@ -15,7 +15,7 @@ Changelog
     * Uncertainty-aware Fourier analysis
 * Use pytest for regression tests
 * Add Shepard plots for quality evaluation
-
+* Bug fix: Align axes in SPLOMs
 
 0.0.2
 ---- 
