@@ -14,6 +14,6 @@ then
   twine upload dist/*
 else
   echo "Unexpected argument $1"
-  echo "For publishing to pypu use 'notest', or provide no argument to publish to test.pypi."
+  echo "For publishing to pypi use 'notest', or provide no argument to publish to test.pypi."
 fi
 
