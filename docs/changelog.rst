@@ -1,7 +1,7 @@
 =========
 Changelog
 =========
-0.1
+0.1.0
 ---- 
 
 * Reorganization of plotting interface: input parameters are now more consistent across different plotting functions, default parameters changed
