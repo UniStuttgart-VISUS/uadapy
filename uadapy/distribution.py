@@ -96,6 +96,27 @@ class Distribution:
             raise AttributeError(f"The model has no pdf. {self.model.__class__.__name__}")
         else:
             return self.model.pdf(x)
+    
+    def cdf(self, x: np.ndarray | float) -> np.ndarray | float:
+        """
+        Computes the cumulative density function.
+
+        Parameters
+        ----------
+        x : np.ndarray or float
+            The position where the cdf should be evaluated.
+
+        Returns
+        -------
+        np.ndarray or float
+            Cumulative probability values of the distribution at the given sample points.
+        """
+        if isinstance(self.model, np.ndarray):
+            raise AttributeError("CDF not implemented for sample-based distributions.")
+        if not hasattr(self.model, 'cdf'):
+            raise AttributeError(f"The model has no cdf. {self.model.__class__.__name__}")
+        else:
+            return self.model.cdf(x)
 
     def mean(self) -> np.ndarray | float:
         """
