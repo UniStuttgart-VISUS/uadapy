@@ -2,7 +2,7 @@ import numpy as np
 from uadapy import Distribution
 from scipy.stats import multivariate_normal
 
-def uapca(distributions, n_dims: int = 2):
+def uapca(distributions, n_dims: int = 2, weights: np.ndarray = None):
     """
     Applies UAPCA algorithm to the distribution and returns the distribution
     in lower-dimensional space. It assumes a normal distribution. If you apply
@@ -15,6 +15,8 @@ def uapca(distributions, n_dims: int = 2):
         List of input distributions
     n_dims : int
         Target dimension. Default is 2.
+    weights : np.ndarray, optional
+        Array of weights for each distribution. If None, uniform weights are used.
 
     Returns
     -------
@@ -25,7 +27,7 @@ def uapca(distributions, n_dims: int = 2):
     try:
         means = np.array([d.mean() for d in distributions])
         covs = np.array([d.cov() for d in distributions])
-        means_pca, covs_pca = transform_uapca(means, covs, n_dims)
+        means_pca, covs_pca = transform_uapca(means, covs, n_dims, weights)
         dist_pca = []
         for (m, c) in zip(means_pca, covs_pca):
             dist_pca.append(Distribution(multivariate_normal(m, c)))
@@ -37,9 +39,10 @@ def uapca(distributions, n_dims: int = 2):
 
 # Computing methods
 
-def compute_ua_cov(means: np.ndarray, covs: np.ndarray) -> np.ndarray:
+def compute_ua_cov(means: np.ndarray, covs: np.ndarray, weights: np.ndarray = None) -> np.ndarray:
     """
-    Computes the uncertainty-aware covariance matrix.
+    Computes the weighted uncertainty-aware covariance matrix. If weights is None,
+    uniform weights are assumed.
 
     Parameters
     ----------
@@ -47,28 +50,39 @@ def compute_ua_cov(means: np.ndarray, covs: np.ndarray) -> np.ndarray:
         Array of mean vectors.
     covs : np.ndarray
         Array of covariance matrices.
+    weights : np.ndarray, optional
+        Array of weights of shape (n,).
 
     Returns
     -------
     np.ndarray
-        Uncertainty-aware covariance matrix.
+        Weighted uncertainty-aware covariance matrix.
     """
 
     n = means.shape[0]
     d = means.shape[1]
+    # Set uniform weights if not provided
+    if weights is None:
+        weights = np.ones(n) / n
+    else:
+        weights = np.array(weights)
+        weights = weights / weights.sum()
     # empirical mean
-    mu = means.mean(axis=0)
+    mu = np.sum(weights[:, None] * means, axis=0)
     # centering matrix
     centering = np.outer(mu, mu)
     # average covariance matrix
-    avg_cov = covs.reshape((n,d,d)).mean(axis=0)
+    avg_cov = np.sum(weights[:, None, None] * covs, axis=0)
     # sample covariance
-    sample_cov = np.array([np.outer(means[i,:], means[i,:]) for i in range(n)]).mean(axis=0)
+    sample_cov = np.sum(
+        weights[:, None, None] * np.array([np.outer(means[i], means[i]) for i in range(n)]),
+        axis=0
+    )
     # final uncertainty aware covariance matrix
     return sample_cov + avg_cov - centering
 
 
-def compute_uapca(means: np.ndarray, covs: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def compute_uapca(means: np.ndarray, covs: np.ndarray, weights: np.ndarray = None) -> tuple[np.ndarray, np.ndarray]:
     """
     Computes the principal components for uncertainty-aware PCA.
 
@@ -78,6 +92,8 @@ def compute_uapca(means: np.ndarray, covs: np.ndarray) -> tuple[np.ndarray, np.n
         Array of mean vectors.
     covs : np.ndarray
         Array of covariance matrices.
+    weights : np.ndarray, optional
+        Array of weights for each distribution.
 
     Returns
     -------
@@ -85,12 +101,12 @@ def compute_uapca(means: np.ndarray, covs: np.ndarray) -> tuple[np.ndarray, np.n
         Eigenvectors and eigenvalues.
     """
 
-    cov = compute_ua_cov(means, covs)
+    cov = compute_ua_cov(means, covs, weights)
     u,s,vh = np.linalg.svd(cov, full_matrices=True)
     return u, s
 
 
-def transform_uapca(means, covs, dims: int=2) -> tuple[np.ndarray, np.ndarray]:
+def transform_uapca(means, covs, dims: int=2, weights: np.ndarray = None) -> tuple[np.ndarray, np.ndarray]:
     """
     Projects mean and covariance matrices into a lower-dimensional space.
 
@@ -102,6 +118,8 @@ def transform_uapca(means, covs, dims: int=2) -> tuple[np.ndarray, np.ndarray]:
         Array of covariance matrices.
     dims : int
         Target dimension for projection.
+    weights : np.ndarray, optional
+        Array of weights for each distribution.
 
     Returns
     -------
@@ -111,7 +129,7 @@ def transform_uapca(means, covs, dims: int=2) -> tuple[np.ndarray, np.ndarray]:
 
     n = means.shape[0]
     d = means.shape[1]
-    eigvecs, eigvals = compute_uapca(means, covs)
+    eigvecs, eigvals = compute_uapca(means, covs, weights)
     projmat = eigvecs[:, :dims]
     projected_means = means @ projmat
     projected_covs = np.vstack(
