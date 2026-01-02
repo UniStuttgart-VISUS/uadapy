@@ -1,6 +1,8 @@
 from sklearn import datasets
+from sklearn.mixture import GaussianMixture
 import numpy as np
 from uadapy import Distribution, TimeSeries
+from uadapy.distributions import MultivariateGMM
 from scipy import stats
 
 def load_iris_normal():
@@ -69,3 +71,68 @@ def generate_synthetic_timeseries(timesteps=200, trend = 0.1):
     timeseries = TimeSeries(model, None)
 
     return timeseries
+
+def generate_synthetic_gmm(n_classes=3, n_dims=4, random_state=0):
+    """
+    Generates synthetic Gaussian Mixture Model distributions for testing and examples.
+    
+    Creates multiple classes, each represented as a GMM with varying numbers of components,
+    means, and covariances. Useful for demonstrating dimensionality reduction techniques
+    like wGMM-UAPCA.
+    
+    Parameters
+    ----------
+    n_classes : int, optional
+        Number of classes to generate.
+        Default value is 3.
+    n_dims : int, optional
+        Dimensionality of the original data space.
+        Default value is 4.
+    random_state : int, optional
+        Random seed for reproducibility.
+        Default value is 42.
+    
+    Returns
+    -------
+    list
+        List of Distribution objects, each wrapping a MultivariateGMM model.
+    """
+    np.random.seed(random_state)
+
+    distributions = []
+    
+    for class_idx in range(n_classes):
+        # Vary the number of components per class (1 to 3)
+        n_components = np.random.randint(1, 4)
+        
+        # Generate synthetic data for this class
+        samples_per_component = 100
+        class_data = []
+        
+        for comp_idx in range(n_components):
+            # Random mean in hypercube
+            mean = np.random.randn(n_dims) * 3 + class_idx * 5
+            
+            # Random covariance matrix (positive definite)
+            A = np.random.randn(n_dims, n_dims)
+            cov = A @ A.T + np.eye(n_dims) * 0.5
+            
+            # Generate samples
+            samples = np.random.multivariate_normal(mean, cov, samples_per_component)
+            class_data.append(samples)
+        
+        # Combine all component samples
+        class_data = np.vstack(class_data)
+        
+        # Fit GMM
+        gmm = GaussianMixture(
+            n_components=n_components,
+            covariance_type='full',
+            random_state=random_state + class_idx
+        )
+        gmm.fit(class_data)
+        
+        # Wrap and store
+        distributions.append(Distribution(MultivariateGMM(gmm)))
+    
+    return distributions
