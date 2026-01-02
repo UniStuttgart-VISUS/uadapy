@@ -71,6 +71,8 @@ class Distribution:
         """
         if isinstance(self.model, np.ndarray):
             return self.kde.resample(n, seed).T
+        if hasattr(self.model, 'sample') and callable(self.model.sample):
+            return self.model.sample(n, seed=seed)
         if hasattr(self.model, 'rvs') and callable(self.model.rvs):
             return self.model.rvs(size=n, random_state=seed)
         if hasattr(self.model, 'resample') and callable(self.model.resample):
