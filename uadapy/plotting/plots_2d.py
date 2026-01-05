@@ -233,19 +233,8 @@ def plot_contour(distributions,
         pdf = d.pdf(coordinates)
         pdf = pdf.reshape(xv.shape)
         color = palette[i]
-
-        # Monte Carlo approach for determining isovalues
-        isovalues = []
-        samples = distrib_samples[i]
-        densities = d.pdf(samples)
-        densities.sort()
-        quantiles.sort(reverse=True)
-        for quantile in quantiles:
-            if not 0 < quantile < 100:
-                raise ValueError(f"Invalid quantile: {quantile}. Quantiles must be between 0 and 100 (exclusive).")
-            elif int((1 - quantile/100) * n_samples) >= n_samples:
-                raise ValueError(f"Quantile {quantile} results in an index that is out of bounds.")
-            isovalues.append(densities[int((1 - quantile/100) * n_samples)])
+        
+        isovalues = _calculate_isovalues(pdf, x, y, quantiles)
 
         axs.contour(xv, yv, pdf, levels=isovalues, colors = [color])
 
@@ -372,20 +361,8 @@ def plot_contour_bands(distributions,
         pdf = pdf.reshape(xv.shape)
         pdf = np.ma.masked_where(pdf <= 0, pdf)  # Mask non-positive values to avoid log scale issues
 
-        # Monte Carlo approach for determining isovalues
-        isovalues = []
-        samples = distrib_samples[i]
-        densities = d.pdf(samples)
-        densities.sort()
-        
-        quantiles.sort(reverse=True)
-        for quantile in quantiles:
-            if not 0 < quantile < 100:
-                raise ValueError(f"Invalid quantile: {quantile}. Quantiles must be between 0 and 100 (exclusive).")
-            elif int((1 - quantile/100) * n_samples) >= n_samples:
-                raise ValueError(f"Quantile {quantile} results in an index that is out of bounds.")
-            isovalues.append(densities[int((1 - quantile/100) * n_samples)])
-        isovalues.append(densities[-1])  # Minimum density value
+        isovalues = _calculate_isovalues(pdf, x, y, quantiles)
+        isovalues.append(np.min(pdf[pdf > 0]))
 
         # Extract the subset of colors corresponding to the current Set2 color and its 3 alpha variations
         start_idx = i * n_quantiles
@@ -403,3 +380,53 @@ def plot_contour_bands(distributions,
         plt.show()
 
     return fig, axs
+
+# Helper functions
+
+def _calculate_isovalues(pdf_grid, grid_x, grid_y, quantiles):
+    """
+    Calculate density isovalues using cumulative probability.
+    
+    Parameters
+    ----------
+    pdf_grid : np.ndarray
+        2D array of PDF values on the grid.
+    grid_x : np.ndarray
+        1D array of x-coordinates.
+    grid_y : np.ndarray
+        1D array of y-coordinates.
+    quantiles : list
+        List of quantile percentages.
+        
+    Returns
+    -------
+    list
+        List of density threshold values corresponding to the quantiles.
+    """
+    # Normalize to create a proper PDF (integrate to 1)
+    dx = grid_x[1] - grid_x[0]
+    dy = grid_y[1] - grid_y[0]
+    pdf_sum = np.sum(pdf_grid) * dx * dy
+    pdf_normalized = pdf_grid / pdf_sum if pdf_sum > 0 else pdf_grid
+    
+    # Sort density values in descending order
+    sorted_pdf = np.sort(pdf_normalized.flatten())[::-1]
+    
+    # Calculate cumulative probability
+    cumulative_prob = np.cumsum(sorted_pdf) * dx * dy
+    
+    # Process quantiles and find density thresholds
+    isovalues = []
+    sorted_quantiles = sorted(quantiles, reverse=True)
+    
+    for quantile in sorted_quantiles:
+        if not 0 < quantile < 100:
+            raise ValueError(f"Invalid quantile: {quantile}. Quantiles must be between 0 and 100 (exclusive).")
+        
+        # Find the density threshold at which cumulative probability reaches this level
+        idx = np.searchsorted(cumulative_prob, quantile / 100.0)
+        if idx < len(sorted_pdf):
+            threshold = sorted_pdf[idx]
+            isovalues.append(threshold)
+    
+    return isovalues
