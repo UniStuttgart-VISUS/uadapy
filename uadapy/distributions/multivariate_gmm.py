@@ -7,9 +7,6 @@ class MultivariateGMM:
     Wrapper around sklearn's GaussianMixture providing a consistent interface
     for use with the Distribution class.
     
-    This class delegates to the underlying GaussianMixture model and implements
-    additional functionality like pdf evaluation and reproducible sampling.
-    
     Parameters
     ----------
     gmm : GaussianMixture
@@ -59,19 +56,19 @@ class MultivariateGMM:
     
     def sample(self, n: int, seed: int = None) -> np.ndarray:
         """
-        Generate random samples from the Gaussian Mixture Model.
-        
+        Creates samples from the Gaussian Mixture Model.
+
         Parameters
         ----------
         n : int
-            Number of samples to generate.
+            Number of samples.
         seed : int, optional
-            Random seed for reproducibility. If None, uses the model's random state.
-            
+            Seed for the random number generator for reproducibility, default is None.
+
         Returns
         -------
         np.ndarray
-            Generated samples, shape (n, n_dims).
+            Samples of the Gaussian Mixture Model.
         """
         if seed is not None:
             # Create temporary random state without modifying the model
@@ -99,19 +96,17 @@ class MultivariateGMM:
     
     def pdf(self, x: np.ndarray) -> np.ndarray | float:
         """
-        Evaluate the probability density function at given points.
-        
+        Computes the probability density function.
+
         Parameters
         ----------
-        x : np.ndarray
-            Points at which to evaluate the pdf.
-            Shape should be (n_samples, n_dims) or (n_dims,) for a single point.
-            
+        x : np.ndarray or float
+            The position(s) where the pdf should be evaluated.
+
         Returns
         -------
         np.ndarray or float
-            PDF values at the given points.
-            Returns a scalar if input was 1D, array otherwise.
+            Probability values of the distribution at the given sample point(s).
         """
         # Ensure x is 2D for score_samples
         x = np.atleast_2d(x)
@@ -130,7 +125,7 @@ class MultivariateGMM:
         Returns
         -------
         np.ndarray
-            Overall mean vector, shape (n_dims,).
+            Overall mean vector.
         """
         # Weighted mean of all components
         return np.sum(self.weights_[:, None] * self.means_, axis=0)
@@ -139,14 +134,10 @@ class MultivariateGMM:
         """
         Compute the overall covariance of the Gaussian Mixture Model.
         
-        Uses the law of total covariance:
-        Cov(X) = E[Cov(X|Z)] + Cov(E[X|Z])
-        where Z is the latent component indicator.
-        
         Returns
         -------
         np.ndarray
-            Overall covariance matrix, shape (n_dims, n_dims).
+            Overall covariance matrix.
         """
         overall_mean = self.mean()
         

@@ -58,6 +58,10 @@ def plot_samples(distributions,
     if isinstance(distributions, Distribution):
         distributions = [distributions]
 
+    for d in distributions:
+        if d.n_dims != 2:
+            raise ValueError("All distributions must have 2 dimensions.")
+
     if axs is None:
         if fig is None:
             fig, axs = plt.subplots()
@@ -154,6 +158,10 @@ def plot_contour(distributions,
 
     if isinstance(distributions, Distribution):
         distributions = [distributions]
+
+    for d in distributions:
+        if d.n_dims != 2:
+            raise ValueError("All distributions must have 2 dimensions.")
 
     if axs is None:
         if fig is None:
@@ -304,6 +312,10 @@ def plot_contour_bands(distributions,
 
     if isinstance(distributions, Distribution):
         distributions = [distributions]
+
+    for d in distributions:
+        if d.n_dims != 2:
+            raise ValueError("All distributions must have 2 dimensions.")
 
     if axs is None:
         if fig is None:

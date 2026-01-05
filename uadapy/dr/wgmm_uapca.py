@@ -8,7 +8,7 @@ from uadapy.dr.uapca import compute_uapca
 
 def wgmm_uapca(distributions: list, weights: np.ndarray = None, n_dims: int = 2) -> list:
     """
-    Applies weighted GMM-based UAPCA algorithm to Gaussian Mixture Model distributions
+    Applies weighted GMM UAPCA to Gaussian Mixture Model distributions
     and returns the projected distributions in lower-dimensional space.
 
     Parameters
@@ -17,7 +17,6 @@ def wgmm_uapca(distributions: list, weights: np.ndarray = None, n_dims: int = 2)
         List of input Distribution objects wrapping MultivariateGMM models.
     weights : np.ndarray, optional
         Array of weights for each distribution. If None, uniform weights are used.
-        Shape should be (n_distributions,).
     n_dims : int
         Target dimension. Default is 2.
 
@@ -25,17 +24,16 @@ def wgmm_uapca(distributions: list, weights: np.ndarray = None, n_dims: int = 2)
     -------
     list
         List of Distribution objects wrapping projected MultivariateGMM models.
-
-    Raises
-    ------
-    Exception
-        If input distributions are not MultivariateGMM models or if computation fails.
     """
     try:
         # Validate inputs
         for d in distributions:
             if not isinstance(d.model, MultivariateGMM):
                 raise ValueError("All distributions must be MultivariateGMM models")
+            if d.n_dims < n_dims:
+                raise ValueError("All distributions must have dimensionality greater than or equal to n_dims")
+        if not (weights is None or len(weights) == len(distributions)):
+            raise ValueError("Weights array must be None or have the same length as distributions list")
         
         # Extract overall means and covariances from each GMM
         means = np.array([d.mean() for d in distributions])
@@ -52,7 +50,7 @@ def wgmm_uapca(distributions: list, weights: np.ndarray = None, n_dims: int = 2)
         return dist_pca
         
     except Exception as e:
-        raise Exception(f'Something went wrong. Did you input MultivariateGMM distributions? Exception: {e}')
+        raise Exception(f'Something went wrong. Exception: {e}')
 
 
 # Computing methods
@@ -107,11 +105,11 @@ def create_gmm_from_components(means: np.ndarray, covariances: np.ndarray, weigh
     Parameters
     ----------
     means : np.ndarray
-        Array of component means, shape (n_components, n_dims).
+        Array of component means.
     covariances : np.ndarray
-        Array of component covariances, shape (n_components, n_dims, n_dims).
+        Array of component covariances.
     weights : np.ndarray
-        Array of component weights, shape (n_components,).
+        Array of component weights.
 
     Returns
     -------

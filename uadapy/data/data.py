@@ -27,6 +27,45 @@ def load_iris():
         dist.append(Distribution(np.array(iris.data[iris.target == c])))
     return dist
 
+def load_iris_gmm(n_components=2, random_state=0):
+    """
+    Uses the iris dataset and fits a Gaussian Mixture Model for each class.
+    
+    Parameters
+    ----------
+    n_components : int, optional
+        Number of mixture components for each GMM.
+        Default value is 2.
+    random_state : int, optional
+        Random seed for reproducibility.
+        Default value is 0.
+    
+    Returns
+    -------
+    list
+        List of Distribution objects, each wrapping a MultivariateGMM model
+        fitted to one class of the iris dataset.
+    """
+    iris = datasets.load_iris()
+    dists = []
+    
+    for c in np.unique(iris.target):
+        # Get data for this class
+        class_data = iris.data[iris.target == c]
+        
+        # Fit GMM to the class data
+        gmm = GaussianMixture(
+            n_components=n_components,
+            covariance_type='full',
+            random_state=random_state
+        )
+        gmm.fit(class_data)
+        
+        # Wrap and store
+        dists.append(Distribution(MultivariateGMM(gmm)))
+    
+    return dists
+
 def generate_synthetic_timeseries(timesteps=200, trend = 0.1):
     """
     Generates synthetic time series data by modeling a combination of trend,
@@ -74,11 +113,10 @@ def generate_synthetic_timeseries(timesteps=200, trend = 0.1):
 
 def generate_synthetic_gmm(n_classes=3, n_dims=4, random_state=0):
     """
-    Generates synthetic Gaussian Mixture Model distributions for testing and examples.
-    
-    Creates multiple classes, each represented as a GMM with varying numbers of components,
-    means, and covariances. Useful for demonstrating dimensionality reduction techniques
-    like wGMM-UAPCA.
+    Generates synthetic Gaussian Mixture Model distributions.    
+    Creates multiple classes, each represented as a GMM with
+    random number of components (1 to 10). Per component, random means
+    and covariances are generated to form the GMM.
     
     Parameters
     ----------
@@ -90,7 +128,7 @@ def generate_synthetic_gmm(n_classes=3, n_dims=4, random_state=0):
         Default value is 4.
     random_state : int, optional
         Random seed for reproducibility.
-        Default value is 42.
+        Default value is 0.
     
     Returns
     -------
@@ -102,18 +140,18 @@ def generate_synthetic_gmm(n_classes=3, n_dims=4, random_state=0):
     distributions = []
     
     for class_idx in range(n_classes):
-        # Vary the number of components per class (1 to 3)
-        n_components = np.random.randint(1, 4)
+        # Vary the number of components per class
+        n_components = np.random.randint(1, 10)
         
         # Generate synthetic data for this class
         samples_per_component = 100
         class_data = []
         
         for comp_idx in range(n_components):
-            # Random mean in hypercube
+            # Random mean
             mean = np.random.randn(n_dims) * 3 + class_idx * 5
             
-            # Random covariance matrix (positive definite)
+            # Random covariance
             A = np.random.randn(n_dims, n_dims)
             cov = A @ A.T + np.eye(n_dims) * 0.5
             
