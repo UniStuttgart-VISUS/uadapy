@@ -132,7 +132,5 @@ def transform_uapca(means, covs, dims: int=2, weights: np.ndarray = None) -> tup
     eigvecs, eigvals = compute_uapca(means, covs, weights)
     projmat = eigvecs[:, :dims]
     projected_means = means @ projmat
-    projected_covs = np.vstack(
-        [projmat.T @ covs[i*d:(i+1)*d, :] @ projmat for i in range(n)]
-    )
+    projected_covs = np.array([projmat.T @ covs[i] @ projmat for i in range(n)])
     return projected_means, projected_covs
