@@ -62,7 +62,7 @@ def load_iris_gmm(n_components=2, random_state=0):
         gmm.fit(class_data)
         
         # Wrap and store
-        dists.append(Distribution(MultivariateGMM(gmm)))
+        dists.append(Distribution(MultivariateGMM(gmm), name="GMM"))
     
     return dists
 
@@ -113,7 +113,7 @@ def generate_synthetic_timeseries(timesteps=200, trend = 0.1):
 
 def generate_synthetic_gmm(n_classes=3, n_dims=4, random_state=0):
     """
-    Generates synthetic Gaussian Mixture Model distributions.    
+    Generates synthetic Gaussian Mixture Model distributions.
     Creates multiple classes, each represented as a GMM with
     random number of components (1 to 10). Per component, random means
     and covariances are generated to form the GMM.
@@ -171,6 +171,6 @@ def generate_synthetic_gmm(n_classes=3, n_dims=4, random_state=0):
         gmm.fit(class_data)
         
         # Wrap and store
-        distributions.append(Distribution(MultivariateGMM(gmm)))
+        distributions.append(Distribution(MultivariateGMM(gmm), name="GMM"))
     
     return distributions

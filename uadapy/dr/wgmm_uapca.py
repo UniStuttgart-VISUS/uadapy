@@ -45,7 +45,7 @@ def wgmm_uapca(distributions: list, weights: np.ndarray = None, n_dims: int = 2)
         # Turn GaussianMixture objects back into Distribution objects wrapping MultivariateGMM
         dist_pca = []
         for projected_gmm in projected_gmms:
-            dist_pca.append(Distribution(MultivariateGMM(projected_gmm)))
+            dist_pca.append(Distribution(MultivariateGMM(projected_gmm), name="GMM"))
         
         return dist_pca
         
