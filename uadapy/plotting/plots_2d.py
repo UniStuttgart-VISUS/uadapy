@@ -382,8 +382,6 @@ def _calculate_isovalues(pdf_grid, grid_x, grid_y, quantiles):
     for val in isovalues:
         if not unique_isovalues or val > unique_isovalues[-1]:
             unique_isovalues.append(val)
-    
-    print(unique_isovalues)
 
     return unique_isovalues
 
