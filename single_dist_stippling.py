@@ -7,7 +7,7 @@ from uadapy.plotting import utils
 # -----------------------------
 # Attraction precompute with parallelization
 # -----------------------------
-@njit(cache=True, parallel=True)
+@njit(cache=True, parallel=True, fastmath=True)
 def precompute_attraction_field(u, k=1.0):
     H, W = u.shape
     F_field = np.zeros((H, W, 2), dtype=np.float64)
@@ -17,17 +17,25 @@ def precompute_attraction_field(u, k=1.0):
             Fy, Fx = 0.0, 0.0
             for y in range(H):
                 for x in range(W):
-                    if y == y0 and x == x0:
-                        continue
+                    # if y == y0 and x == x0:
+                    #     continue
+                    # weight = 1.0 - u[y, x]
+                    # if weight == 0.0:
+                    #     continue
+                    # dy = y - y0
+                    # dx = x - x0
+                    # dist = (dy*dy + dx*dx)**0.5
+                    # if dist > 1e-12:
+                    #     Fy += k * weight * (dy / (dist*dist))
+                    #     Fx += k * weight * (dx / (dist*dist))
                     weight = 1.0 - u[y, x]
-                    if weight == 0.0:
-                        continue
                     dy = y - y0
                     dx = x - x0
-                    dist = (dy*dy + dx*dx)**0.5
-                    if dist > 1e-12:
-                        Fy += k * weight * (dy / (dist*dist))
-                        Fx += k * weight * (dx / (dist*dist))
+                    dist2 = dy*dy + dx*dx + 1e-8
+                    div_by_dist2 = 1/dist2
+                    Fy += k * weight * (dy *div_by_dist2)
+                    Fx += k * weight * (dx *div_by_dist2)
+
             F_field[y0, x0, 0] = Fy
             F_field[y0, x0, 1] = Fx
     return F_field
@@ -80,8 +88,9 @@ def repulsion_force_all(P, k=1.0):
             dy = P[j, 0] - P[i, 0]
             dx = P[j, 1] - P[i, 1]
             dist2 = dy*dy + dx*dx + 1e-8
-            Fy += -k * (dy / dist2)
-            Fx += -k * (dx / dist2)
+            div_by_dist2 = 1/dist2
+            Fy += -k * dy * div_by_dist2
+            Fx += -k * dx * div_by_dist2
 
 
         F[i, 0] = Fy
