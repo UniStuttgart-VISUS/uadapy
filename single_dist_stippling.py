@@ -61,20 +61,29 @@ def bilinear_interpolate(F_field, pos):
 # -----------------------------
 # Repulsion with parallelization
 # -----------------------------
-@njit(cache=True, parallel=True)
+@njit(cache=True, parallel=True, fastmath=True)
 def repulsion_force_all(P, k=1.0):
     N = P.shape[0]
     F = np.zeros_like(P, dtype=np.float64)
     for i in prange(N):  # parallel outer loop
         Fy, Fx = 0.0, 0.0
         for j in range(N):
-            if i != j:
-                dy = P[j, 0] - P[i, 0]
-                dx = P[j, 1] - P[i, 1]
-                dist = (dy*dy + dx*dx)**0.5
-                if dist > 1e-12:
-                    Fy += -k * (dy / (dist*dist))
-                    Fx += -k * (dx / (dist*dist))
+            # if i != j:
+            #     dy = P[j, 0] - P[i, 0]
+            #     dx = P[j, 1] - P[i, 1]
+            #     dist = np.sqrt(dy*dy + dx*dx)
+            #     if dist > 1e-12:
+            #         Fy += -k * (dy / (dist*dist))
+            #         Fx += -k * (dx / (dist*dist))
+            
+            # omiting i != j check, only slows down, but dy,dx is zero anyway
+            dy = P[j, 0] - P[i, 0]
+            dx = P[j, 1] - P[i, 1]
+            dist2 = dy*dy + dx*dx + 1e-8
+            Fy += -k * (dy / dist2)
+            Fx += -k * (dx / dist2)
+
+
         F[i, 0] = Fy
         F[i, 1] = Fx
     return F
@@ -96,13 +105,21 @@ def init_particles(u, N=None, seed=0):
     P = coords[idx].astype(float)  # positions are floats
     return P
 
+@njit(cache=True, parallel=True)
+def attraction_force_all(P, F_field):
+    #return np.array([bilinear_interpolate(F_field, p) for p in P])
+    forces = np.zeros_like(P)
+    for i in prange(P.shape[0]):
+        forces[i] = bilinear_interpolate(F_field, P[i])
+    return forces
+
 def step_particles(P, F_field, u, tau=0.1, k=1.0):
     """
     Particle update step using precomputed attraction field.
     """
     H, W = u.shape
     # Attraction via bilinear interpolation
-    F_a = np.array([bilinear_interpolate(F_field, p) for p in P])
+    F_a = attraction_force_all(P,F_field)
     # Repulsion
     F_r = repulsion_force_all(P, k)
     # Update
@@ -119,6 +136,7 @@ def simulate_halftoning(u, steps=300, tau=0.1, k=1.0, seed=0,
     P = init_particles(u, seed=seed)
     F_field = precompute_attraction_field(u, k=k)
     H, W = u.shape
+
 
     for t in range(steps):
         P_new = step_particles(P, F_field, u, tau=tau, k=k)
@@ -146,7 +164,8 @@ def plot_stipples(distributions,
                   n_samples=3000,
                   resolution=128,
                   seed=55,
-                  show_plot=False):
+                  show_plot=False,
+                  steps=600):
 
     samples = distributions[0].sample(n_samples, seed)
     x = np.linspace(np.min(samples[:, 0]), np.max(samples[:, 0]), resolution)
@@ -162,7 +181,7 @@ def plot_stipples(distributions,
     u = 1 - Z_norm  # high pdf → black (attraction)
 
     # Run halftoning
-    P = simulate_halftoning(u, steps=600, tau=0.1, seed=seed)
+    P = simulate_halftoning(u, steps=steps, tau=0.1, seed=seed)
 
     # Map stipple indices back to real coords
     x_coords = np.interp(P[:, 1], (0, resolution-1), (x[0], x[-1]))
@@ -179,17 +198,21 @@ def plot_stipples(distributions,
     return fig, ax
 
 
-# Example usage
-from sklearn import datasets
-from uadapy.dr import uamds
+def main(steps = 200):
+    # Example usage
+    from sklearn import datasets
+    from uadapy.dr import uamds
 
-def _load_iris():
-    iris = datasets.load_iris()
-    dists = []
-    for c in np.unique(iris.target):
-        dists.append(Distribution(iris.data[iris.target == c]))
-    return dists, iris.target_names
+    def _load_iris():
+        iris = datasets.load_iris()
+        dists = []
+        for c in np.unique(iris.target):
+            dists.append(Distribution(iris.data[iris.target == c]))
+        return dists, iris.target_names
 
-distribs_hi, labels = _load_iris()
-distribs_lo = uamds(distribs_hi, n_dims=2)
-fig, axs = plot_stipples(distribs_lo, n_samples=3000, resolution=256, seed=55, show_plot=True)
+    distribs_hi, labels = _load_iris()
+    distribs_lo = uamds(distribs_hi, n_dims=2)
+    fig, axs = plot_stipples(distribs_lo, n_samples=3000, resolution=256, seed=55, show_plot=False, steps=steps)
+    return fig, axs
+
+main()
