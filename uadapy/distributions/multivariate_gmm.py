@@ -6,7 +6,10 @@ class MultivariateGMM:
     """
     Wrapper around sklearn's GaussianMixture providing a consistent interface
     for use with the Distribution class.
-    
+
+    This class supports all sklearn covariance types of sklearn's GaussianMixture.
+    Covariances are always converted to full format if necessary for consistent handling.
+
     Parameters
     ----------
     gmm : GaussianMixture
@@ -20,10 +23,12 @@ class MultivariateGMM:
         Number of mixture components.
     n_dims : int
         Dimensionality of the distribution.
+    covariance_type : str
+        Type of covariance parameters: "full", "tied", "diag", or "spherical".
     means_ : np.ndarray
         Means of each mixture component, shape (n_components, n_dims).
     covariances_ : np.ndarray
-        Covariances of each mixture component, shape (n_components, n_dims, n_dims).
+        Covariances of each mixture component in "full" format, shape (n_components, n_dims, n_dims).
     weights_ : np.ndarray
         Weights of each mixture component, shape (n_components,).
     """
@@ -48,10 +53,11 @@ class MultivariateGMM:
         self.gmm = gmm
         self.n_components = gmm.n_components
         self.n_dims = gmm.means_.shape[1]
+        self.covariance_type = gmm.covariance_type
         
         # Expose key attributes for direct access
         self.means_ = gmm.means_
-        self.covariances_ = gmm.covariances_
+        self.covariances_ = self._convert_to_full_covariances(gmm)
         self.weights_ = gmm.weights_
     
     def sample(self, n: int, seed: int = None) -> np.ndarray:
@@ -155,3 +161,36 @@ class MultivariateGMM:
         )
         
         return weighted_cov + weighted_outer
+    
+    def _convert_to_full_covariances(self, gmm: GaussianMixture) -> np.ndarray:
+        """
+        Convert sklearn's covariances to full format regardless of original type.
+        
+        Parameters
+        ----------
+        gmm : GaussianMixture
+            Fitted GaussianMixture model.
+            
+        Returns
+        -------
+        np.ndarray
+            Covariances in full format, shape (n_components, n_dims, n_dims).
+        """
+        cov_type = gmm.covariance_type
+        
+        if cov_type == "full":
+            return gmm.covariances_
+        elif cov_type == "tied":
+            return np.array([gmm.covariances_] * self.n_components)
+        elif cov_type == "diag":
+            full_covs = np.zeros((self.n_components, self.n_dims, self.n_dims))
+            for i in range(self.n_components):
+                full_covs[i] = np.diag(gmm.covariances_[i])
+            return full_covs
+        elif cov_type == "spherical":
+            full_covs = np.zeros((self.n_components, self.n_dims, self.n_dims))
+            for i in range(self.n_components):
+                full_covs[i] = np.eye(self.n_dims) * gmm.covariances_[i]
+            return full_covs
+        else:
+            raise ValueError(f"Unknown covariance type: {cov_type}")
