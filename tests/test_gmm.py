@@ -21,7 +21,15 @@ def test_gmm_pipeline():
         dist = uadapy.Distribution(model=mgmm)
         projected = uadapy.dr.wgmm_uapca([dist])
 
+def test_kde2gmm():
+    randdat = np.random.rand(5,3)
+    distr_kde = uadapy.Distribution(randdat)
+    gmm = uadapy.distributions.gmm_from_kde(distr_kde.kde)
+    distr_gmm = uadapy.Distribution(gmm)
+    projected = uadapy.dr.wgmm_uapca([distr_gmm])
+
 
 test_gmm_pipeline()
+test_kde2gmm()
 
 

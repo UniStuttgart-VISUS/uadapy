@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.mixture import GaussianMixture
+from scipy.stats import gaussian_kde
 
 
 class MultivariateGMM:
@@ -194,3 +195,29 @@ class MultivariateGMM:
             return full_covs
         else:
             raise ValueError(f"Unknown covariance type: {cov_type}")
+
+
+def gmm_from_kde(kde: gaussian_kde):
+    """
+    Converts a scipy gaussian_kde object to MultivariateGMM.
+    KDE consists of gaussians at every point of the dataset it was estimated from.
+    Each gaussian shares the same covariance matrix which makes it easy to convert
+    to GMM.
+    
+    Returns
+    -------
+    MultivariateGMM
+        The mGMM equivalent to specified KDE.
+    """
+    centers = kde.dataset.T
+    n_components = len(centers)
+
+    # Create a GaussianMixture object
+    gmm = GaussianMixture(n_components=n_components, covariance_type="full")
+
+    # Manually set the parameters
+    gmm.weights_ = kde.weights
+    gmm.means_ = centers
+    gmm.covariances_ = np.array([kde.covariance for _ in range(n_components)])
+
+    return MultivariateGMM(gmm)
