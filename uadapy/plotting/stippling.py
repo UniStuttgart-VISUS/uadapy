@@ -1,9 +1,8 @@
 import numpy as np
-import glasbey as gb
 from collections import deque
 import matplotlib.pyplot as plt
 from numba import njit, prange
-from uadapy.plotting import utils
+from uadapy.plotting import plots_2d
 
 
 @njit(cache=True, parallel=True)
@@ -460,13 +459,13 @@ def _simulate_halftoning(u_list, steps=600, tau=0.1, seed=55,
 
 
 def plot_stipples(distributions,
-                  n_samples=3000,
                   resolution=256,
                   steps=600,
                   tau=0.1,
                   stipple_size=4,
                   stippling_scale=1,
                   seed=55,
+                  ranges=None,
                   fig=None,
                   axs=None,
                   distrib_labels=None,
@@ -523,6 +522,9 @@ def plot_stipples(distributions,
     seed : int, optional
         RNG seed used for particle initialization (importance sampling) and early shaking.
         Default is 55.
+    ranges : list of tuple or None, optional
+        The ranges for the x and y axes as [(x_min, x_max), (y_min, y_max)]. 
+        If None, ranges are calculated based on the distributions.
     fig : matplotlib.figure.Figure or None, optional
         Figure to plot into. If None, a new figure is created.
     axs : matplotlib.axes.Axes or None, optional
@@ -565,29 +567,19 @@ def plot_stipples(distributions,
         if fig is None:
             fig = axs.figure
 
-    _ = np.random.default_rng(seed)
-    all_samples = np.vstack([d.sample(n_samples, seed) for d in distributions])
-    xmin, xmax = np.min(all_samples[:, 0]), np.max(all_samples[:, 0])
-    ymin, ymax = np.min(all_samples[:, 1]), np.max(all_samples[:, 1])
+    if ranges is None:
+        quantiles= [99]
+        ranges = plots_2d._calculate_plot_ranges(distributions, quantiles, resolution)
+
+    xmin, xmax = ranges[0]
+    ymin, ymax = ranges[1]
 
     x = np.linspace(xmin, xmax, resolution)
     y = np.linspace(ymin, ymax, resolution)
     X, Y = np.meshgrid(x, y)
     coords = np.dstack((X, Y)).reshape(-1, 2)
 
-    if distrib_colors is None:
-        if colorblind_safe:
-            palette = gb.create_palette(palette_size=len(distributions), colorblind_safe=colorblind_safe)
-        else:
-            palette =  utils.get_colors(len(distributions))
-    else:
-        if len(distrib_colors) < len(distributions):
-            if colorblind_safe:
-                additional_colors = gb.create_palette(palette_size=len(distributions) - len(distrib_colors), colorblind_safe=colorblind_safe)
-            else:
-                additional_colors = utils.get_colors(len(distributions) - len(distrib_colors))
-            distrib_colors.extend(additional_colors)
-        palette = distrib_colors
+    palette = plots_2d._get_color_palette(len(distributions), distrib_colors, colorblind_safe)
 
     if distrib_labels is None:
         distrib_labels = [f"Class {i+1}" for i in range(C)]
