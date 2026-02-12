@@ -496,9 +496,6 @@ def plot_stipples(distributions,
     ----------
     distributions : list[Distribution] or Distribution
         A list of uadapy.Distribution objects (or a single one) representing classes.
-    n_samples : int, optional
-        Number of samples per class used to estimate a tight common bounding box for all
-        distributions. Default is 3000.
     resolution : int, optional
         Side length (pixels) of the square raster grid used to build tone images u_c and
         their attraction fields. The solver operates in grid coordinates (pixels).
