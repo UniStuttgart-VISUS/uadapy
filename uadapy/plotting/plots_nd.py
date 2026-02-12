@@ -7,6 +7,7 @@ import glasbey as gb
 def plot_samples(distributions,
                  n_samples,
                  seed=55,
+                 point_size=None,
                  fig=None,
                  axs=None,
                  distrib_colors=None,
@@ -23,6 +24,8 @@ def plot_samples(distributions,
         Number of samples per distribution.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
+    point_size : float or None, optional
+        Marker size (area in points^2). If None, matplotlib's default is used.
     fig : matplotlib.figure.Figure or None, optional
         Figure object to use for plotting. If None, a new figure will be created.
     axs : Array of matplotlib.axes.Axes or None, optional
@@ -88,7 +91,7 @@ def plot_samples(distributions,
         samples = d.sample(n_samples, seed)
         for i, j in zip(*np.triu_indices_from(axs, k=1)):
             for x, y in [(i, j), (j, i)]:
-                axs[x,y].scatter(samples[:,y], y=samples[:,x], color=palette[k])
+                axs[x,y].scatter(samples[:,y], y=samples[:,x], color=palette[k], s=point_size)
 
         # Fill diagonal
         for i in range(n_dims):
