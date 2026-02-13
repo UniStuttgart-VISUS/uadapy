@@ -302,6 +302,7 @@ def plot_contour(distributions,
 def plot_contour_samples(distributions,
                          n_samples,
                          resolution=128,
+                         point_size=None,
                          ranges=None,
                          quantiles: list = None,
                          seed=55,
@@ -322,6 +323,8 @@ def plot_contour_samples(distributions,
         Number of samples for the scatterplot.
     resolution : int, optional
         The resolution for the pdf. Default is 128.
+    point_size : float or None, optional
+        Marker size (area in points^2). If None, matplotlib's default is used.
     ranges : list or None, optional
         Array of ranges for all dimensions. If None, the ranges are calculated based on the distributions.
     quantiles : list or None, optional
@@ -467,7 +470,7 @@ def plot_contour_samples(distributions,
                 if x < y:
                     axs[x,y].contour(dims[y], dims[x], pdf_agg, levels=isovalues, colors=[color])
                 else:
-                    axs[x, y].scatter(samples[:, y], y=samples[:, x], color=palette[k])
+                    axs[x, y].scatter(samples[:, y], y=samples[:, x], color=palette[k], s=point_size)
 
                 axs[x, y].set_xlim(ranges[y][0], ranges[y][1])
                 axs[x, y].set_ylim(ranges[x][0], ranges[x][1])
