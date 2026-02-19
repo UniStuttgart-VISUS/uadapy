@@ -41,7 +41,7 @@ class Distribution:
         if isinstance(model, np.ndarray) and name == "Normal":
             mean = np.mean(model, axis=0)
             cov = np.cov(model, rowvar=False)
-            self.model = stats.multivariate_normal(mean, cov)
+            self.model = stats.multivariate_normal(mean, cov, allow_singular=True)
         else:
             self.model = model
         mean = self.mean()
