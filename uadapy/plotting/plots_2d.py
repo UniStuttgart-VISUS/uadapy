@@ -10,6 +10,7 @@ import glasbey as gb
 def plot_samples(distributions,
                  n_samples,
                  seed=55,
+                 point_size=None,
                  fig=None,
                  axs=None,
                  x_label=None,
@@ -30,6 +31,8 @@ def plot_samples(distributions,
         Number of samples per distribution.
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
+    point_size : float or None, optional
+        Marker size (area in points^2). If None, matplotlib's default is used.
     fig : matplotlib.figure.Figure or None, optional
         Figure object to use for plotting. If None, a new figure will be created.
     axs : matplotlib.axes.Axes or None, optional
@@ -81,7 +84,7 @@ def plot_samples(distributions,
 
     for i, d in enumerate(distributions):
         samples = d.sample(n_samples, seed)
-        axs.scatter(x=samples[:,0], y=samples[:,1], color=palette[i])
+        axs.scatter(x=samples[:,0], y=samples[:,1], color=palette[i], s=point_size)
     if x_label:
         axs.set_xlabel(x_label)
     if y_label:
