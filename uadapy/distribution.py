@@ -41,7 +41,7 @@ class Distribution:
         if isinstance(model, np.ndarray) and name == "Normal":
             mean = np.mean(model, axis=0)
             cov = np.cov(model, rowvar=False)
-            self.model = stats.multivariate_normal(mean, cov)
+            self.model = stats.multivariate_normal(mean, cov, allow_singular=True)
         else:
             self.model = model
         mean = self.mean()
@@ -71,6 +71,8 @@ class Distribution:
         """
         if isinstance(self.model, np.ndarray):
             return self.kde.resample(n, seed).T
+        if hasattr(self.model, 'sample') and callable(self.model.sample):
+            return self.model.sample(n, seed=seed)
         if hasattr(self.model, 'rvs') and callable(self.model.rvs):
             return self.model.rvs(size=n, random_state=seed)
         if hasattr(self.model, 'resample') and callable(self.model.resample):
@@ -96,6 +98,27 @@ class Distribution:
             raise AttributeError(f"The model has no pdf. {self.model.__class__.__name__}")
         else:
             return self.model.pdf(x)
+    
+    def cdf(self, x: np.ndarray | float) -> np.ndarray | float:
+        """
+        Computes the cumulative density function.
+
+        Parameters
+        ----------
+        x : np.ndarray or float
+            The position where the cdf should be evaluated.
+
+        Returns
+        -------
+        np.ndarray or float
+            Cumulative probability values of the distribution at the given sample points.
+        """
+        if isinstance(self.model, np.ndarray):
+            raise AttributeError("CDF not implemented for sample-based distributions.")
+        if not hasattr(self.model, 'cdf'):
+            raise AttributeError(f"The model has no cdf. {self.model.__class__.__name__}")
+        else:
+            return self.model.cdf(x)
 
     def mean(self) -> np.ndarray | float:
         """

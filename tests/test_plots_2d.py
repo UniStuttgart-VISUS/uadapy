@@ -28,5 +28,5 @@ def test_plot_contour(sample_distributions):
 @pytest.mark.mpl_image_compare(baseline_dir="baseline")
 def test_plot_contour_bands(sample_distributions):
     """Test plot_contour_bands function."""
-    fig, axs = plots_2d.plot_contour_bands(sample_distributions, n_samples=10000)
+    fig, axs = plots_2d.plot_contour_bands(sample_distributions)
     return fig
