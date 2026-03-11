@@ -15,10 +15,12 @@ import jax
 import jax.numpy as np
 from jax import vmap
 import numpy
+import warnings
 from scipy.linalg import block_diag
+from uadapy import Distribution
+from scipy.linalg import null_space
 from vipurpca import PCA
 from vipurpca.helper_functions import equipotential_standard_normal
-import warnings
 
 
 def _prepare_pca_inputs(dists):
@@ -117,27 +119,29 @@ def _fit_pca_with_uncertainty(Y, cov_Y, n_components=2):
     return model
 
 
-def compute_distribution_eigenvectors(dists, n_components=3):
+def fit_distribution_pca(dists, n_components=2):
     """
-    Compute eigenvectors of PCA fitted on distributions with uncertainty.
+    Fit an uncertainty-aware PCA model on a set of distributions and return the full PCA model.
 
     Parameters
     ----------
     dists : list of Distribution
         List of distribution objects with `.mean()` and `.cov()`.
-    n_components : int, default=3
+    n_components : int, default=2
         Number of principal components to retain.
 
     Returns
     -------
-    eigenvectors : ndarray of shape (p, n_components)
-        Principal component eigenvectors.
+    model : vipurpca.PCA
+        A fitted VIPurPCA PCA model. The returned object exposes both standard PCA outputs and
+        uncertainty-related quantities needed for distribution plots.
     """
     Y, cov_Y = _prepare_pca_inputs(dists)
     model = _fit_pca_with_uncertainty(Y, cov_Y, n_components)
-    return model.eigenvectors
+    return model
 
-def compute_distribution_trajectories(dists, n_components=2, n_frames=10, seed=55):
+
+def compute_distribution_trajectories(distributions, n_components=2, n_frames=10, seed=55):
     """
     Compute trajectories of distributions under PCA with uncertainty.
 
@@ -147,7 +151,7 @@ def compute_distribution_trajectories(dists, n_components=2, n_frames=10, seed=5
 
     Parameters
     ----------
-    dists : list of Distribution
+    distributions : list of Distribution
         List of distribution objects with `.mean()` and `.cov()`
     n_components : int, default=2
         Number of principal components to retain.
@@ -165,8 +169,7 @@ def compute_distribution_trajectories(dists, n_components=2, n_frames=10, seed=5
     """
     numpy.random.seed(seed)
 
-    Y, cov_Y = _prepare_pca_inputs(dists)
-    model = _fit_pca_with_uncertainty(Y, cov_Y, n_components)
+    model = fit_distribution_pca(distributions, n_components)
 
     if model.cov_eigenvectors is None:
         raise RuntimeError("Uncertainty of eigenvectors has not been computed.")
@@ -189,3 +192,134 @@ def compute_distribution_trajectories(dists, n_components=2, n_frames=10, seed=5
     trajectories = np.array([model.X_unflattener(model.X_flat) @ i for i in samples_reshaped])
 
     return trajectories
+
+
+def estimate_pc_direction_uncertainty(mean_w_matrix, cov_eigenvectors, n_samples=1000, seed=55):
+    """
+    Estimate principal-direction mean and angular uncertainty for N-dimensional PCs.
+
+    For each PC, samples directions from the Gaussian uncertainty, resolves sign
+    ambiguity, computes the Frechet mean direction, and estimates angular spread
+    via signed tangent-plane projection.
+
+    Parameters
+    ----------
+    mean_w_matrix : array-like of shape (p, n_components)
+        Eigenvector matrix from model.eigenvectors.
+        Each COLUMN is one principal component direction.
+    cov_eigenvectors : array-like of shape (n_components*p, n_components*p)
+        Joint covariance of all eigenvector weights from model.cov_eigenvectors.
+    n_samples : int, default=1000
+        Number of Monte Carlo samples per PC.
+    seed : int, default=55
+        Random seed for reproducibility.
+
+    Returns
+    -------
+    results : list of dict, one per PC
+        Each dict contains:
+            'pc'    : int          - PC index (1-based)
+            'mu'    : ndarray (p,) - unit mean direction vector
+            'sigma' : float        - angular standard deviation in radians
+    """
+    rng = numpy.random.default_rng(seed)
+
+    mean_w_matrix    = numpy.asarray(mean_w_matrix, float)
+    cov_eigenvectors = numpy.asarray(cov_eigenvectors, float)
+
+    p = mean_w_matrix.shape[0]
+    n_components = mean_w_matrix.shape[1]
+
+    results = []
+
+    for k in range(n_components):
+
+        # Extract mean vector and covariance block for this PC
+        mean_w = mean_w_matrix[:, k]
+        cov_w  = cov_eigenvectors[k*p:(k+1)*p, k*p:(k+1)*p]
+
+        # Sample possible directions from Gaussian uncertainty
+        W = rng.multivariate_normal(mean=mean_w, cov=cov_w, size=n_samples)
+
+        # Normalize onto unit hypersphere
+        norms = numpy.linalg.norm(W, axis=1)
+        valid = norms > 1e-12
+        W = W[valid] / norms[valid, None]
+
+        # Resolve sign ambiguity
+        mw   = mean_w / (numpy.linalg.norm(mean_w) + 1e-12)
+        dots = W @ mw
+        W[dots < 0] *= -1
+
+        # Average unit vectors and re-normalize
+        mean_dir = numpy.mean(W, axis=0)
+        mean_dir /= numpy.linalg.norm(mean_dir)
+
+        # Project samples onto tangent plane at mean_dir
+        # v_tangent = v - (v · mean_dir) * mean_dir
+        dots_mean = W @ mean_dir
+        W_tangent = W - dots_mean[:, None] * mean_dir
+
+        # Signed deviations via tangent reference axis
+        # null_space gives orthonormal basis of the hyperplane perpendicular to mean_dir
+        tangent_ref       = null_space(mean_dir.reshape(1, -1))[:, 0]
+        signed_deviations = W_tangent @ tangent_ref
+
+        sigma = float(numpy.std(signed_deviations))
+
+        results.append({
+            'pc'   : k + 1,
+            'mu'   : mean_dir,
+            'sigma': sigma,
+        })
+
+    return results
+
+
+def compute_uncertain_projections(model, pcx=1, pcy=2, n_samples=1000, seed=55):
+    """
+    Computes projected distributions for VIPurPCA model eigenvector samples.
+
+    Parameters
+    ----------
+    model : vipurpca.PCA
+        Fitted VIPurPCA model with computed eigenvectors and eigenvector covariance.
+    pcx, pcy : int
+        1-based indices of principal components to return.
+    n_samples : int, default=1000
+        Number of eigenvector samples to draw.
+    seed : int, default=55
+        Random seed for reproducibility.
+
+    Returns
+    -------
+    projected_distributions : list
+        list of Distribution objects (one per data point)
+    """
+    rng = numpy.random.default_rng(seed)
+
+    X_np = numpy.asarray(model.X_unflattener(model.X_flat))
+    n, p = model.size
+    n_components = model.n_components
+    ix, iy = pcx - 1, pcy - 1
+
+    mean_flat = numpy.asarray(model.eigenvectors).T.flatten()
+    cov_flat  = numpy.asarray(model.cov_eigenvectors)
+
+    samples = rng.multivariate_normal(
+        mean=mean_flat,
+        cov=cov_flat + 1e-5 * numpy.eye(cov_flat.shape[0]),
+        size=n_samples
+    )
+
+    W_samples = samples.reshape(n_samples, n_components, p).transpose(0, 2, 1)
+
+    # Project mean-centered data: (n_samples, n_data, n_components)
+    projections = numpy.einsum('ip, spk -> sik', X_np, W_samples)
+
+    projected_distributions = []
+    for i in range(n):
+        pts = projections[:, i, :][:, [ix, iy]]
+        projected_distributions.append(Distribution(pts, name="samples"))
+
+    return projected_distributions
