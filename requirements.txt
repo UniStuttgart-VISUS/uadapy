@@ -6,3 +6,4 @@ numba
 glasbey
 seaborn
 cffi
+vipurpca
