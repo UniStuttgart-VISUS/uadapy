@@ -654,3 +654,28 @@ def generate_synthetic_gmm(n_classes=3, n_dims=4, random_state=0):
         distributions.append(Distribution(MultivariateGMM(gmm), name="GMM"))
     
     return distributions
+
+
+def load_student_grades(n_samples_per_student=100, normal: bool = False, random_state=None):
+    """
+    Load the student grades dataset as class-conditional distributions (KDE-based by default).
+    This function creates one nonparametric, KDE-backed Distribution per student (Tom, David, Bob, Jane, Joe, Jack).
+
+    Parameters
+    ----------
+    n_samples_per_student : int, optional
+        The number of grade samples to generate for each student, by default 100
+    normal : bool, optional
+        If False (default), represent each species with a KDE over raw samples
+        (nonparametric). If True, fit a multivariate Normal per species.
+    random_state : int or np.random.RandomState, optional
+        The random state to use for reproducibility, by default None
+
+    Returns
+    -------
+    list of Distribution
+        Three distributions, one for each student.
+    """
+    import student_grades
+    X, y  = student_grades.sample_dataset(n_per_student=n_samples, random_state=random_state)
+    return _to_class_distributions(X, y, normal=normal)
