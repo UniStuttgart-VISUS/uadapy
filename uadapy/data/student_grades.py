@@ -152,7 +152,7 @@ def sample_dataset(n_per_student=1, random_state=None):
     Returns
     -------
     tuple[np.ndarray, np.ndarray]
-        A tuple (X, y) where X is a (n_per_student*6, 4) array of grades and y is a (n_per_student*6,) array of corresponding student names
+        A tuple (X, y) where X is a (n_per_student * 6, 4) array of grades and y is a (n_per_student * 6,) array of corresponding student names
     """
     X = []
     y = []
