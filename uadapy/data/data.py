@@ -676,6 +676,7 @@ def load_student_grades(n_samples_per_student=100, normal: bool = False, random_
     list of Distribution
         Three distributions, one for each student.
     """
-    import student_grades
-    X, y  = student_grades.sample_dataset(n_per_student=n_samples, random_state=random_state)
+    from . import student_grades
+    X, y  = student_grades.sample_dataset(n_per_student=n_samples_per_student, random_state=random_state)
+    X = X + stats.uniform.rvs(loc=0, scale=.002, size=X.shape, random_state=random_state)-.001 # add small noise to prevent singular covariances 
     return _to_class_distributions(X, y, normal=normal)

@@ -159,6 +159,6 @@ def sample_dataset(n_per_student=1, random_state=None):
     for student_name, samplers in students().items():
         samples = multivariate_sample(samplers, n=n_per_student, random_state=random_state)
         X.append(samples)
-        y.append(np.array([student_name]*n_per_stduent))
+        y.append(np.array([student_name]*n_per_student))
     return np.vstack(X), np.concatenate(y)
 
