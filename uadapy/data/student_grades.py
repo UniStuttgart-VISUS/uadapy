@@ -138,13 +138,13 @@ def multivariate_sample(student_samplers, n=1, random_state=None):
     ]).T
 
 
-def sample_dataset(n_per_stduent=1, random_state=None):
+def sample_dataset(n_per_student=1, random_state=None):
     """
     Sample a dataset of grades for all students and subjects
 
     Parameters
     ----------
-    n_per_stduent : int, optional
+    n_per_student : int, optional
         The number of samples to generate for each student, by default 1
     random_state : int or np.random.RandomState, optional
         The random state to use for reproducibility, by default None
@@ -157,7 +157,7 @@ def sample_dataset(n_per_stduent=1, random_state=None):
     X = []
     y = []
     for student_name, samplers in students().items():
-        samples = multivariate_sample(samplers, n=n_per_stduent, random_state=random_state)
+        samples = multivariate_sample(samplers, n=n_per_student, random_state=random_state)
         X.append(samples)
         y.append(np.array([student_name]*n_per_stduent))
     return np.vstack(X), np.concatenate(y)
