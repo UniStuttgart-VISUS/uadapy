@@ -20,6 +20,7 @@ This section is currently work in progress and will be extended over time.
    :maxdepth: 1
 
    distribution.rst
+   timeseries.rst
 
 Indices and tables
 ==================

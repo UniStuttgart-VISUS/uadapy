@@ -14,7 +14,7 @@ Creating a time series
 
 :Parameters:
    - **model**: A `scipy.stats` distribution object or an array of samples.
-   - **timesteps** *(int)*: The number of time steps in the time series.
+   - **timesteps** *(np.ndarray, optional)*: The time steps in the time series (if None, a default time axis is generated).
    - **name** *(str, optional)*: The name of the distribution (default is inferred from the model).
    - **n_dims** *(int, optional)*: Dimensionality of the distribution (default is `1`).
 
@@ -61,7 +61,7 @@ Creating correlated distributions
 
 :Parameters:
    - **distributions** *(list[Distribution])*: A list of individual distributions or time series.
-   - **covariance_matrix** *(np.ndarray, optional)*: The pairwise covariance matrix of the distributions.
+   - **covariance_matrix** *(np.ndarray)*: The pairwise covariance matrix of the distributions.
 
 The class validates whether the provided covariance matrix aligns with the variances of the individual distributions.
 

@@ -1,10 +1,18 @@
 uadapy.data package
-=======================
+===================
 
-uadapy.data.data module
------------------------------------------
+Submodules
+----------
 
-.. automodule:: uadapy.data.data
+.. toctree::
+   :maxdepth: 4
+
+   uadapy.data.data
+
+Module contents
+---------------
+
+.. automodule:: uadapy.data
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
