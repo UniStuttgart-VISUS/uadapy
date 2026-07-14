@@ -1,27 +1,22 @@
 uadapy.dr package
 =================
 
+Submodules
+----------
 
-uadapy.dr.uamds module
-----------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: uadapy.dr.uamds
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-uadapy.dr.uapca module
-----------------------
-
-.. automodule:: uadapy.dr.uapca
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   uadapy.dr.uamds
+   uadapy.dr.uapca
+   uadapy.dr.uapca_revisited
+   uadapy.dr.vipurpca
+   uadapy.dr.wgmm_uapca
 
 Module contents
 ---------------
 
 .. automodule:: uadapy.dr
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

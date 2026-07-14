@@ -103,7 +103,7 @@ class TimeSeries:
         np.ndarray or float
             Variance of the time series.
         """
-        return self.distribution.cov().diag()
+        return self.distribution.cov().diagonal()
 
 class CorrelatedDistributions:
     """

@@ -7,14 +7,24 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   uadapy.data
+   uadapy.distributions
    uadapy.dr
    uadapy.plotting
-   uadapy.data
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   uadapy.distribution
+   uadapy.timeseries
 
 Module contents
 ---------------
 
 .. automodule:: uadapy
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
