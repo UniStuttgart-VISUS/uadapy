@@ -660,6 +660,11 @@ def load_student_grades(n_samples_per_student=100, normal: bool = False, random_
     """
     Load the student grades dataset as class-conditional distributions (KDE-based by default).
     This function creates one nonparametric, KDE-backed Distribution per student (Tom, David, Bob, Jane, Joe, Jack).
+    The underlying distributions are defined according to the specification in 
+    ["Uncertainty-Aware Principal Component Analysis" Görtler et al. 2020](https://arxiv.org/abs/1905.01127).
+    Some of the students have singular covariances, which is not supported by scipy's KDE.
+    Therfore small uniform noise (within +- 0.001) is added to all samples before estimation 
+    (regardless of normal=True for consistency).
 
     Parameters
     ----------
