@@ -214,10 +214,10 @@ def plot_contour(distributions,
         distrib_samples.append(samples)
 
 
-    for i, ax in enumerate(axs.flat):
-        # Hide all ticks and labels
-        ax.xaxis.set_visible(False)
-        ax.yaxis.set_visible(False)
+    # for i, ax in enumerate(axs.flat):
+    #     # Hide all ticks and labels
+    #     ax.xaxis.set_visible(False)
+    #     ax.yaxis.set_visible(False)
 
     # Fill matrix with data
 
@@ -228,6 +228,34 @@ def plot_contour(distributions,
             plots_2d.plot_contour(dists2d, resolution=resolution, ranges=ranges, quantiles=quantiles, 
                 fig=fig, axs=axs[y,x],distrib_colors=distrib_colors, colorblind_safe=colorblind_safe,
                 show_plot=False)
+
+    # get maximized limits per row and column
+    limits = []
+    for i in range(n_dims):
+        minx,maxx = axs[(i+1)%n_dims, i].get_xlim()
+        miny,maxy = axs[i, (i+1)%n_dims].get_ylim()
+        for j in range(n_dims-2):
+            minx_,maxx_ = axs[i, (i+2+j)%n_dims].get_xlim()
+            miny_,maxy_ = axs[(i+2+j)%n_dims, i].get_ylim()
+            minx = min(minx,minx_)
+            maxx = max(maxx,maxx_)
+            miny = min(miny,miny_)
+            maxy = max(maxy,maxy_)
+        limits.append([(minx,maxx),(miny,maxy)])
+
+    # distribute maximized limits
+    for i in range(n_dims):
+        for j in range(n_dims-1):
+            axs[i, (i+1+j)%n_dims].set_ylim(limits[i][1])
+            axs[(i+1+j)%n_dims, i].set_xlim(limits[i][1])
+
+    # share axes 
+    for i in range(n_dims):
+        axs[i,i].sharex(axs[(i+1)%n_dims, i])
+        for j in range(n_dims-2):
+            axs[(i+2+j)%n_dims, i].sharex(axs[(i+1)%n_dims, i])
+            axs[i, (i+2+j)%n_dims].sharey(axs[i, (i+1)%n_dims])
+        
         
 
     # Fill diagonal
