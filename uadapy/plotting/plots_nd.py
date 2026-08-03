@@ -224,9 +224,9 @@ def plot_contour(distributions,
     for i, j in zip(*np.triu_indices_from(axs, k=1)):
         for x, y in [(i, j), (j, i)]:
             from . import plots_2d
-            dists2d = [Distribution(distrib_samples[k][:,[y,x]]) for k in range(len(distributions))]
+            dists2d = [Distribution(distrib_samples[k][:,[x,y]]) for k in range(len(distributions))]
             plots_2d.plot_contour(dists2d, resolution=resolution, ranges=ranges, quantiles=quantiles, 
-                fig=fig, axs=axs[x,y],distrib_colors=distrib_colors, colorblind_safe=colorblind_safe,
+                fig=fig, axs=axs[y,x],distrib_colors=distrib_colors, colorblind_safe=colorblind_safe,
                 show_plot=False)
         
 
