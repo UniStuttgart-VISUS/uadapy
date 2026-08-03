@@ -214,10 +214,10 @@ def plot_contour(distributions,
         distrib_samples.append(samples)
 
 
-    # for i, ax in enumerate(axs.flat):
-    #     # Hide all ticks and labels
-    #     ax.xaxis.set_visible(False)
-    #     ax.yaxis.set_visible(False)
+    for i, ax in enumerate(axs.flat):
+        # Hide all ticks and labels
+        ax.xaxis.set_visible(False)
+        ax.yaxis.set_visible(False)
 
     # Fill matrix with data
 
@@ -235,8 +235,8 @@ def plot_contour(distributions,
         minx,maxx = axs[(i+1)%n_dims, i].get_xlim()
         miny,maxy = axs[i, (i+1)%n_dims].get_ylim()
         for j in range(n_dims-2):
-            minx_,maxx_ = axs[i, (i+2+j)%n_dims].get_xlim()
-            miny_,maxy_ = axs[(i+2+j)%n_dims, i].get_ylim()
+            minx_,maxx_ = axs[(i+2+j)%n_dims, i].get_xlim()
+            miny_,maxy_ = axs[i, (i+2+j)%n_dims].get_ylim()
             minx = min(minx,minx_)
             maxx = max(maxx,maxx_)
             miny = min(miny,miny_)
@@ -247,7 +247,7 @@ def plot_contour(distributions,
     for i in range(n_dims):
         for j in range(n_dims-1):
             axs[i, (i+1+j)%n_dims].set_ylim(limits[i][1])
-            axs[(i+1+j)%n_dims, i].set_xlim(limits[i][1])
+            axs[(i+1+j)%n_dims, i].set_xlim(limits[i][0])
 
     # share axes 
     for i in range(n_dims):
