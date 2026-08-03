@@ -224,20 +224,22 @@ def plot_contour(distributions,
     for i, j in zip(*np.triu_indices_from(axs, k=1)):
         for x, y in [(i, j), (j, i)]:
             from . import plots_2d
-            dists2d = [Distribution(distrib_samples[k][:,[x,y]]) for k in range(len(distributions))]
+            dists2d = [Distribution(distrib_samples[k][:,[y,x]]) for k in range(len(distributions))]
             plots_2d.plot_contour(dists2d, resolution=resolution, ranges=ranges, quantiles=quantiles, 
                 fig=fig, axs=axs[x,y],distrib_colors=distrib_colors, colorblind_safe=colorblind_safe,
                 show_plot=False)
-            #axs[x,y].contour(dims[y], dims[x], pdf_agg, levels=isovalues, colors=[color])
         
 
-    # # Fill diagonal
-    # for i in range(n_dims):
-    #     indices = list(np.arange(d.n_dims))
-    #     indices.remove(i)
-    #     axs[i,i].plot(dims[i], np.sum(pdf, axis=tuple(indices)), color=color)
-    #     axs[i,i].xaxis.set_visible(True)
-    #     axs[i,i].yaxis.set_visible(True)
+    # Fill diagonal
+    for i in range(n_dims):
+        dists1d = [Distribution(distrib_samples[k][:,i]) for k in range(len(distributions))]
+        xmin, xmax = axs[(i+1)%n_dims, i].get_xlim()
+        x = np.linspace(xmin, xmax, resolution)
+        ys = [dists1d[k].pdf(x) for k in range(len(distributions))]
+        for k in range(len(distributions)):
+            axs[i,i].plot(x, ys[k], color=distrib_colors[k])
+        #axs[i,i].xaxis.set_visible(True)
+        axs[i,i].yaxis.set_visible(True)
 
     for i in range(n_dims):
         axs[-1,i].xaxis.set_visible(True)
