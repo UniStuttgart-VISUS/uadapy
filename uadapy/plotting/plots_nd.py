@@ -191,9 +191,9 @@ def plot_contour(distributions,
     # Generate colors
     if distrib_colors is None:
         if colorblind_safe:
-            palette = gb.create_palette(palette_size=len(distributions), colorblind_safe=colorblind_safe)
+            distrib_colors = gb.create_palette(palette_size=len(distributions), colorblind_safe=colorblind_safe)
         else:
-            palette =  utils.get_colors(len(distributions))
+            distrib_colors = utils.get_colors(len(distributions))
     else:
         if len(distrib_colors) < len(distributions):
             if colorblind_safe:
@@ -201,40 +201,18 @@ def plot_contour(distributions,
             else:
                 additional_colors = utils.get_colors(len(distributions) - len(distrib_colors))
             distrib_colors.extend(additional_colors)
-        palette = distrib_colors
 
     distrib_samples = []
     for d in distributions:
         samples = d.sample(n_samples, seed)
+        # need to add noise for zero variance since KDE does not like that
+        variances = np.var(samples, axis=0)
+        from scipy import stats
+        noise = stats.uniform.rvs(loc=0, scale=2e-8, size=samples.shape, random_state=seed) - 1e-8
+        noise *= (variances == 0)[None,:]
+        samples += noise
         distrib_samples.append(samples)
 
-    # Dynamically determine ranges using samples
-    if ranges is None:
-        all_samples = np.concatenate(distrib_samples, axis=0)
-        initial_ranges = [
-            (np.percentile(all_samples[:, dim], 0), np.percentile(all_samples[:, dim], 100))
-            for dim in range(all_samples.shape[1])
-        ]
-
-        # Dynamically adjust the expansion factor based on the largest quantile
-        ranges = []
-        base_expansion = 0.05  # Base expansion factor for moderate quantiles
-        if largest_quantile >= 99.999:
-            expansion_factor = 0.15  # Larger expansion for extreme quantiles
-        elif largest_quantile >= 99.9:
-            expansion_factor = 0.10
-        elif largest_quantile >= 99:
-            expansion_factor = 0.08
-        else:
-            expansion_factor = base_expansion
-
-        # Expand the range slightly based on the data spread to ensure no cutoff
-        for dim_range in initial_ranges:
-            min_val, max_val = dim_range
-            range_span = max_val - min_val
-            expanded_min = min_val - expansion_factor * range_span
-            expanded_max = max_val + expansion_factor * range_span
-            ranges.append((expanded_min, expanded_max))
 
     for i, ax in enumerate(axs.flat):
         # Hide all ticks and labels
@@ -242,56 +220,29 @@ def plot_contour(distributions,
         ax.yaxis.set_visible(False)
 
     # Fill matrix with data
-    for k, d in enumerate(distributions):
-        if d.n_dims < 2:
-            raise Exception('Wrong dimension of distribution')
-        dims = ()
-        test = ()
-        for i in range(d.n_dims):
-            test = (*test, i)
-            x = np.linspace(ranges[i][0], ranges[i][1], resolution)
-            dims = (*dims, x)
-        coordinates = np.array(np.meshgrid(*dims)).transpose(tuple(range(1, n_dims+1)) + (0,))
-        pdf = d.pdf(coordinates.reshape((-1, coordinates.shape[-1])))
-        pdf = pdf.reshape(coordinates.shape[:-1])
-        pdf = pdf.transpose((1,0)+tuple(range(2,n_dims)))
 
-        # Monte Carlo approach for determining isovalues
-        isovalues = []
-        samples = distrib_samples[k]
-        densities = d.pdf(samples)
-        densities.sort()
-        quantiles.sort(reverse=True)
-        for quantile in quantiles:
-            if not 0 < quantile < 100:
-                raise ValueError(f"Invalid quantile: {quantile}. Quantiles must be between 0 and 100 (exclusive).")
-            elif int((1 - quantile/100) * n_samples) >= n_samples:
-                raise ValueError(f"Quantile {quantile} results in an index that is out of bounds.")
-            isovalues.append(densities[int((1 - quantile/100) * n_samples)])
+    for i, j in zip(*np.triu_indices_from(axs, k=1)):
+        for x, y in [(i, j), (j, i)]:
+            from . import plots_2d
+            dists2d = [Distribution(distrib_samples[k][:,[x,y]]) for k in range(len(distributions))]
+            plots_2d.plot_contour(dists2d, resolution=resolution, ranges=ranges, quantiles=quantiles, 
+                fig=fig, axs=axs[x,y],distrib_colors=distrib_colors, colorblind_safe=colorblind_safe,
+                show_plot=False)
+            #axs[x,y].contour(dims[y], dims[x], pdf_agg, levels=isovalues, colors=[color])
+        
 
-        for i, j in zip(*np.triu_indices_from(axs, k=1)):
-            for x, y in [(i, j), (j, i)]:
-                color = palette[k]
-                indices = list(np.arange(d.n_dims))
-                indices.remove(x)
-                indices.remove(y)
-                pdf_agg = np.sum(pdf, axis=tuple(indices))
-                if x > y:
-                    pdf_agg = pdf_agg.T
-                axs[x,y].contour(dims[y], dims[x], pdf_agg, levels=isovalues, colors=[color])
+    # # Fill diagonal
+    # for i in range(n_dims):
+    #     indices = list(np.arange(d.n_dims))
+    #     indices.remove(i)
+    #     axs[i,i].plot(dims[i], np.sum(pdf, axis=tuple(indices)), color=color)
+    #     axs[i,i].xaxis.set_visible(True)
+    #     axs[i,i].yaxis.set_visible(True)
 
-        # Fill diagonal
-        for i in range(n_dims):
-            indices = list(np.arange(d.n_dims))
-            indices.remove(i)
-            axs[i,i].plot(dims[i], np.sum(pdf, axis=tuple(indices)), color=color)
-            axs[i,i].xaxis.set_visible(True)
-            axs[i,i].yaxis.set_visible(True)
-
-        for i in range(n_dims):
-            axs[-1,i].xaxis.set_visible(True)
-            axs[i,0].yaxis.set_visible(True)
-        axs[0,1].yaxis.set_visible(True)
+    for i in range(n_dims):
+        axs[-1,i].xaxis.set_visible(True)
+        axs[i,0].yaxis.set_visible(True)
+    axs[0,1].yaxis.set_visible(True)
 
     if show_plot:
         fig.tight_layout()
