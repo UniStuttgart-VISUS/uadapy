@@ -14,7 +14,7 @@ def plot_samples(distributions,
                  colorblind_safe=False,
                  show_plot=False):
     """
-    Plot samples from the multivariate distribution as a SLOM.
+    Plot samples from the multivariate distribution as a SPLOM.
 
     Parameters
     ----------
@@ -110,8 +110,53 @@ def plot_samples(distributions,
 
     return fig, axs
 
+
+def maximize_axes_limits(axs, plot_mask=None):
+    n_dims = len(axs)
+    # default plot mask: all True
+    if plot_mask is None:
+        plot_mask = np.ones((n_dims,n_dims)) == 1
+    # get maximized limits per row and column
+    limits = []
+    for i in range(n_dims):
+        minx,maxx = (np.inf, -np.inf)
+        miny,maxy = (np.inf, -np.inf)
+        for j in range(n_dims):
+            if plot_mask[j,i]:
+                minx_,maxx_ = axs[j,i].get_xlim()
+                minx = min(minx,minx_)
+                maxx = max(maxx,maxx_)
+            if plot_mask[i,j]:
+                miny_,maxy_ = axs[i,j].get_ylim()
+                miny = min(miny,miny_)
+                maxy = max(maxy,maxy_)
+        limits.append([(minx,maxx),(miny,maxy)])
+
+    # distribute maximized limits
+    for i in range(n_dims):
+        for j in range(n_dims):
+            if plot_mask[j,i]:
+                axs[j, i].set_xlim(limits[i][0])
+            if plot_mask[i,j]:
+                axs[i, j].set_ylim(limits[i][1])
+
+
+def plot_matrix_share_axes(axs):
+    """
+    Sets up the axis sharing for a plot matrix.
+    I.e. all axes in the same column share X, and all axes in the same row (except for the diagonal) share Y. 
+    """
+    n_dims = len(axs)
+    # share axes 
+    for i in range(n_dims):
+        axs[i,i].sharex(axs[(i+1)%n_dims, i])
+        for j in range(n_dims-2):
+            axs[(i+2+j)%n_dims, i].sharex(axs[(i+1)%n_dims, i])
+            axs[i, (i+2+j)%n_dims].sharey(axs[i, (i+1)%n_dims])
+
+
 def plot_contour(distributions,
-                 n_samples,
+                 n_samples_kde=1000,
                  resolution=128,
                  ranges=None,
                  quantiles: list = None,
@@ -120,16 +165,19 @@ def plot_contour(distributions,
                  axs=None,
                  distrib_colors=None,
                  colorblind_safe=False,
-                 show_plot=False):
+                 show_plot=False,
+                 plot_mask=None):
     """
     Visualizes a multidimensional distribution in a matrix of contour plots.
+    For this, the 2D/1D marginal distributions have to be estimated for each combination of dimensions.
+    This is done via KDE on samples drawn from the distribution.
 
     Parameters
     ----------
     distributions : list
         List of distributions to plot.
-    n_samples : int
-        Number of samples per distribution.
+    n_samples_kde : int
+        Number of samples drawn per distribution to estimate the marginal 2D distributions via KDE. Default 1000.
     resolution : int, optional
         The resolution for the pdf. Default is 128.
     ranges : list or None, optional
@@ -173,7 +221,7 @@ def plot_contour(distributions,
 
     if axs is None:
         if fig is None:
-            fig, axs = plt.subplots(nrows=n_dims, ncols=n_dims)
+            fig, axs = plt.subplots(nrows=n_dims, ncols=n_dims, figsize=((0.5+n_dims)*2,n_dims*2))
         else:
             if fig.axes is not None:
                 axs = np.array(fig.axes).reshape(n_dims, n_dims)
@@ -186,7 +234,6 @@ def plot_contour(distributions,
     # Determine default quantiles: 25%, 75%, and 95%
     if quantiles is None:
         quantiles = [25, 75, 95]
-    largest_quantile = max(quantiles)
 
     # Generate colors
     if distrib_colors is None:
@@ -204,7 +251,7 @@ def plot_contour(distributions,
 
     distrib_samples = []
     for d in distributions:
-        samples = d.sample(n_samples, seed)
+        samples = d.sample(n_samples_kde, seed)
         # need to add noise for zero variance since KDE does not like that
         variances = np.var(samples, axis=0)
         from scipy import stats
@@ -219,47 +266,35 @@ def plot_contour(distributions,
         ax.xaxis.set_visible(False)
         ax.yaxis.set_visible(False)
 
-    # Fill matrix with data
+    # default plot mask: all True
+    if plot_mask is None:
+        plot_mask = np.ones((n_dims,n_dims)) == 1
+    import inspect
+    if inspect.isfunction(plot_mask):
+        plot_mask = [[plot_mask(i,j) for j in range(n_dims)] for i in range(n_dims)]
+    if not isinstance(plot_mask, np.ndarray):
+        plot_mask = np.array(plot_mask)
+    
 
+    # Fill matrix with data
+    from . import plots_2d
     for i, j in zip(*np.triu_indices_from(axs, k=1)):
         for x, y in [(i, j), (j, i)]:
-            from . import plots_2d
+            if not plot_mask[y,x]:
+                continue # skip
             dists2d = [Distribution(distrib_samples[k][:,[x,y]]) for k in range(len(distributions))]
             plots_2d.plot_contour(dists2d, resolution=resolution, ranges=ranges, quantiles=quantiles, 
                 fig=fig, axs=axs[y,x],distrib_colors=distrib_colors, colorblind_safe=colorblind_safe,
                 show_plot=False)
 
-    # get maximized limits per row and column
-    limits = []
-    for i in range(n_dims):
-        minx,maxx = axs[(i+1)%n_dims, i].get_xlim()
-        miny,maxy = axs[i, (i+1)%n_dims].get_ylim()
-        for j in range(n_dims-2):
-            minx_,maxx_ = axs[(i+2+j)%n_dims, i].get_xlim()
-            miny_,maxy_ = axs[i, (i+2+j)%n_dims].get_ylim()
-            minx = min(minx,minx_)
-            maxx = max(maxx,maxx_)
-            miny = min(miny,miny_)
-            maxy = max(maxy,maxy_)
-        limits.append([(minx,maxx),(miny,maxy)])
-
-    # distribute maximized limits
-    for i in range(n_dims):
-        for j in range(n_dims-1):
-            axs[i, (i+1+j)%n_dims].set_ylim(limits[i][1])
-            axs[(i+1+j)%n_dims, i].set_xlim(limits[i][0])
-
-    # share axes 
-    for i in range(n_dims):
-        axs[i,i].sharex(axs[(i+1)%n_dims, i])
-        for j in range(n_dims-2):
-            axs[(i+2+j)%n_dims, i].sharex(axs[(i+1)%n_dims, i])
-            axs[i, (i+2+j)%n_dims].sharey(axs[i, (i+1)%n_dims])
-        
-        
+    # maximize axis limits for off diagonals and setup axis sharing
+    maximize_axes_limits(axs, plot_mask=np.diag(np.ones(n_dims)) != 1)
+    plot_matrix_share_axes(axs)
 
     # Fill diagonal
     for i in range(n_dims):
+        if not plot_mask[i,i]:
+            continue
         dists1d = [Distribution(distrib_samples[k][:,i]) for k in range(len(distributions))]
         xmin, xmax = axs[(i+1)%n_dims, i].get_xlim()
         x = np.linspace(xmin, xmax, resolution)
@@ -294,14 +329,16 @@ def plot_contour_samples(distributions,
                          show_plot=False):
     """
     Visualizes a multidimensional distribution in a matrix visualization where the
-    upper diagonal contains contour plots and the lower diagonal contains scatterplots.
+    upper triangle contains contour plots and the lower triangle contains scatterplots.
 
     Parameters
     ----------
     distributions : list
         List of distributions to plot.
     n_samples : int
-        Number of samples for the scatterplot.
+        Number of samples for the scatterplots.
+    n_samples_kde : int
+        Number of samples drawn per distribution to estimate the marginal 2D distributions via KDE. Default 1000. 
     resolution : int, optional
         The resolution for the pdf. Default is 128.
     point_size : float or None, optional
