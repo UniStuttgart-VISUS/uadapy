@@ -7,12 +7,15 @@ import glasbey as gb
 def plot_samples(distributions,
                  n_samples,
                  seed=55,
-                 point_size=None,
+                 point_size=1,
+                 alpha=1,
                  fig=None,
                  axs=None,
                  distrib_colors=None,
                  colorblind_safe=False,
-                 show_plot=False):
+                 show_plot=False,
+                 plot_mask=None
+):
     """
     Plot samples from the multivariate distribution as a SPLOM.
 
@@ -38,6 +41,8 @@ def plot_samples(distributions,
     show_plot : bool, optional
         If True, display the plot.
         Default is False.
+    plot_mask: 2D boolean array or function (i,j)->bool, optional 
+        mask that specifies which subplots will be generated. By default every plot will be generated.
 
     Returns
     -------
@@ -84,6 +89,15 @@ def plot_samples(distributions,
         ax.xaxis.set_visible(False)
         ax.yaxis.set_visible(False)
 
+    # default plot mask: all True
+    if plot_mask is None:
+        plot_mask = np.ones((n_dims,n_dims)) == 1
+    import inspect
+    if inspect.isfunction(plot_mask):
+        plot_mask = [[plot_mask(i,j) for j in range(n_dims)] for i in range(n_dims)]
+    if not isinstance(plot_mask, np.ndarray):
+        plot_mask = np.array(plot_mask)
+
     # Fill matrix with data
     for k, d in enumerate(distributions):
         if d.n_dims < 2:
@@ -91,10 +105,14 @@ def plot_samples(distributions,
         samples = d.sample(n_samples, seed)
         for i, j in zip(*np.triu_indices_from(axs, k=1)):
             for x, y in [(i, j), (j, i)]:
-                axs[x,y].scatter(samples[:,y], y=samples[:,x], color=palette[k], s=point_size)
+                if not plot_mask[y,x]:
+                    continue
+                axs[y,x].scatter(samples[:,x], y=samples[:,y], color=palette[k], s=point_size, alpha=alpha)
 
         # Fill diagonal
         for i in range(n_dims):
+            if not plot_mask[i,i]:
+                    continue
             axs[i,i].hist(samples[:,i], histtype='stepfilled', fill=False, alpha=1.0, density=True, ec=palette[k])
             axs[i,i].xaxis.set_visible(True)
             axs[i,i].yaxis.set_visible(True)
@@ -103,6 +121,9 @@ def plot_samples(distributions,
             axs[-1,i].xaxis.set_visible(True)
             axs[i,0].yaxis.set_visible(True)
         axs[0,1].yaxis.set_visible(True)
+
+    # maximize axis limits for off diagonals and setup axis sharing
+    maximize_axes_limits(axs, plot_mask=plot_mask)
 
     if show_plot:
         fig.tight_layout()
@@ -116,6 +137,11 @@ def maximize_axes_limits(axs, plot_mask=None):
     # default plot mask: all True
     if plot_mask is None:
         plot_mask = np.ones((n_dims,n_dims)) == 1
+    import inspect
+    if inspect.isfunction(plot_mask):
+        plot_mask = [[plot_mask(i,j) for j in range(n_dims)] for i in range(n_dims)]
+    if not isinstance(plot_mask, np.ndarray):
+        plot_mask = np.array(plot_mask)
     # get maximized limits per row and column
     limits = []
     for i in range(n_dims):
@@ -126,7 +152,7 @@ def maximize_axes_limits(axs, plot_mask=None):
                 minx_,maxx_ = axs[j,i].get_xlim()
                 minx = min(minx,minx_)
                 maxx = max(maxx,maxx_)
-            if plot_mask[i,j]:
+            if plot_mask[i,j] and i != j:
                 miny_,maxy_ = axs[i,j].get_ylim()
                 miny = min(miny,miny_)
                 maxy = max(maxy,maxy_)
@@ -137,7 +163,7 @@ def maximize_axes_limits(axs, plot_mask=None):
         for j in range(n_dims):
             if plot_mask[j,i]:
                 axs[j, i].set_xlim(limits[i][0])
-            if plot_mask[i,j]:
+            if plot_mask[i,j] and i != j:
                 axs[i, j].set_ylim(limits[i][1])
 
 
@@ -198,6 +224,8 @@ def plot_contour(distributions,
     show_plot : bool, optional
         If True, display the plot.
         Default is False.
+    plot_mask: 2D boolean array or function (i,j)->bool, optional 
+        mask that specifies which subplots will be generated. By default every plot will be generated.
 
     Returns
     -------
@@ -287,22 +315,21 @@ def plot_contour(distributions,
                 fig=fig, axs=axs[y,x],distrib_colors=distrib_colors, colorblind_safe=colorblind_safe,
                 show_plot=False)
 
-    # maximize axis limits for off diagonals and setup axis sharing
-    maximize_axes_limits(axs, plot_mask=np.diag(np.ones(n_dims)) != 1)
-    plot_matrix_share_axes(axs)
-
     # Fill diagonal
     for i in range(n_dims):
         if not plot_mask[i,i]:
             continue
         dists1d = [Distribution(distrib_samples[k][:,i]) for k in range(len(distributions))]
-        xmin, xmax = axs[(i+1)%n_dims, i].get_xlim()
+        xmin, xmax = np.vstack(distrib_samples)[:,i].min(), np.vstack(distrib_samples)[:,i].max()
         x = np.linspace(xmin, xmax, resolution)
         ys = [dists1d[k].pdf(x) for k in range(len(distributions))]
         for k in range(len(distributions)):
             axs[i,i].plot(x, ys[k], color=distrib_colors[k])
         #axs[i,i].xaxis.set_visible(True)
         axs[i,i].yaxis.set_visible(True)
+
+    # maximize axis limits for off diagonals and setup axis sharing
+    maximize_axes_limits(axs, plot_mask=plot_mask)
 
     for i in range(n_dims):
         axs[-1,i].xaxis.set_visible(True)
@@ -326,7 +353,8 @@ def plot_contour_samples(distributions,
                          axs=None,
                          distrib_colors=None,
                          colorblind_safe=False,
-                         show_plot=False):
+                         show_plot=False
+                         ):
     """
     Visualizes a multidimensional distribution in a matrix visualization where the
     upper triangle contains contour plots and the lower triangle contains scatterplots.
