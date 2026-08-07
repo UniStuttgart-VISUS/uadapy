@@ -322,11 +322,14 @@ def plot_contour(distributions,
         if not plot_mask[i,i]:
             continue
         dists1d = [Distribution(distrib_samples[k][:,i]) for k in range(len(distributions))]
-        xmin, xmax = np.vstack(distrib_samples)[:,i].min(), np.vstack(distrib_samples)[:,i].max()
-        x = np.linspace(xmin, xmax, resolution)
-        ys = [dists1d[k].pdf(x) for k in range(len(distributions))]
+        range_global = np.vstack(distrib_samples)[:,i].min(), np.vstack(distrib_samples)[:,i].max()
+        x_global = np.linspace(range_global[0],range_global[1], num=resolution)
         for k in range(len(distributions)):
-            axs[i,i].plot(x, ys[k], color=distrib_colors[k])
+            xmin, xmax = distrib_samples[k][:,i].min(), distrib_samples[k][:,i].max()
+            xs = np.linspace(xmin, xmax, resolution)
+            xs = np.sort(np.concat([x_global,xs]))
+            ys = dists1d[k].pdf(xs)
+            axs[i,i].plot(xs, ys, color=distrib_colors[k])
         #axs[i,i].xaxis.set_visible(True)
         axs[i,i].yaxis.set_visible(True)
 
