@@ -5,7 +5,7 @@ import uadapy.plotting.utils as utils
 import glasbey as gb
 
 def plot_samples(distributions,
-                 n_samples,
+                 n_samples=100,
                  seed=55,
                  point_size=1,
                  alpha=1,
@@ -345,8 +345,8 @@ def plot_contour(distributions,
     return fig, axs
 
 def plot_contour_samples(distributions,
-                         n_samples,
-                         n_samples_kde,
+                         n_samples=100,
+                         n_samples_kde=1000,
                          resolution=128,
                          point_size=1,
                          alpha=1,
