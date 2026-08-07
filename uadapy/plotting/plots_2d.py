@@ -170,14 +170,14 @@ def plot_contour(distributions,
     palette = _get_color_palette(len(distributions), distrib_colors, colorblind_safe)
 
     # Calculate ranges
+    separate_ranges = None
     if ranges is None:
-        ranges = _calculate_plot_ranges(distributions, quantiles, resolution)
-
-    range_x = ranges[0]
-    range_y = ranges[1]
+        ranges, separate_ranges = _calculate_plot_ranges(distributions, quantiles, resolution)
 
     # Plot contours for each distribution
     for i, d in enumerate(distributions):
+        range_x = ranges[0] if separate_ranges is None else separate_ranges[i][0]
+        range_y = ranges[1] if separate_ranges is None else separate_ranges[i][1]
         x = np.linspace(range_x[0], range_x[1], resolution)
         y = np.linspace(range_y[0], range_y[1], resolution)
         xv, yv = np.meshgrid(x, y)
@@ -263,14 +263,14 @@ def plot_contour_bands(distributions,
     custom_cmap = utils.create_shaded_set2_colormap(alpha_values)
 
     # Calculate ranges
+    separate_ranges = None
     if ranges is None:
-        ranges = _calculate_plot_ranges(distributions, quantiles, resolution)
-
-    range_x = ranges[0]
-    range_y = ranges[1]
+        ranges, separate_ranges = _calculate_plot_ranges(distributions, quantiles, resolution)
 
     # Plot contour bands for each distribution
     for i, d in enumerate(distributions):
+        range_x = ranges[0] if separate_ranges is None else separate_ranges[i][0]
+        range_y = ranges[1] if separate_ranges is None else separate_ranges[i][1]
         x = np.linspace(range_x[0], range_x[1], resolution)
         y = np.linspace(range_y[0], range_y[1], resolution)
         xv, yv = np.meshgrid(x, y)
@@ -437,7 +437,8 @@ def _calculate_plot_ranges(distributions, quantiles, resolution=128):
             ranges = _calculate_ranges_numerical(
                 distribution,
                 largest_quantile,
-                resolution=resolution
+                resolution=resolution,
+                factor=1.5
             )
 
         all_ranges.append(ranges)
@@ -451,7 +452,7 @@ def _calculate_plot_ranges(distributions, quantiles, resolution=128):
         max_vals = [r[dim][1] for r in all_ranges]
         combined_ranges.append((min(min_vals), max(max_vals)))
 
-    return combined_ranges
+    return combined_ranges, all_ranges
 
 
 def _ellipsoid_ranges(mean, cov, chi2_val, padding):
