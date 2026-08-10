@@ -2,7 +2,7 @@ import matplotlib
 matplotlib.use('Agg')  # Use a non-GUI backend
 
 import pytest
-from uadapy.dr import uamds
+from uadapy.dr import uapca
 import uadapy.data as data
 from uadapy.plotting import plots_1d
 
@@ -10,14 +10,14 @@ from uadapy.plotting import plots_1d
 def sample_distribution():
     """Fixture to create a sample distribution."""
     distribs_hi = data.load_iris_normal()
-    distribs_lo = uamds(distribs_hi, n_dims=1)
+    distribs_lo = uapca(distribs_hi, n_dims=1)
     return distribs_lo
 
 @pytest.fixture
 def sample_distributions():
     """Fixture to create sample distributions."""
     distribs_hi = data.load_iris_normal()
-    distribs_lo = uamds(distribs_hi, n_dims=4)
+    distribs_lo = uapca(distribs_hi, n_dims=4)
     return distribs_lo
 
 @pytest.mark.mpl_image_compare(baseline_dir="baseline")
