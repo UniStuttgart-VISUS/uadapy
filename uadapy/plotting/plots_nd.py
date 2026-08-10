@@ -86,10 +86,6 @@ def plot_samples(distributions,
             distrib_colors.extend(additional_colors)
         palette = distrib_colors
 
-    for ax in axs.flat:
-        # Hide all ticks and labels
-        ax.xaxis.set_visible(False)
-        ax.yaxis.set_visible(False)
 
     # default plot mask: all True
     if plot_mask is None:
@@ -99,6 +95,16 @@ def plot_samples(distributions,
         plot_mask = [[plot_mask(i,j) for j in range(n_dims)] for i in range(n_dims)]
     if not isinstance(plot_mask, np.ndarray):
         plot_mask = np.array(plot_mask)
+
+
+    for i in range(n_dims):
+        for j in range(n_dims):
+            if not plot_mask[i,j]:
+                continue
+            # Hide all ticks and labels
+            axs[i,j].xaxis.set_visible(False)
+            axs[i,j].yaxis.set_visible(False)
+
 
     # Fill matrix with data
     for k, d in enumerate(distributions):
@@ -116,13 +122,15 @@ def plot_samples(distributions,
             if not plot_mask[i,i]:
                     continue
             axs[i,i].hist(samples[:,i], histtype='stepfilled', fill=False, alpha=1.0, density=True, ec=palette[k])
-            axs[i,i].xaxis.set_visible(True)
             axs[i,i].yaxis.set_visible(True)
 
         for i in range(n_dims):
-            axs[-1,i].xaxis.set_visible(True)
-            axs[i,0].yaxis.set_visible(True)
-        axs[0,1].yaxis.set_visible(True)
+            if plot_mask[-1,i]:
+                axs[-1,i].xaxis.set_visible(True)
+            if plot_mask[i,0]:    
+                axs[i,0].yaxis.set_visible(True)
+        if plot_mask[0,1]:
+            axs[0,1].yaxis.set_visible(True)
 
     # maximize axis limits for off diagonals and setup axis sharing
     maximize_axes_limits(axs, plot_mask=plot_mask)
@@ -291,11 +299,6 @@ def plot_contour(distributions,
         distrib_samples.append(samples)
 
 
-    for i, ax in enumerate(axs.flat):
-        # Hide all ticks and labels
-        ax.xaxis.set_visible(False)
-        ax.yaxis.set_visible(False)
-
     # default plot mask: all True
     if plot_mask is None:
         plot_mask = np.ones((n_dims,n_dims)) == 1
@@ -304,6 +307,15 @@ def plot_contour(distributions,
         plot_mask = [[plot_mask(i,j) for j in range(n_dims)] for i in range(n_dims)]
     if not isinstance(plot_mask, np.ndarray):
         plot_mask = np.array(plot_mask)
+
+
+    for i in range(n_dims):
+        for j in range(n_dims):
+            if not plot_mask[i,j]:
+                continue
+            # Hide all ticks and labels
+            axs[i,j].xaxis.set_visible(False)
+            axs[i,j].yaxis.set_visible(False)
     
 
     # Fill matrix with data
@@ -330,16 +342,19 @@ def plot_contour(distributions,
             xs = np.sort(np.concat([x_global,xs]))
             ys = dists1d[k].pdf(xs)
             axs[i,i].plot(xs, ys, color=distrib_colors[k])
-        #axs[i,i].xaxis.set_visible(True)
-        axs[i,i].yaxis.set_visible(True)
+            axs[i,i].yaxis.set_visible(True)
+        
 
     # maximize axis limits for off diagonals and setup axis sharing
     maximize_axes_limits(axs, plot_mask=plot_mask)
 
     for i in range(n_dims):
-        axs[-1,i].xaxis.set_visible(True)
-        axs[i,0].yaxis.set_visible(True)
-    axs[0,1].yaxis.set_visible(True)
+        if plot_mask[-1,i]:
+            axs[-1,i].xaxis.set_visible(True)
+        if plot_mask[i,0]:
+            axs[i,0].yaxis.set_visible(True)
+    if plot_mask[0,1]:
+        axs[0,1].yaxis.set_visible(True)
 
     if show_plot:
         fig.tight_layout()
@@ -461,6 +476,9 @@ def plot_contour_samples(distributions,
 
     maximize_axes_limits(axs,plot_mask=None)
     plot_matrix_share_axes(axs)
+
+    #for i in range(n_dims):
+     #   axs[i,i].yaxis.set_visible(True)
 
     if show_plot:
         fig.tight_layout()
