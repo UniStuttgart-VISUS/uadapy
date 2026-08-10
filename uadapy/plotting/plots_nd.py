@@ -339,7 +339,7 @@ def plot_contour(distributions,
         for k in range(len(distributions)):
             xmin, xmax = distrib_samples[k][:,i].min(), distrib_samples[k][:,i].max()
             xs = np.linspace(xmin, xmax, resolution)
-            xs = np.sort(np.concat([x_global,xs]))
+            xs = np.sort(np.concatenate([x_global,xs]))
             ys = dists1d[k].pdf(xs)
             axs[i,i].plot(xs, ys, color=distrib_colors[k])
             axs[i,i].yaxis.set_visible(True)
