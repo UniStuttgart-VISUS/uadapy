@@ -266,6 +266,7 @@ def plot_1d_distribution(
                             else:
                                 scale_factor = 1 + np.log10(n_samples / 100)
                             dot_size = _calculate_dot_size(len(sample[:,index]), scale_factor)
+                        np.random.seed(seed)  # Set the seed for reproducibility
                         if vert:
                             sns.stripplot(x=[k]*len(sample[:,index]), y=sample[:,index], color=palette[k % len(palette)], size=dot_size, jitter=0.25, ax=ax)
                         else:
