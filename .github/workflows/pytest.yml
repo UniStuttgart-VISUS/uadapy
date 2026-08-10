@@ -24,7 +24,14 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install --force-reinstall "matplotlib==3.8.3"
-        pip install pytest pytest-mpl
+        pip install pytest pytest-mpl --mpl-results-path=pytest-mpl-results --mpl-generate-summary=html
 
     - name: Run Pytest
       run: pytest --mpl
+
+    - name: Upload Matplotlib Test Failure Artifacts
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: matplotlib-test-failures
+        path: pytest-mpl-results/
