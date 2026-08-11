@@ -1,7 +1,6 @@
 name: Generate Test Baseline Images
 
-on: 
-  workflow_dispatch:
+on: workflow_dispatch
 
 
 jobs:
@@ -12,7 +11,11 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
+      with:
+        ref: ${{ github.head_ref }}
+        # Value already defaults to true, but `persist-credentials` is required to push new commits to the repository.
+        persist-credentials: true
 
     - name: Set Up Python
       uses: actions/setup-python@v4
@@ -29,7 +32,7 @@ jobs:
       run: pytest --mpl-generate-path=tests/baseline
 
     - name: Commit baseline images
-        uses: stefanzweifel/git-auto-commit-action@v7
-        with:
-          commit_message: "Update baseline images [via github action]"
-          file_pattern: "tests/baseline/*.png"
+      uses: stefanzweifel/git-auto-commit-action@v7
+      with:
+        commit_message: "Update baseline images [via github action]"
+        file_pattern: "tests/baseline/*.png"
