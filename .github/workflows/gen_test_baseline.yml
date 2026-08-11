@@ -28,6 +28,20 @@ jobs:
         pip install -r requirements.test.txt
         pip install pytest pytest-mpl
 
+    - name: Print CPU and BLAS diagnostics
+      run: |
+        echo "===== CPU INFO ====="
+        lscpu
+        echo "===== /proc/cpuinfo model/flags ====="
+        grep -m1 "model name" /proc/cpuinfo
+        grep -m1 "flags" /proc/cpuinfo | tr ' ' '\n' | grep -E "avx|fma|sse" | sort -u
+        echo "===== numpy config ====="
+        python -c "import numpy; numpy.show_config()"
+        echo "===== scipy config ====="
+        python -c "import scipy; scipy.show_config()"
+        echo "===== BLAS/LAPACK library resolved by numpy ====="
+        python -c "import numpy as np; np.show_runtime()" || true
+
     - name: Run Pytest baseline generation
       run: pytest --mpl-generate-path=tests/baseline
 
