@@ -1,4 +1,4 @@
-name: Java CI with Gradle and Publish
+name: Generate Test Baseline Images
 
 on:
   workflow_dispatch
