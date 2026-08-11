@@ -201,3 +201,75 @@ class Distribution:
             return self.model.stats(moments='k')
         if isinstance(self.model, stats.multivariate_normal):
             return 0
+        
+    def __getitem__(self, key):
+        """
+        Allows indexing into the distribution's dimensions.
+        This yields the corresponding marginal distribution.
+
+        Parameters
+        ----------
+        key : int or slice or tuple or list
+            Index or slice to access dimensions of the distribution.
+            In case the underlying model does not provide a marginalization function, a KDE can be used to estimate the marginal distribution. 
+            Then, the key needs to contain the keyword 'KDE' followed by the number of samples to use for the marginal estimation via KDE, the level of noise to be applied, and the seed for the random number generator.
+            Example: distrib[0, 1, 'KDE', 1000] or distrib[0, 1, 'KDE', 1000, 0.1, 42]
+
+        Returns
+        -------
+        Distribuition
+            The marginal distribution corresponding to the specified dimensions. 
+        """
+        if self.n_dims == 1:
+            raise IndexError("Cannot marginalize a 1D distribution. Use the sample method to get samples.")
+
+        # turn key into a list if it is not already
+        if isinstance(key, (int, np.int_)):
+            key = [key]
+        if isinstance(key, slice):
+            start, stop, step = key.indices(self.n_dims)
+            key = list(range(start, stop, step))
+        if isinstance(key, tuple):
+            key = list(key)
+        # now check if the key is a list
+        if not isinstance(key, list):
+            raise TypeError("Invalid index type. Must be int, slice, list or tuple.")
+        
+        # check if key contains 'KDE' or 'kde' then the argument following it is the number of samples to use for the marginal estimation via KDE
+        # and if there is another argument, it is the level of noise to be applied, 
+        # and if there is another argument, it is the seed for the random number generator
+        if 'KDE' in key or 'kde' in key:
+            kde_index = key.index('KDE') if 'KDE' in key else key.index('kde')
+            n_samples = 1000
+            noise_level = 0.0
+            seed = None
+            if kde_index + 1 < len(key):
+                n_samples = key[kde_index + 1]
+            if kde_index + 2 < len(key):
+                noise_level = key[kde_index + 2]
+            if kde_index + 3 < len(key):
+                seed = key[kde_index + 3]
+            samples = self.sample(n_samples, seed=seed)
+            samples += stats.uniform.rvs(loc=-noise_level/2, scale=noise_level, size=samples.shape, random_state=seed)
+            # update key to be the indices before the 'KDE' keyword
+            key = key[:kde_index]
+            return Distribution(samples[:, key if len(key) > 1 else key[0]], n_dims=len(key))
+
+        # lets check if fallback KDE flag 'KDE?' / 'kde?' is present
+        kde_index = None
+        if 'KDE?' in key or 'kde?' in key:
+            kde_index = key.index('KDE?') if 'KDE?' in key else key.index('kde?')
+            # update key to be the indices before the 'KDE?' keyword
+            key = key[:kde_index]
+
+        # lets check the model if it has a `marginal` method
+        if hasattr(self.model, 'marginal') and callable(self.model.marginal):
+            return Distribution(self.model.marginal(key if len(key) > 1 else key[0]), n_dims=len(key))
+        elif isinstance(self.model, np.ndarray):
+            return Distribution(self.model[:, key if len(key) > 1 else key[0]], n_dims=len(key))
+        # fallback to KDE if specified
+        elif kde_index is not None:
+            key[kde_index] = 'KDE'
+            return self.__getitem__(key)
+        else:
+            raise NotImplementedError(f"Marginal distribution not implemented for {self.model.__class__.__name__}")
