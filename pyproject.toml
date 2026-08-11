@@ -25,6 +25,9 @@ dynamic = ["dependencies"]
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
 
+[tool.setuptools.packages.find]
+include = ["uadapy"]
+
 [tool.setuptools.package-data]
 "uadapy.temporal.chi2comb" = ["*.dll", "*.h", "*.dylib", "*.so"]
 
