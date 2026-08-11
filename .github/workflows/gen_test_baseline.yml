@@ -1,11 +1,14 @@
 name: Generate Test Baseline Images
 
-on:
-  workflow_dispatch
+on: 
+  workflow_dispatch:
+
 
 jobs:
   genbaseline:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout Repository
