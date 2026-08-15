@@ -202,7 +202,7 @@ def ua_fourier_spectrum(timeseries: TimeSeries) -> np.ndarray:
     # Compute the Fourier transform 
     fftMu, fftGamma, fftC = _ua_fourier_transform(timeseries)
     dt = timeseries.timesteps[1]-timeseries.timesteps[0]
-    frequencies = (np.arange(len(timeseries.timesteps)) + 2) / len(timeseries.timesteps) / (2*dt)
+    frequencies = (np.arange(len(timeseries.timesteps))) / len(timeseries.timesteps) / (dt)
     frequencies = frequencies[:len(frequencies)//2]
     return TimeSeries(chi_square_comb.ChiSquareComb(fftMu, fftGamma, fftC), frequencies)
 

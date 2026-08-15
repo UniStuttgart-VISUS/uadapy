@@ -421,7 +421,7 @@ def plot_correlated_timeseries(
 
     if axs is None:
         if fig is None:
-            fig, axs = plt.subplots(n_distributions, 1, figsize=(12, 8))
+            fig, axs = plt.subplots(n_distributions, 1, figsize=(9, 6))
         else:
             if fig.axes is not None:
                 if len(fig.axes) != n_distributions:
@@ -656,7 +656,7 @@ def plot_correlation_matrix(
 
     if axs is None:
         if fig is None:
-            fig, axs = plt.subplots(figsize=(8, 8))
+            fig, axs = plt.subplots(figsize=(6, 6))
         else:
             if fig.axes is not None:
                 axs = fig.axes[0]

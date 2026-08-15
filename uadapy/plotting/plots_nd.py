@@ -8,6 +8,7 @@ def plot_samples(distributions,
                  n_samples,
                  seed=55,
                  point_size=None,
+                 point_opacity=1.0,
                  fig=None,
                  axs=None,
                  distrib_colors=None,
@@ -91,7 +92,7 @@ def plot_samples(distributions,
         samples = d.sample(n_samples, seed)
         for i, j in zip(*np.triu_indices_from(axs, k=1)):
             for x, y in [(i, j), (j, i)]:
-                axs[x,y].scatter(samples[:,y], y=samples[:,x], color=palette[k], s=point_size)
+                axs[x,y].scatter(samples[:,y], y=samples[:,x], color=palette[k], s=point_size, alpha=point_opacity)
 
         # Fill diagonal
         for i in range(n_dims):
@@ -284,7 +285,9 @@ def plot_contour(distributions,
         for i in range(n_dims):
             indices = list(np.arange(d.n_dims))
             indices.remove(i)
-            axs[i,i].plot(dims[i], np.sum(pdf, axis=tuple(indices)), color=color)
+            pdf_agg = np.sum(pdf, axis=tuple(indices))
+            pdf_agg = pdf_agg/np.sum(pdf_agg)  # Normalize the pdf for plotting
+            axs[i,i].plot(dims[i], pdf_agg, color=color)
             axs[i,i].xaxis.set_visible(True)
             axs[i,i].yaxis.set_visible(True)
 

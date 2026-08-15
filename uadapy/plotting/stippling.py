@@ -619,7 +619,7 @@ def plot_stipples(distributions,
     axs.set_xlim(xmin, xmax)
     axs.set_ylim(ymin, ymax)
     axs.set_aspect("equal", adjustable="box")
-    axs.legend()
+    #axs.legend()
 
     if show_plot:
         plt.tight_layout()
