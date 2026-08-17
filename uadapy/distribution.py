@@ -184,7 +184,12 @@ class Distribution:
         if hasattr(self.model, 'stats') and callable(self.model.stats):
             return self.model.stats(moments='s')
         if isinstance(self.model, mv.multivariate_t_frozen):
-            return 0
+            return 0 # TODO: check why there is a specific case for multivariate t distribution
+        if hasattr(self.model, 'skew'):
+            if callable(self.model.skew):
+                return self.model.skew()
+            return self.model.skew
+        raise AttributeError(f"Skew not implemented! {self.model.__class__.__name__}")
 
     def kurt(self) -> np.ndarray | float:
         """
@@ -200,4 +205,13 @@ class Distribution:
         if hasattr(self.model, 'stats') and callable(self.model.stats):
             return self.model.stats(moments='k')
         if isinstance(self.model, stats.multivariate_normal):
-            return 0
+            return 0 # TODO: check why there is a specific case for multivariate normal distribution
+        if hasattr(self.model, 'kurt'):
+            if callable(self.model.kurt):
+                return self.model.kurt()
+            return self.model.kurt
+        if hasattr(self.model, 'kurtosis'):
+            if callable(self.model.kurtosis):
+                return self.model.kurtosis()
+            return self.model.kurtosis
+        raise AttributeError(f"Kurtosis not implemented! {self.model.__class__.__name__}")
