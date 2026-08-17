@@ -41,7 +41,19 @@ def very_good():
 def subject_names():
     return ['M1', 'M2', 'P1', 'P2']
 
+
+def distrib_function_names():
+    return ['samplers', 'densities', 'means', 'variances']
+
+samplers = namedtuple('samplers', subject_names())
+densitites = namedtuple('densities', subject_names())
+means = namedtuple('means', subject_names())
+variances = namedtuple('variances', subject_names())
+distrib_functions = namedtuple('distrib_functions', distrib_function_names())
+
 def student_tom():
+
+
     samplers = namedtuple('samplers', subject_names())
     s = samplers(
         lambda n, rand_state=None: np.ones(n)*15, # M1
@@ -49,7 +61,14 @@ def student_tom():
         lambda n, rand_state=None: stats.norm.rvs(loc=14, scale=5.7, size=n, random_state=rand_state), # P1
         lambda n, rand_state=None: stats.uniform.rvs(loc=14, scale=2, size=n, random_state=rand_state)  # P2 [14,16]
     )
-    return s
+    densitites = namedtuple('densities', subject_names())
+    d = densitites(
+        lambda x, delta=0: np.where((x>=15-delta) & (x<=15+delta), 1/(2*delta), 0), # M1
+        lambda x, delta=0: stats.trapezoid.pdf(x, *fairly_good()), # M2
+        lambda x, delta=0: stats.norm.pdf(x, loc=14, scale=5.7), # P1
+        lambda x, delta=0: stats.uniform.pdf(x, loc=14, scale=2)  # P2 [14,16]
+    ) 
+    return s,d
 
 def student_david():
     samplers = namedtuple('samplers', subject_names())
@@ -59,7 +78,14 @@ def student_david():
         lambda n, rand_state=None: stats.trapezoid.rvs(*fairly_good(),size=n, random_state=rand_state), # P1
         lambda n, rand_state=None: np.ones(n)*10  # P2
     )
-    return s
+    densitites = namedtuple('densities', subject_names())
+    d = densitites(
+        lambda x, delta=0: np.where((x>=9-delta) & (x<=9+delta), 1/(2*delta), 0), # M1
+        lambda x, delta=0: stats.trapezoid.pdf(x, *good()), # M2
+        lambda x, delta=0: stats.trapezoid.pdf(x, *fairly_good()), # P1
+        lambda x, delta=0: np.where((x>=10-delta) & (x<=10+delta), 1/(2*delta), 0)  # P2
+    )
+    return s,d
 
 def student_bob():
     samplers = namedtuple('samplers', subject_names())
@@ -69,7 +95,14 @@ def student_bob():
         lambda n, rand_state=None: stats.uniform.rvs(loc=13, scale=7, size=n, random_state=rand_state),
         lambda n, rand_state=None: stats.trapezoid.rvs(*good(),size=n, random_state=rand_state)
     )
-    return s
+    densitites = namedtuple('densities', subject_names())
+    d = densitites(
+        lambda x, delta=0: np.where((x>=6-delta) & (x<=6+delta), 1/(2*delta), 0), # M1
+        lambda x, delta=0: stats.uniform.pdf(x, loc=10, scale=1), # M2
+        lambda x, delta=0: stats.uniform.pdf(x, loc=13, scale=7), # P1
+        lambda x, delta=0: stats.trapezoid.pdf(x, *good())  # P2
+    )
+    return s,d
 
 def student_jane():
     samplers = namedtuple('samplers', subject_names())
@@ -79,7 +112,14 @@ def student_jane():
         lambda n, rand_state=None: np.ones(n)*19,
         lambda n, rand_state=None: stats.uniform.rvs(loc=10, scale=2, size=n, random_state=rand_state)
     )
-    return s
+    densitites = namedtuple('densities', subject_names())
+    d = densitites(
+        lambda x, delta=0: stats.trapezoid.pdf(x, *fairly_good()), # M1
+        lambda x, delta=0: stats.trapezoid.pdf(x, *very_good()), # M2
+        lambda x, delta=0: np.where((x>=19-delta) & (x<=19+delta), 1/(2*delta), 0), # P1
+        lambda x, delta=0: stats.uniform.pdf(x, loc=10, scale=2)  # P2
+    )
+    return s,d
 
 def student_joe():
     samplers = namedtuple('samplers', subject_names())
@@ -89,7 +129,14 @@ def student_joe():
         lambda n, rand_state=None: stats.uniform.rvs(loc=10, scale=4, size=n, random_state=rand_state),
         lambda n, rand_state=None: np.ones(n)*14
     )
-    return s
+    densitites = namedtuple('densities', subject_names())
+    d = densitites(
+        lambda x, delta=0: stats.trapezoid.pdf(x, *very_bad()), # M1
+        lambda x, delta=0: stats.trapezoid.pdf(x, *fairly_bad()), # M2
+        lambda x, delta=0: stats.uniform.pdf(x, loc=10, scale=4), # P1
+        lambda x, delta=0: np.where((x>=14-delta) & (x<=14+delta), 1/(2*delta), 0)  # P2
+    )
+    return s,d
 
 def student_jack():
     samplers = namedtuple('samplers', subject_names())
@@ -99,12 +146,19 @@ def student_jack():
         lambda n, rand_state=None: np.ones(n)*9,
         lambda n, rand_state=None: stats.uniform.rvs(loc=6, scale=3, size=n, random_state=rand_state)
     )
-    return s
+    densitites = namedtuple('densities', subject_names())
+    d = densitites(
+        lambda x, delta=0: np.where((x>=1-delta) & (x<=1+delta), 1/(2*delta), 0), # M1
+        lambda x, delta=0: stats.uniform.pdf(x, loc=4, scale=2), # M2
+        lambda x, delta=0: np.where((x>=9-delta) & (x<=9+delta), 1/(2*delta), 0), # P1
+        lambda x, delta=0: stats.uniform.pdf(x, loc=6, scale=3)  # P2
+    )
+    return s,d
 
 
 def students():
     """
-    Return a dictionary of students and their samplers for each subject
+    Return a dictionary of students and their (samplers,pdfs) for each subject
     """
     return {
         'Tom': student_tom(),
@@ -114,6 +168,18 @@ def students():
         'Joe': student_joe(),
         'Jack': student_jack()
     }
+
+def get_student_samplers():
+    """
+    Return a dictionary of students and their samplers for each subject
+    """
+    return {name: sampler_pdf[0] for name, sampler_pdf in students().items()}
+
+def get_student_pdfs():
+    """
+    Return a dictionary of students and their pdfs for each subject
+    """
+    return {name: sampler_pdf[1] for name, sampler_pdf in students().items()}
 
 
 def multivariate_sample(student_samplers, n=1, random_state=None):
@@ -156,7 +222,7 @@ def sample_dataset(n_per_student=1, random_state=None):
     """
     X = []
     y = []
-    for student_name, samplers in students().items():
+    for student_name, samplers in get_student_samplers().items():
         samples = multivariate_sample(samplers, n=n_per_student, random_state=random_state)
         X.append(samples)
         y.append(np.array([student_name]*n_per_student))
