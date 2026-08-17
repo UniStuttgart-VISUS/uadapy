@@ -17,6 +17,7 @@ pip install uadapy
 
 ## Documentation
 You can find the documentation here: https://unistuttgart-visus.github.io/uadapy/
+It also contains an overview of all supported methods.
 
 ## Citation
 If you use this software in your work, please cite it using the following metadata
