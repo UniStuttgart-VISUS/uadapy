@@ -165,6 +165,10 @@ class Distribution:
             if callable(self.model.var):
                 return self.model.var()
             return self.model.var
+        if hasattr(self.model, 'variance'):
+            if callable(self.model.variance):
+                return self.model.variance()
+            return self.model.variance
         if isinstance(self.model, mv.multivariate_t_frozen):
             return self.model.shape * (self.model.df / (self.model.df - 2))
         raise AttributeError(f"Covariance not implemented yet! {self.model.__class__.__name__}")
@@ -189,6 +193,10 @@ class Distribution:
             if callable(self.model.skew):
                 return self.model.skew()
             return self.model.skew
+        if hasattr(self.model, 'skewness'):
+            if callable(self.model.skewness):
+                return self.model.skewness()
+            return self.model.skewness
         raise AttributeError(f"Skew not implemented! {self.model.__class__.__name__}")
 
     def kurt(self) -> np.ndarray | float:
