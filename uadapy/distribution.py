@@ -250,7 +250,7 @@ class Distribution:
         elif 'KDE?' == kde or 'kde?' == kde:
             return self.marginalize(dims, kde='KDE', n_samples_kde=n_samples_kde, noise_level=noise_level, seed=seed)
         else:
-            raise NotImplementedError(f"Marginal distribution not implemented for {self.model.__class__.__name__}")
+            raise NotImplementedError(f"Marginal distribution not implemented for {self.model.__class__.__name__}. You may want to use the 'KDE' flag to estimate the marginal distribution via KDE.")
 
 
     def __getitem__(self, key):
@@ -263,8 +263,10 @@ class Distribution:
         key : int or slice or tuple or list
             Index or slice to access dimensions of the distribution.
             In case the underlying model does not provide a marginalization function, a KDE can be used to estimate the marginal distribution. 
-            Then, the key needs to contain the keyword 'KDE' followed by the number of samples to use for the marginal estimation via KDE, the level of noise to be applied, and the seed for the random number generator.
+            Then, the key needs to contain the keyword 'KDE' followed by the number of samples to use for the marginal estimation via KDE, 
+            the level of noise to be applied, and the seed for the random number generator.
             Example: distrib[0, 1, 'KDE', 1000] or distrib[0, 1, 'KDE', 1000, 0.1, 42]
+            Using the 'KDE?' or 'kde?' keyword will fallback to KDE if the underlying model does not provide a marginalization function.
 
         Returns
         -------
@@ -305,5 +307,7 @@ class Distribution:
                 seed = key[kde_index + 3]
             # remove the kde flag and its parameters from the key
             key = key[:kde_index]
+            if len(key) == 1:
+                key = key[0]
             return self.marginalize(key, kde=kde_flag, n_samples_kde=n_samples_kde, noise_level=noise_level, seed=seed)
         return self.marginalize(key)
