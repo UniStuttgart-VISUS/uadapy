@@ -216,7 +216,8 @@ class MultivariateGMM:
         if np.asarray(dimensions).size > 1:
             # Extract means and covariances for the specified dimensions
             new_means = self.means_[:, dimensions]
-            new_covariances = self.covariances_[:, *np.ix_(dimensions, dimensions)]
+            idx0, idx1 = np.ix_(dimensions, dimensions)
+            new_covariances = self.covariances_[:, idx0, idx1]
             
             # Create a new GaussianMixture with the same weights
             new_gmm = GaussianMixture(n_components=self.n_components, covariance_type="full")
