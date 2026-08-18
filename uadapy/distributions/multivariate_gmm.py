@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.mixture import GaussianMixture
-from scipy.stats import gaussian_kde
+from scipy.stats import gaussian_kde, Mixture, Normal
+from sklearn.mixture._gaussian_mixture import _compute_precision_cholesky
 
 
 class MultivariateGMM:
@@ -79,7 +80,7 @@ class MultivariateGMM:
         """
         if seed is not None:
             # Create temporary random state without modifying the model
-            rng = np.random.RandomState(seed)
+            rng = np.random.RandomState(seed) # TODO: why use RandomState(seed) instead of default_rng(seed)?
             
             # Sample component indices according to mixture weights
             component_indices = rng.choice(
@@ -195,6 +196,43 @@ class MultivariateGMM:
             return full_covs
         else:
             raise ValueError(f"Unknown covariance type: {cov_type}")
+        
+
+    def marginal(self, dimensions):
+        """
+        Computes the marginal distribution over specified dimensions.
+
+        Parameters
+        ----------
+        dimensions : list of int or int
+            Indices of the dimensions to keep.
+
+        Returns
+        -------
+        MultivariateGMM or Mixture
+            A new MultivariateGMM representing the marginal distribution.
+            In case of a single dimension, returns a univariate scipy.stats.Mixture of Normals.
+        """
+        if np.asarray(dimensions).size > 1:
+            # Extract means and covariances for the specified dimensions
+            new_means = self.means_[:, dimensions]
+            new_covariances = self.covariances_[:, *np.ix_(dimensions, dimensions)]
+            
+            # Create a new GaussianMixture with the same weights
+            new_gmm = GaussianMixture(n_components=self.n_components, covariance_type="full")
+            new_gmm.weights_ = self.weights_
+            new_gmm.means_ = new_means
+            new_gmm.covariances_ = new_covariances
+            new_gmm.precisions_cholesky_ = _compute_precision_cholesky(new_covariances, "full")
+            return MultivariateGMM(new_gmm)
+        else:
+            dim = np.asarray(dimensions).item()
+            # for single dimension, return a univariate GMM
+            new_means = self.means_[:, dim]
+            new_variances = self.covariances_[:, dim, dim]
+            return Mixture([Normal(mu=new_means[i], sigma=new_variances[i]) for i in range(new_means.size)], weights=self.weights_)
+            
+
 
 
 def gmm_from_kde(kde: gaussian_kde):
@@ -219,5 +257,7 @@ def gmm_from_kde(kde: gaussian_kde):
     gmm.weights_ = kde.weights
     gmm.means_ = centers
     gmm.covariances_ = np.array([kde.covariance for _ in range(n_components)])
+    gmm.precisions_cholesky_ = _compute_precision_cholesky(gmm.covariances_, "full")
+
 
     return MultivariateGMM(gmm)
