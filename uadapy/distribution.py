@@ -209,7 +209,7 @@ class Distribution:
             return 0
         
 
-    def marginalize(self, dims, kde=None, n_samples_kde=1000, noise_level=0.0, seed=None):
+    def marginal(self, dims, kde=None, n_samples_kde=1000, noise_level=0.0, seed=None):
         """
         Marginalizes the distribution retaining the specified dimensions.
 
@@ -248,7 +248,7 @@ class Distribution:
             return Distribution(self.model[:, dims if len(dims) > 1 else dims[0]], n_dims=len(dims))
         # fallback to KDE if specified
         elif 'KDE?' == kde or 'kde?' == kde:
-            return self.marginalize(dims, kde='KDE', n_samples_kde=n_samples_kde, noise_level=noise_level, seed=seed)
+            return self.marginal(dims, kde='KDE', n_samples_kde=n_samples_kde, noise_level=noise_level, seed=seed)
         else:
             raise NotImplementedError(f"Marginal distribution not implemented for {self.model.__class__.__name__}. You may want to use the 'KDE' flag to estimate the marginal distribution via KDE.")
 
@@ -309,5 +309,5 @@ class Distribution:
             key = key[:kde_index]
             if len(key) == 1:
                 key = key[0]
-            return self.marginalize(key, kde=kde_flag, n_samples_kde=n_samples_kde, noise_level=noise_level, seed=seed)
+            return self.marginal(key, kde=kde_flag, n_samples_kde=n_samples_kde, noise_level=noise_level, seed=seed)
         return self.marginalize(key)
