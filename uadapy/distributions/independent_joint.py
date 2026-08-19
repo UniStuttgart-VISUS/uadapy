@@ -27,6 +27,8 @@ class IndependentJoint:
         self.dim_permutation = np.asarray(permutation) if permutation is not None else np.eye(self.dim,dtype=int)
         if len(self.dim_permutation.shape) == 1:
             self.dim_permutation = np.eye(self.dim,dtype=int)[:,self.dim_permutation.astype(int)]
+        if self.dim_permutation.sum() != self.dim or np.any(self.dim_permutation.sum(axis=1) != 1) or np.any(self.dim_permutation.sum(axis=0) != 1):
+            raise ValueError("permutation must be a valid permutation of the dimensions of the joint distribution")
     
     def sample(self, n, seed=None):
         samples = []
