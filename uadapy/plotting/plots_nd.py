@@ -324,7 +324,7 @@ def plot_contour(distributions,
         for x, y in [(i, j), (j, i)]:
             if not plot_mask[y,x]:
                 continue # skip
-            dists2d = [Distribution(distrib_samples[k][:,[x,y]]) for k in range(len(distributions))]
+            dists2d = [d[x,y, 'KDE?', n_samples_kde, 2e-8, seed] for d in distributions]
             plots_2d.plot_contour(dists2d, resolution=resolution, ranges=ranges, quantiles=quantiles, 
                 fig=fig, axs=axs[y,x],distrib_colors=distrib_colors, colorblind_safe=colorblind_safe,
                 show_plot=False)
@@ -333,7 +333,8 @@ def plot_contour(distributions,
     for i in range(n_dims):
         if not plot_mask[i,i]:
             continue
-        dists1d = [Distribution(distrib_samples[k][:,i]) for k in range(len(distributions))]
+        #dists1d = [Distribution(distrib_samples[k][:,i]) for k in range(len(distributions))]
+        dists1d = [d[i, 'KDE?', n_samples_kde, 2e-8, seed] for d in distributions]
         range_global = np.vstack(distrib_samples)[:,i].min(), np.vstack(distrib_samples)[:,i].max()
         x_global = np.linspace(range_global[0],range_global[1], num=resolution)
         for k in range(len(distributions)):

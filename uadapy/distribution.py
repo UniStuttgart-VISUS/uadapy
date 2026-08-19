@@ -53,6 +53,7 @@ class Distribution:
         if isinstance(self.model, np.ndarray):
             self.kde = stats.gaussian_kde(self.model.T)
 
+
     def sample(self, n: int, seed: int = None) -> np.ndarray:
         """
         Creates samples from the distribution.
@@ -78,6 +79,7 @@ class Distribution:
         if hasattr(self.model, 'resample') and callable(self.model.resample):
             return self.model.resample(size=n, seed=seed)
 
+
     def pdf(self, x: np.ndarray | float) -> np.ndarray | float:
         """
         Computes the probability density function.
@@ -99,6 +101,7 @@ class Distribution:
         else:
             return self.model.pdf(x)
     
+
     def cdf(self, x: np.ndarray | float) -> np.ndarray | float:
         """
         Computes the cumulative density function.
@@ -119,6 +122,7 @@ class Distribution:
             raise AttributeError(f"The model has no cdf. {self.model.__class__.__name__}")
         else:
             return self.model.cdf(x)
+
 
     def mean(self) -> np.ndarray | float:
         """
@@ -141,6 +145,7 @@ class Distribution:
             return self.model.mu
         else:
            raise AttributeError(f"Mean not implemented yet! {self.model.__class__.__name__}")
+
 
     def cov(self) -> np.ndarray | float:
         """
@@ -199,6 +204,7 @@ class Distribution:
             return self.model.skewness
         raise AttributeError(f"Skew not implemented! {self.model.__class__.__name__}")
 
+
     def kurt(self) -> np.ndarray | float:
         """
         Kurtosis of the distribution.
@@ -223,3 +229,107 @@ class Distribution:
                 return self.model.kurtosis()
             return self.model.kurtosis
         raise AttributeError(f"Kurtosis not implemented! {self.model.__class__.__name__}")
+        
+
+    def marginal(self, dims, kde=None, n_samples_kde=1000, noise_level=0.0, seed=None):
+        """
+        Marginalizes the distribution retaining the specified dimensions.
+
+        Parameters
+        ----------
+        dims : int or list of int or ndarray
+            The dimensions to retain in the marginal distribution.
+        kde : str, optional
+            If 'KDE' or 'kde', a KDE estimation of the marginal is performed. 
+            If 'KDE?' or 'kde?', a fallback to KDE is performed if the model does not have a marginal method. 
+            Default is None, and an error is raised if the model does not have a marginal method.
+        n_samples_kde : int, optional
+            Number of samples to use for the marginal estimation via KDE. Default is 1000.
+        noise_level : float, optional
+            Level of uniform noise to be applied to the samples before KDE estimation. Default is 0.0.
+        seed : int, optional
+            Seed for the random number generator for reproducibility. Default is None.
+        """
+        if self.n_dims == 1:
+            raise IndexError("Cannot marginalize a 1D distribution. Use the sample method to get samples.")
+        if not isinstance(dims, np.ndarray):
+            dims = np.array([dims])
+        
+        # check if KDE estimation of the marginal is requested
+        if 'KDE' == kde or 'kde' == kde:
+            samples = self.sample(n_samples_kde, seed=seed)
+            samples += stats.uniform.rvs(loc=-noise_level/2, scale=noise_level, size=samples.shape, random_state=seed)
+            # update key to be the indices before the 'KDE' keyword
+            return Distribution(samples[:, dims if len(dims) > 1 else dims[0]], n_dims=len(dims))
+        # lets check if fallback KDE flag 'KDE?' / 'kde?' is present
+
+        # lets check the model if it has a `marginal` method
+        if hasattr(self.model, 'marginal') and callable(self.model.marginal):
+            return Distribution(self.model.marginal(dims if len(dims) > 1 else dims[0]), n_dims=len(dims))
+        elif isinstance(self.model, np.ndarray):
+            return Distribution(self.model[:, dims if len(dims) > 1 else dims[0]], n_dims=len(dims))
+        # fallback to KDE if specified
+        elif 'KDE?' == kde or 'kde?' == kde:
+            return self.marginal(dims, kde='KDE', n_samples_kde=n_samples_kde, noise_level=noise_level, seed=seed)
+        else:
+            raise NotImplementedError(f"Marginal distribution not implemented for {self.model.__class__.__name__}. You may want to use the 'KDE' flag to estimate the marginal distribution via KDE.")
+
+
+    def __getitem__(self, key):
+        """
+        Allows indexing into the distribution's dimensions.
+        This yields the corresponding marginal distribution.
+
+        Parameters
+        ----------
+        key : int or slice or tuple or list
+            Index or slice to access dimensions of the distribution.
+            In case the underlying model does not provide a marginalization function, a KDE can be used to estimate the marginal distribution. 
+            Then, the key needs to contain the keyword 'KDE' followed by the number of samples to use for the marginal estimation via KDE, 
+            the level of noise to be applied, and the seed for the random number generator.
+            Example: distrib[0, 1, 'KDE', 1000] or distrib[0, 1, 'KDE', 1000, 0.1, 42]
+            Using the 'KDE?' or 'kde?' keyword will fallback to KDE if the underlying model does not provide a marginalization function.
+
+        Returns
+        -------
+        Distribuition
+            The marginal distribution corresponding to the specified dimensions. 
+        """
+        # turn key into a list if it is not already
+        if isinstance(key, (int, np.int_)):
+            key = [key]
+        if isinstance(key, slice):
+            start, stop, step = key.indices(self.n_dims)
+            key = list(range(start, stop, step))
+        if isinstance(key, tuple):
+            key = list(key)
+        # now check if key is list or ndarray
+        if not isinstance(key, (list, np.ndarray)):
+            raise TypeError("Invalid index type. Must be int, slice, list, tuple, or ndarray.")
+
+        # check if key contains 'KDE' or 'kde' or 'KDE?' or 'kde?'. 
+        # Then the argument following it is the number of samples to use for the marginal estimation via KDE
+        # and if there is another argument, it is the level of noise to be applied, 
+        # and if there is yet another argument, it is the seed for the random number generator
+        kde_index = None
+        for i, k in enumerate(key):
+            if k in ['KDE', 'kde', 'KDE?', 'kde?']:
+                kde_index = i
+                break
+        if kde_index is not None:
+            kde_flag = key[kde_index]
+            n_samples_kde = 1000
+            noise_level = 0.0
+            seed = None
+            if len(key) > kde_index + 1:
+                n_samples_kde = key[kde_index + 1]
+            if len(key) > kde_index + 2:
+                noise_level = key[kde_index + 2]
+            if len(key) > kde_index + 3:
+                seed = key[kde_index + 3]
+            # remove the kde flag and its parameters from the key
+            key = key[:kde_index]
+            if len(key) == 1:
+                key = key[0]
+            return self.marginal(key, kde=kde_flag, n_samples_kde=n_samples_kde, noise_level=noise_level, seed=seed)
+        return self.marginalize(key)
