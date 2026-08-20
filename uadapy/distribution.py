@@ -253,7 +253,7 @@ class Distribution:
         if self.n_dims == 1:
             raise IndexError("Cannot marginalize a 1D distribution. Use the sample method to get samples.")
         if not isinstance(dims, np.ndarray):
-            dims = np.array([dims])
+            dims = np.array([dims]).ravel()
         
         # check if KDE estimation of the marginal is requested
         if 'KDE' == kde or 'kde' == kde:
@@ -268,6 +268,9 @@ class Distribution:
             return Distribution(self.model.marginal(dims if len(dims) > 1 else dims[0]), n_dims=len(dims))
         elif isinstance(self.model, np.ndarray):
             return Distribution(self.model[:, dims if len(dims) > 1 else dims[0]], n_dims=len(dims))
+        elif isinstance(self.model, stats._multivariate.multivariate_normal_frozen):
+            # in case scipy version too old, i.e. 'marginal' is missing, we do it ourselves
+            return Distribution(_multivariate_normal_marginal_(dims, self.model))
         # fallback to KDE if specified
         elif 'KDE?' == kde or 'kde?' == kde:
             return self.marginal(dims, kde='KDE', n_samples_kde=n_samples_kde, noise_level=noise_level, seed=seed)
@@ -333,3 +336,14 @@ class Distribution:
                 key = key[0]
             return self.marginal(key, kde=kde_flag, n_samples_kde=n_samples_kde, noise_level=noise_level, seed=seed)
         return self.marginalize(key)
+
+
+def _multivariate_normal_marginal_(dims, model):
+    if len(dims) == 1:
+        mean = model.mean[dims[0]]
+        var = model.cov[dims[0], dims[0]]
+        return stats.norm(loc=mean, scale=np.sqrt(var))
+    else:
+        mean = model.mean[dims]
+        cov = model.cov[:,dims][dims,:]
+        return stats.multivariate_normal(mean=mean, cov=cov)
