@@ -31,6 +31,10 @@ class IndependentJoint:
             raise ValueError("permutation must be a valid permutation of the dimensions of the joint distribution")
     
     def sample(self, n, seed=None):
+        if isinstance(seed, int):
+            # passing the same seed to each distribution can result in correlated samples.
+            # instead, we use a common RNG for all distributions, which will produce independent samples.
+            seed = np.random.default_rng(seed)
         samples = []
         for d in self.distributions:
             s = d.sample(n, seed=seed)

@@ -54,7 +54,7 @@ class Distribution:
             self.kde = stats.gaussian_kde(self.model.T)
 
 
-    def sample(self, n: int, seed: int = None) -> np.ndarray:
+    def sample(self, n: int, seed = None) -> np.ndarray:
         """
         Creates samples from the distribution.
 
@@ -62,8 +62,8 @@ class Distribution:
         ----------
         n : int
             Number of samples.
-        seed : int, optional
-            Seed for the random number generator for reproducibility, default is None.
+        seed : int | rng, optional
+            Seed for downstream RNG, or specific RNG to be used. Default is None.
 
         Returns
         -------
