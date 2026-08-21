@@ -54,7 +54,7 @@ class Distribution:
             self.kde = stats.gaussian_kde(self.model.T)
 
 
-    def sample(self, n: int, seed: int = None) -> np.ndarray:
+    def sample(self, n: int, seed = None) -> np.ndarray:
         """
         Creates samples from the distribution.
 
@@ -62,8 +62,8 @@ class Distribution:
         ----------
         n : int
             Number of samples.
-        seed : int, optional
-            Seed for the random number generator for reproducibility, default is None.
+        seed : int | rng, optional
+            Seed for downstream RNG, or specific RNG to be used. Default is None.
 
         Returns
         -------
@@ -170,6 +170,10 @@ class Distribution:
             if callable(self.model.var):
                 return self.model.var()
             return self.model.var
+        if hasattr(self.model, 'variance'):
+            if callable(self.model.variance):
+                return self.model.variance()
+            return self.model.variance
         if isinstance(self.model, mv.multivariate_t_frozen):
             return self.model.shape * (self.model.df / (self.model.df - 2))
         raise AttributeError(f"Covariance not implemented yet! {self.model.__class__.__name__}")
@@ -189,7 +193,16 @@ class Distribution:
         if hasattr(self.model, 'stats') and callable(self.model.stats):
             return self.model.stats(moments='s')
         if isinstance(self.model, mv.multivariate_t_frozen):
-            return 0
+            return 0 # TODO: check why there is a specific case for multivariate t distribution
+        if hasattr(self.model, 'skew'):
+            if callable(self.model.skew):
+                return self.model.skew()
+            return self.model.skew
+        if hasattr(self.model, 'skewness'):
+            if callable(self.model.skewness):
+                return self.model.skewness()
+            return self.model.skewness
+        raise AttributeError(f"Skew not implemented! {self.model.__class__.__name__}")
 
 
     def kurt(self) -> np.ndarray | float:
@@ -206,7 +219,16 @@ class Distribution:
         if hasattr(self.model, 'stats') and callable(self.model.stats):
             return self.model.stats(moments='k')
         if isinstance(self.model, stats.multivariate_normal):
-            return 0
+            return 0 # TODO: check why there is a specific case for multivariate normal distribution
+        if hasattr(self.model, 'kurt'):
+            if callable(self.model.kurt):
+                return self.model.kurt()
+            return self.model.kurt
+        if hasattr(self.model, 'kurtosis'):
+            if callable(self.model.kurtosis):
+                return self.model.kurtosis()
+            return self.model.kurtosis
+        raise AttributeError(f"Kurtosis not implemented! {self.model.__class__.__name__}")
         
 
     def marginal(self, dims, kde=None, n_samples_kde=1000, noise_level=0.0, seed=None):
@@ -231,7 +253,7 @@ class Distribution:
         if self.n_dims == 1:
             raise IndexError("Cannot marginalize a 1D distribution. Use the sample method to get samples.")
         if not isinstance(dims, np.ndarray):
-            dims = np.array([dims])
+            dims = np.array([dims]).ravel()
         
         # check if KDE estimation of the marginal is requested
         if 'KDE' == kde or 'kde' == kde:
@@ -246,6 +268,9 @@ class Distribution:
             return Distribution(self.model.marginal(dims if len(dims) > 1 else dims[0]), n_dims=len(dims))
         elif isinstance(self.model, np.ndarray):
             return Distribution(self.model[:, dims if len(dims) > 1 else dims[0]], n_dims=len(dims))
+        elif isinstance(self.model, stats._multivariate.multivariate_normal_frozen):
+            # in case scipy version too old, i.e. 'marginal' is missing, we do it ourselves
+            return Distribution(_multivariate_normal_marginal_(dims, self.model))
         # fallback to KDE if specified
         elif 'KDE?' == kde or 'kde?' == kde:
             return self.marginal(dims, kde='KDE', n_samples_kde=n_samples_kde, noise_level=noise_level, seed=seed)
@@ -311,3 +336,14 @@ class Distribution:
                 key = key[0]
             return self.marginal(key, kde=kde_flag, n_samples_kde=n_samples_kde, noise_level=noise_level, seed=seed)
         return self.marginalize(key)
+
+
+def _multivariate_normal_marginal_(dims, model):
+    if len(dims) == 1:
+        mean = model.mean[dims[0]]
+        var = model.cov[dims[0], dims[0]]
+        return stats.norm(loc=mean, scale=np.sqrt(var))
+    else:
+        mean = model.mean[dims]
+        cov = model.cov[:,dims][dims,:]
+        return stats.multivariate_normal(mean=mean, cov=cov)

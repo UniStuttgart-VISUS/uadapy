@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.stats as stats
 from collections import namedtuple
+from uadapy.distributions import DiracDelta, IndependentJoint
 
 def _trapezoid_abcd2cdls(a,b,c,d):
     """
@@ -41,104 +42,83 @@ def very_good():
 def subject_names():
     return ['M1', 'M2', 'P1', 'P2']
 
-def student_tom():
-    samplers = namedtuple('samplers', subject_names())
-    s = samplers(
-        lambda n, rand_state=None: np.ones(n)*15, # M1
-        lambda n, rand_state=None: stats.trapezoid.rvs(*fairly_good(),size=n, random_state=rand_state), # M2
-        lambda n, rand_state=None: stats.norm.rvs(loc=14, scale=5.7, size=n, random_state=rand_state), # P1
-        lambda n, rand_state=None: stats.uniform.rvs(loc=14, scale=2, size=n, random_state=rand_state)  # P2 [14,16]
-    )
-    return s
 
-def student_david():
-    samplers = namedtuple('samplers', subject_names())
-    s = samplers(
-        lambda n, rand_state=None: np.ones(n)*9, # M1
-        lambda n, rand_state=None: stats.trapezoid.rvs(*good(),size=n, random_state=rand_state), # M2
-        lambda n, rand_state=None: stats.trapezoid.rvs(*fairly_good(),size=n, random_state=rand_state), # P1
-        lambda n, rand_state=None: np.ones(n)*10  # P2
-    )
-    return s
+def student_tom(tol=0.0):
+    m1 = DiracDelta(15.0, tol=tol)
+    m2 = stats.trapezoid(*fairly_good())
+    p1 = stats.norm(loc=14, scale=5.7)
+    p2 = stats.uniform(loc=14, scale=2)
 
-def student_bob():
-    samplers = namedtuple('samplers', subject_names())
-    s = samplers(
-        lambda n, rand_state=None: np.ones(n)*6, # M1
-        lambda n, rand_state=None: stats.uniform.rvs(loc=10, scale=1, size=n, random_state=rand_state),
-        lambda n, rand_state=None: stats.uniform.rvs(loc=13, scale=7, size=n, random_state=rand_state),
-        lambda n, rand_state=None: stats.trapezoid.rvs(*good(),size=n, random_state=rand_state)
-    )
-    return s
+    return IndependentJoint([m1, m2, p1, p2])
 
-def student_jane():
-    samplers = namedtuple('samplers', subject_names())
-    s = samplers(
-        lambda n, rand_state=None: stats.trapezoid.rvs(*fairly_good(),size=n, random_state=rand_state),
-        lambda n, rand_state=None: stats.trapezoid.rvs(*very_good(),size=n, random_state=rand_state),
-        lambda n, rand_state=None: np.ones(n)*19,
-        lambda n, rand_state=None: stats.uniform.rvs(loc=10, scale=2, size=n, random_state=rand_state)
-    )
-    return s
+def student_david(tol=0.0):
+    m1 = DiracDelta(9.0, tol=tol)
+    m2 = stats.trapezoid(*good())
+    p1 = stats.trapezoid(*fairly_good())
+    p2 = DiracDelta(10.0, tol=tol)
 
-def student_joe():
-    samplers = namedtuple('samplers', subject_names())
-    s = samplers(
-        lambda n, rand_state=None: stats.trapezoid.rvs(*very_bad(),size=n, random_state=rand_state),
-        lambda n, rand_state=None: stats.trapezoid.rvs(*fairly_bad(),size=n, random_state=rand_state),
-        lambda n, rand_state=None: stats.uniform.rvs(loc=10, scale=4, size=n, random_state=rand_state),
-        lambda n, rand_state=None: np.ones(n)*14
-    )
-    return s
+    return IndependentJoint([m1, m2, p1, p2])
 
-def student_jack():
-    samplers = namedtuple('samplers', subject_names())
-    s = samplers(
-        lambda n, rand_state=None: np.ones(n)*1,
-        lambda n, rand_state=None: stats.uniform.rvs(loc=4, scale=2, size=n, random_state=rand_state),
-        lambda n, rand_state=None: np.ones(n)*9,
-        lambda n, rand_state=None: stats.uniform.rvs(loc=6, scale=3, size=n, random_state=rand_state)
-    )
-    return s
+def student_bob(tol=0.0):
+    m1 = DiracDelta(6.0, tol=tol)
+    m2 = stats.uniform(loc=10, scale=1)
+    p1 = stats.uniform(loc=13, scale=7)
+    p2 = stats.trapezoid(*good())
+
+    return IndependentJoint([m1, m2, p1, p2])
+
+def student_jane(tol=0.0):
+    m1 = stats.trapezoid(*fairly_good())
+    m2 = stats.trapezoid(*very_good())
+    p1 = DiracDelta(19.0, tol=tol)
+    p2 = stats.uniform(loc=10, scale=2)
+
+    return IndependentJoint([m1, m2, p1, p2])
+
+def student_joe(tol=0.0):
+    m1 = stats.trapezoid(*very_bad())
+    m2 = stats.trapezoid(*fairly_bad())
+    p1 = stats.uniform(loc=10, scale=4)
+    p2 = DiracDelta(14.0, tol=tol)
+
+    return IndependentJoint([m1, m2, p1, p2])
+
+def student_jack(tol=0.0):
+    m1 = DiracDelta(1.0, tol=tol)
+    m2 = stats.uniform(loc=4, scale=2)
+    p1 = DiracDelta(9.0, tol=tol)
+    p2 = stats.uniform(loc=6, scale=3)
+
+    return IndependentJoint([m1, m2, p1, p2])
 
 
-def students():
+def students(tol=0.0):
     """
-    Return a dictionary of students and their samplers for each subject
-    """
-    return {
-        'Tom': student_tom(),
-        'David': student_david(),
-        'Bob': student_bob(),
-        'Jane': student_jane(),
-        'Joe': student_joe(),
-        'Jack': student_jack()
-    }
-
-
-def multivariate_sample(student_samplers, n=1, random_state=None):
-    """
-    Given a student's samplers namedtuple, sample n grades for each subject and return a (n,4) array
+    Return a dictionary of students and their multivariate distributions
 
     Parameters
     ----------
-    student_samplers : namedtuple
-        A namedtuple containing the samplers for each subject for a student
-    n : int, optional
-        The number of samples to generate for each subject, by default 1
-    random_state : int or np.random.RandomState, optional
-        The random state to use for reproducibility, by default None
+    tol : float, optional
+        The tolerance for the DiracDelta distributions, by default 0.0.
+        Each student has at least one subject that is a DiracDelta distribution, 
+        which means that the grade for that subject is fixed. 
+        The tol parameter allows you to specify a tolerance for these fixed grades, 
+        so that they can vary slightly around the fixed value.
+        This is especially important if you want to sample the probability density function (PDF)
+        of the joint distribution of grades.
     """
-    M1,M2,P1,P2 = student_samplers
-    return np.array([
-        M1(n, random_state),
-        M2(n, random_state),
-        P1(n, random_state),
-        P2(n, random_state)
-    ]).T
+    return {
+        'Tom': student_tom(tol=tol),
+        'David': student_david(tol=tol),
+        'Bob': student_bob(tol=tol),
+        'Jane': student_jane(tol=tol),
+        'Joe': student_joe(tol=tol),
+        'Jack': student_jack(tol=tol)
+    }
 
 
-def sample_dataset(n_per_student=1, random_state=None):
+
+def sample_dataset(n_per_student=1, random_state=None, tol=0.0):
     """
     Sample a dataset of grades for all students and subjects
 
@@ -146,7 +126,7 @@ def sample_dataset(n_per_student=1, random_state=None):
     ----------
     n_per_student : int, optional
         The number of samples to generate for each student, by default 1
-    random_state : int or np.random.RandomState, optional
+    random_state : int or np.random.RandomState or RNG, optional
         The random state to use for reproducibility, by default None
 
     Returns
@@ -156,8 +136,8 @@ def sample_dataset(n_per_student=1, random_state=None):
     """
     X = []
     y = []
-    for student_name, samplers in students().items():
-        samples = multivariate_sample(samplers, n=n_per_student, random_state=random_state)
+    for student_name, d in students(tol=tol).items():
+        samples = d.sample(n=n_per_student, random_state=random_state)
         X.append(samples)
         y.append(np.array([student_name]*n_per_student))
     return np.vstack(X), np.concatenate(y)
