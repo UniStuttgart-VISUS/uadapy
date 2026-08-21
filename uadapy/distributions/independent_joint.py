@@ -20,6 +20,20 @@ class IndependentJoint:
     """
 
     def __init__(self, distributions, permutation=None):
+        """
+        Creates a joint distribution from a list of independent distributions. 
+        The resulting joint distribution will have a dimensionality equal to the sum of the dimensionalities of the individual distributions.
+        The permutation argument allows to specify a custom ordering of the dimensions in the joint distribution.
+        By default, the dimensions are ordered in the order of the input distributions.
+
+        Parameters
+        ----------
+        distributions : list of Distribution or Distribution wrappable objects
+            List of independent distributions to combine into a joint distribution.
+        permutation : array-like, optional
+            Custom ordering of the dimensions in the joint distribution. E.g. backwards ordering [3,2,1,0] for a 4D joint distribution.
+            Default is None, which means the dimensions are ordered in the order of the input distributions.
+        """
         if not isinstance(distributions, list) or len(distributions) < 2:
             raise ValueError("distributions must be a list of at least 2 Distribution objects or Distribution wrappable objects")
         self.distributions = [d if isinstance(d, Distribution) else Distribution(d) for d in distributions]
@@ -31,6 +45,21 @@ class IndependentJoint:
             raise ValueError("permutation must be a valid permutation of the dimensions of the joint distribution")
     
     def sample(self, n, seed=None):
+        """
+        Draws n samples from the joint distribution.
+        
+        Parameters
+        ----------
+        n : int
+            Number of samples to draw.
+        seed : int or np.random.Generator, optional
+            Random seed or random number generator for reproducibility. Default is None.
+
+        Returns
+        -------
+        samples : ndarray, shape (n, dim)
+            Samples drawn from the joint distribution.
+        """
         if isinstance(seed, int):
             # passing the same seed to each distribution can result in correlated samples.
             # instead, we use a common RNG for all distributions, which will produce independent samples.
@@ -42,6 +71,14 @@ class IndependentJoint:
         return np.hstack(samples) @ self.dim_permutation
     
     def cov(self):
+        """
+        Builds the covariance matrix of the joint distribution.
+
+        Returns
+        -------
+        cov : ndarray, shape (dim, dim)
+            Covariance matrix of the joint distribution.
+        """
         covs = [d.cov() for d in self.distributions]
         cov = np.zeros((self.dim, self.dim))
         idx = 0
@@ -52,6 +89,19 @@ class IndependentJoint:
         return self.dim_permutation.T @ cov @ self.dim_permutation
     
     def pdf(self, x):
+        """
+        Computes the probability density function of the joint distribution at the given points x.
+
+        Parameters
+        ----------
+        x : array-like, shape (n_samples, n_dims) or (n_dims,)
+            Points at which to evaluate the PDF. If x is 1D, it is treated as a single sample.
+        
+        Returns
+        -------
+        pdfs : ndarray, shape (n_samples,)
+            Probability density values at the given points x.
+        """
         idx = 0
         if len(x.shape) == 1:
             x = x[None, :]
@@ -70,6 +120,14 @@ class IndependentJoint:
         return pdfs
     
     def mean(self):
+        """
+        Builds the mean of the joint distribution.
+
+        Returns
+        -------
+        mean : ndarray, shape (dim,)
+            Mean of the joint distribution.
+        """
         m = np.zeros(self.dim)
         idx = 0
         for d in self.distributions:
@@ -79,6 +137,20 @@ class IndependentJoint:
         return m @ self.dim_permutation
     
     def marginal(self, dims):
+        """
+        Extracts the marginal distribution for the specified dimensions.
+
+        Parameters
+        ----------
+        dims : array-like of int or int
+            Dimensions for which to extract the marginal distribution. Can be a single dimension or a list of dimensions.
+
+        Returns
+        -------
+        marginal : underlying distribution object or IndependentJoint
+            Marginal distribution for the specified dimensions. If the marginal consists only of a single original distribution object, that object is returned. 
+            If the marginal consists of multiple distributions, a new IndependentJoint object is returned.
+        """
         dims = np.asarray(dims)
         dim2dist, dist2dim = self.__dim_dist_luts__()
         order = np.argmax(self.dim_permutation, axis=0)
