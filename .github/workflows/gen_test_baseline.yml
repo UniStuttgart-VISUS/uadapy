@@ -1,6 +1,14 @@
 name: Generate Test Baseline Images
 
-on: workflow_dispatch
+on: 
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch on which to generate and push'
+        required: true
+        default: 'main'
+        type: string
+      
 
 
 jobs:
@@ -13,7 +21,7 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v7
       with:
-        ref: ${{ github.head_ref }}
+        ref: ${{ inputs.branch }}
         # Value already defaults to true, but `persist-credentials` is required to push new commits to the repository.
         persist-credentials: true
 
