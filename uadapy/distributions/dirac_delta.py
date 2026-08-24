@@ -56,7 +56,7 @@ class DiracDelta:
         if tol == 0.0:
             return np.ones(n) * self.mean
         else:
-            return stats.uniform.rvs(loc=self.mean - self.tol/2, scale=self.tol, size=n, random_state=seed)
+            return stats.uniform.rvs(loc=self.mean - tol/2, scale=tol, size=n, random_state=seed)
     
     def var(self):
         """
@@ -92,7 +92,7 @@ class DiracDelta:
             values = np.where(x==self.mean, np.inf, 0.0)
             return np.asarray(values).item() if np.isscalar(values) or len(values) == 1  else values
         else:
-            return stats.uniform.pdf(x, loc=self.mean-self.tol/2, scale=self.tol)
+            return stats.uniform.pdf(x, loc=self.mean-self.tol/2, scale=tol)
 
     def cdf(self, x, tol=None):
         """
@@ -112,5 +112,5 @@ class DiracDelta:
             values = np.where(x < self.mean, 0.0, 1.0)
             return np.asarray(values).item() if np.isscalar(values) or len(values) == 1  else values
         else:
-            return stats.uniform.cdf(x, loc=self.mean-self.tol/2, scale=self.tol)
+            return stats.uniform.cdf(x, loc=self.mean-self.tol/2, scale=tol)
 

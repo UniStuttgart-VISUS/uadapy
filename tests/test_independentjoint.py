@@ -34,6 +34,9 @@ def test_independent_joint():
     # check that highest density is close to mean
     assert np.allclose(samples_perm[np.argmax(densities_perm)], expected_mean[permutation], atol=0.3), f"Sample with highest density should be close to permuted mean: {expected_mean[permutation]}, but got: {samples_perm[np.argmax(densities_perm)]}"
 
+    # marginal should respect permutation
+    jp_m = jp.marginal([0, 4])
+    assert np.allclose(jp_m.mean(), expected_mean[permutation][[0, 4]])
 
     # test marginal
     dims = [2,1,0,3]

@@ -4,7 +4,7 @@ from uadapy import Distribution
 
 class IndependentJoint:
     """
-    Joint Distributiuon of independent continuous distributions. 
+    Joint Distribution of independent continuous distributions. 
     This class allows to combine multiple independent distributions into a single multivariate joint distribution.
     Univariate as well as multivariate distributions can be joined. 
     The resulting joint distribution will have a dimensionality equal to the sum of the dimensionalities of the individual distributions.
@@ -13,7 +13,7 @@ class IndependentJoint:
 
         import scipy.stats as stats
         from uadapy.distributions import IndependentJoint
-        a = stats.Normal()
+        a = stats.norm()
         b = stats.t(5)
         j = IndependentJoint([a, b])
 
@@ -103,6 +103,7 @@ class IndependentJoint:
             Probability density values at the given points x.
         """
         idx = 0
+        x = np.asarray(x)
         if len(x.shape) == 1:
             x = x[None, :]
         pdfs = np.ones(x.shape[0])
@@ -112,8 +113,6 @@ class IndependentJoint:
             x_ = x[:, idx:idx+dim]
             if dim == 1:
                 x_ = x_.ravel() # flatten to 1D array for univariate distributions
-            if len(x_) == 1:
-                x_ = x_.item() # convert to scalar if univariate and single sample
             p = d.pdf(x_)
             pdfs *= p
             idx += dim
@@ -157,14 +156,14 @@ class IndependentJoint:
         order_reverse = np.argmax(self.dim_permutation, axis=1)
         if dims.size == 1:
             dim = dims.item()
-            dim_idx = order_reverse[dim]
+            dim_idx = order[dim]
             dist_idx = dim2dist[dim_idx]
             if dist2dim[dist_idx][0] == dist2dim[dist_idx][1] - 1: # univariate distribution
                 return self.distributions[dist_idx]
             else: # multivariate distribution
                 return self.distributions[dist_idx].marginal(dim_idx - dist2dim[dist_idx][0])
         else:
-            dims_in_order = order_reverse[dims]
+            dims_in_order = order[dims]
             # find all distributions that contain the requested dimensions
             requested_dist_per_dim = dim2dist[dims_in_order]
             requested_dim_in_dist = [dims_in_order[i] - dist2dim[requested_dist_per_dim[i]][0] for i in range(len(dims_in_order))]

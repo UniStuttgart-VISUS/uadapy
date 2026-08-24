@@ -137,7 +137,7 @@ def sample_dataset(n_per_student=1, random_state=None, tol=0.0):
     X = []
     y = []
     for student_name, d in students(tol=tol).items():
-        samples = d.sample(n=n_per_student, random_state=random_state)
+        samples = d.sample(n=n_per_student, seed=random_state)
         X.append(samples)
         y.append(np.array([student_name]*n_per_student))
     return np.vstack(X), np.concatenate(y)
