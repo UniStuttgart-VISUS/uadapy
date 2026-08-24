@@ -656,32 +656,36 @@ def generate_synthetic_gmm(n_classes=3, n_dims=4, random_state=0):
     return distributions
 
 
-def load_student_grades(n_samples_per_student=100, normal: bool = False, random_state=None):
+def load_student_grades(tol=0.0):
     """
-    Load the student grades dataset as class-conditional distributions (KDE-based by default).
-    This function creates one nonparametric, KDE-backed Distribution per student (Tom, David, Bob, Jane, Joe, Jack).
+    Load the student grades dataset.
     The underlying distributions are defined according to the specification in 
     ["Uncertainty-Aware Principal Component Analysis" Görtler et al. 2020](https://arxiv.org/abs/1905.01127).
-    Some of the students have singular covariances, which is not supported by scipy's KDE.
-    Therfore small uniform noise (within +- 0.001) is added to all samples before estimation 
-    (regardless of normal=True for consistency).
+    All students have at least one subject that is a DiracDelta distribution, 
+    which means that the grade for that subject is fixed.
+    When specifying a non-zero tolerance, the DiracDelta distributions are replaced with uniform distributions
+    which is especially important if you want to sample the probability density function (PDF)
 
     Parameters
     ----------
-    n_samples_per_student : int, optional
-        The number of grade samples to generate for each student, by default 100
-    normal : bool, optional
-        If False (default), represent each species with a KDE over raw samples
-        (nonparametric). If True, fit a multivariate Normal per species.
-    random_state : int or np.random.RandomState, optional
-        The random state to use for reproducibility, by default None
+    tol : float, optional
+        The tolerance for the DiracDelta distributions, by default 0.0.
+        Each student has at least one subject that is a DiracDelta distribution, 
+        which means that the grade for that subject is fixed. 
+        The tol parameter allows you to specify a tolerance for these fixed grades, 
+        so that they can vary slightly around the fixed value.
 
     Returns
     -------
-    list of Distribution
-        Three distributions, one for each student.
+    tuple (list of Distributions, list of labels)
+        A tuple (distributions, labels) where distributions is a list of Distribution objects
+        representing the multivariate distributions of grades for each student, and labels is a list of corresponding student names.
     """
     from . import student_grades
-    X, y  = student_grades.sample_dataset(n_per_student=n_samples_per_student, random_state=random_state)
-    X = X + stats.uniform.rvs(loc=0, scale=.002, size=X.shape, random_state=random_state)-.001 # add small noise to prevent singular covariances 
-    return _to_class_distributions(X, y, normal=normal)
+    students = student_grades.students(tol=tol)
+    distribs = []
+    names = []
+    for name, distrib in students.items():
+        distribs.append(Distribution(distrib))
+        names.append(name)
+    return distribs, names
