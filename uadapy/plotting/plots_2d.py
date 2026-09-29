@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+import warnings
+
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import chi2
@@ -5,6 +8,35 @@ from uadapy import Distribution
 from matplotlib.colors import ListedColormap
 import uadapy.plotting.utils as utils
 import glasbey as gb
+
+
+@dataclass
+class OrientedGrid:
+    center: np.ndarray
+    axes: np.ndarray
+    half_extents: np.ndarray
+    resolution: int
+
+    @classmethod
+    def axis_aligned(cls, ranges, resolution):
+        bounds = np.asarray(ranges, dtype=float)
+        return cls(bounds.mean(axis=1), np.eye(2), (bounds[:, 1] - bounds[:, 0]) / 2, resolution)
+
+    def coordinates(self):
+        u = np.linspace(-self.half_extents[0], self.half_extents[0], self.resolution)
+        v = np.linspace(-self.half_extents[1], self.half_extents[1], self.resolution)
+        uu, vv = np.meshgrid(u, v)
+        x = self.center[0] + self.axes[0, 0] * uu + self.axes[0, 1] * vv
+        y = self.center[1] + self.axes[1, 0] * uu + self.axes[1, 1] * vv
+        return x, y
+
+    def cell_area(self):
+        spacing = 2 * self.half_extents / (self.resolution - 1)
+        return float(spacing[0] * spacing[1])
+
+    def aabb(self):
+        radii = np.abs(self.axes) @ self.half_extents
+        return [(self.center[i] - radii[i], self.center[i] + radii[i]) for i in range(2)]
 
 
 def plot_samples(distributions,
@@ -119,7 +151,10 @@ def plot_contour(distributions,
         The resolution of the plot. Default is 128.
     ranges : list of tuple or None, optional
         The ranges for the x and y axes as [(x_min, x_max), (y_min, y_max)]. 
-        If None, ranges are calculated based on the distributions.
+        If None, a separate grid is calculated for each distribution and oriented
+        along its principal axes. Supplying ranges forces a shared axis-aligned grid.
+        Invalid moments fall back to 2000 samples with a fixed seed; covariance
+        regularization is used only to construct the grid and does not alter the density.
     quantiles : list of float or None, optional
         List of quantiles to use for determining isovalues. Default is [25, 75, 95].
     fig : matplotlib.figure.Figure or None, optional
@@ -134,6 +169,16 @@ def plot_contour(distributions,
     show_plot : bool, optional
         If True, display the plot.
         Default is False.
+
+    Examples
+    --------
+    >>> from scipy.stats import multivariate_normal
+    >>> from uadapy import Distribution
+    >>> thin = Distribution(
+    ...     multivariate_normal(mean=[0, 0], cov=[[1, 0], [0, 1e-6]]),
+    ...     name="Normal",
+    ... )
+    >>> fig, ax = plot_contour(thin)
 
     Returns
     -------
@@ -169,25 +214,18 @@ def plot_contour(distributions,
     # Generate colors
     palette = _get_color_palette(len(distributions), distrib_colors, colorblind_safe)
 
-    # Calculate ranges
-    separate_ranges = None
-    if ranges is None:
-        ranges, separate_ranges = _calculate_plot_ranges(distributions, quantiles, resolution)
-
     # Plot contours for each distribution
     for i, d in enumerate(distributions):
-        range_x = ranges[0] if separate_ranges is None else separate_ranges[i][0]
-        range_y = ranges[1] if separate_ranges is None else separate_ranges[i][1]
-        x = np.linspace(range_x[0], range_x[1], resolution)
-        y = np.linspace(range_y[0], range_y[1], resolution)
-        xv, yv = np.meshgrid(x, y)
+        grid = (OrientedGrid.axis_aligned(ranges, resolution) if ranges is not None
+                else _calculate_oriented_grid(d, max(quantiles), resolution))
+        xv, yv = grid.coordinates()
         coordinates = np.stack((xv, yv), axis=-1)
         coordinates = coordinates.reshape((-1, 2))
         pdf = d.pdf(coordinates)
         pdf = pdf.reshape(xv.shape)
         color = palette[i]
 
-        isovalues = _calculate_isovalues(pdf, x, y, quantiles)
+        isovalues = _calculate_isovalues(pdf, grid.cell_area(), quantiles)
 
         axs.contour(xv, yv, pdf, levels=isovalues, colors=[color])
 
@@ -216,7 +254,10 @@ def plot_contour_bands(distributions,
         The resolution of the plot. Default is 128.
     ranges : list of tuple or None, optional
         The ranges for the x and y axes as [(x_min, x_max), (y_min, y_max)]. 
-        If None, ranges are calculated based on the distributions.
+        If None, a separate grid is calculated for each distribution and oriented
+        along its principal axes. Supplying ranges forces a shared axis-aligned grid.
+        Invalid moments fall back to 2000 samples with a fixed seed; covariance
+        regularization is used only to construct the grid and does not alter the density.
     quantiles : list of float or None, optional
         List of quantiles to use for determining isovalues. Default is [25, 75, 95].
     fig : matplotlib.figure.Figure or None, optional
@@ -262,25 +303,21 @@ def plot_contour_bands(distributions,
     alpha_values = np.linspace(1/n_quantiles, 1.0, n_quantiles)
     custom_cmap = utils.create_shaded_set2_colormap(alpha_values)
 
-    # Calculate ranges
-    separate_ranges = None
-    if ranges is None:
-        ranges, separate_ranges = _calculate_plot_ranges(distributions, quantiles, resolution)
-
     # Plot contour bands for each distribution
     for i, d in enumerate(distributions):
-        range_x = ranges[0] if separate_ranges is None else separate_ranges[i][0]
-        range_y = ranges[1] if separate_ranges is None else separate_ranges[i][1]
-        x = np.linspace(range_x[0], range_x[1], resolution)
-        y = np.linspace(range_y[0], range_y[1], resolution)
-        xv, yv = np.meshgrid(x, y)
+        grid = (OrientedGrid.axis_aligned(ranges, resolution) if ranges is not None
+                else _calculate_oriented_grid(d, max(quantiles), resolution))
+        xv, yv = grid.coordinates()
         coordinates = np.stack((xv, yv), axis=-1)
         coordinates = coordinates.reshape((-1, 2))
         pdf = d.pdf(coordinates)
         pdf = pdf.reshape(xv.shape)
+        if not np.any(pdf > 0):
+            warnings.warn(f"Skipping {d.name}: the PDF is zero on the plotting grid.", RuntimeWarning)
+            continue
         pdf = np.ma.masked_where(pdf <= 0, pdf)
 
-        isovalues = _calculate_isovalues(pdf, x, y, quantiles)
+        isovalues = _calculate_isovalues(pdf, grid.cell_area(), quantiles)
         max_val = np.max(pdf[pdf > 0])
         if not isovalues or max_val > isovalues[-1]:
             isovalues.append(max_val)
@@ -340,7 +377,7 @@ def _get_color_palette(n_distributions, distrib_colors=None, colorblind_safe=Fal
     return palette
 
 
-def _calculate_isovalues(pdf_grid, grid_x, grid_y, quantiles):
+def _calculate_isovalues(pdf_grid, cell_area, quantiles):
     """
     Calculate density isovalues using cumulative probability.
 
@@ -348,10 +385,8 @@ def _calculate_isovalues(pdf_grid, grid_x, grid_y, quantiles):
     ----------
     pdf_grid : np.ndarray
         2D array of PDF values on the grid.
-    grid_x : np.ndarray
-        1D array of x-coordinates.
-    grid_y : np.ndarray
-        1D array of y-coordinates.
+    cell_area : float
+        Area represented by each grid cell.
     quantiles : list of float
         List of quantile percentages.
 
@@ -365,17 +400,14 @@ def _calculate_isovalues(pdf_grid, grid_x, grid_y, quantiles):
     ValueError
         If a quantile is not between 0 and 100 (exclusive).
     """
-    # Normalize to create a proper PDF (integrate to 1)
-    dx = grid_x[1] - grid_x[0]
-    dy = grid_y[1] - grid_y[0]
-    pdf_sum = np.sum(pdf_grid) * dx * dy
+    pdf_sum = np.sum(pdf_grid) * cell_area
     pdf_normalized = pdf_grid / pdf_sum if pdf_sum > 0 else pdf_grid
 
     # Sort density values in descending order
     sorted_pdf = np.sort(pdf_normalized.flatten())[::-1]
 
     # Calculate cumulative probability
-    cumulative_prob = np.cumsum(sorted_pdf) * dx * dy
+    cumulative_prob = np.cumsum(sorted_pdf) * cell_area
 
     # Process quantiles and find density thresholds
     isovalues = []
@@ -403,10 +435,7 @@ def _calculate_isovalues(pdf_grid, grid_x, grid_y, quantiles):
 
 def _calculate_plot_ranges(distributions, quantiles, resolution=128):
     """
-    Calculate plotting ranges for distributions.
-
-    For Normal and GMM distributions, uses analytical methods (mean + covariance).
-    For other distributions, uses a coarse-to-fine PDF-based approach.
+    Return axis-aligned bounds of the per-distribution plotting grids.
 
     Parameters
     ----------
@@ -425,23 +454,10 @@ def _calculate_plot_ranges(distributions, quantiles, resolution=128):
     if isinstance(distributions, Distribution):
         distributions = [distributions]
 
-    largest_quantile = max(quantiles)
-    all_ranges = []
-
-    for distribution in distributions:
-        # Check if we can use analytical methods
-        if distribution.name in ["Normal", "GMM", "multivariate_normal_frozen"]:
-            ranges = _calculate_ranges_analytical(distribution, largest_quantile)
-        else:
-            # Use numerical PDF-based approach
-            ranges = _calculate_ranges_numerical(
-                distribution,
-                largest_quantile,
-                resolution=resolution,
-                factor=1.5
-            )
-
-        all_ranges.append(ranges)
+    all_ranges = [
+        _calculate_oriented_grid(distribution, max(quantiles), resolution).aabb()
+        for distribution in distributions
+    ]
 
     # Combine ranges from all distributions
     combined_ranges = []
@@ -455,104 +471,120 @@ def _calculate_plot_ranges(distributions, quantiles, resolution=128):
     return combined_ranges, all_ranges
 
 
-def _ellipsoid_ranges(mean, cov, chi2_val, padding):
-    """
-    Calculate ranges for an ellipsoid defined by mean and covariance.
+def _get_moments(distribution):
+    """Get finite moments, estimating only invalid moments from reproducible samples."""
+    dims = getattr(distribution, "n_dims", 2)
+    mean = cov = None
+    mean_valid = cov_valid = False
+    try:
+        value = distribution.mean()
+        if value is not None:
+            value = np.atleast_1d(np.asarray(value, dtype=float))
+            mean_valid = value.shape == (dims,) and np.all(np.isfinite(value))
+            if mean_valid:
+                mean = value
+    except Exception:
+        pass
+    try:
+        value = distribution.cov()
+        if value is not None:
+            value = np.asarray(value, dtype=float)
+            if value.ndim == 0:
+                value = np.eye(dims) * value
+            elif value.ndim == 1:
+                value = np.diag(value)
+            cov_valid = value.shape == (dims, dims) and np.all(np.isfinite(value))
+            if cov_valid:
+                cov = value
+    except Exception:
+        pass
 
-    Parameters
-    ----------
-    mean : np.ndarray
-        Mean vector of the distribution.
-    cov : np.ndarray
-        Covariance matrix of the distribution.
-    chi2_val : float
-        Chi-squared value for the desired quantile.
-    padding : float
-        Fraction of padding to add to the ranges.
+    if mean_valid and cov_valid:
+        return mean, cov
 
-    Returns
-    -------
-    list of tuple
-        List of (min, max) tuples for each dimension.
-    """
-    eigenvalues, eigenvectors = np.linalg.eigh(cov)
-
-    # Calculate radii along each principal axis
-    extents = (eigenvectors**2) @ eigenvalues
-    radii = np.sqrt(chi2_val * extents)
-
-    mins = mean - radii
-    maxs = mean + radii
-
-    span = maxs - mins
-    mins -= padding * span
-    maxs += padding * span
-
-    return list(zip(mins, maxs))
+    try:
+        samples = np.asarray(distribution.sample(2000, seed=55), dtype=float)
+        if samples.ndim == 1 and dims == 1:
+            samples = samples[:, None]
+        if samples.ndim != 2 or samples.shape[1] != dims:
+            raise ValueError("unexpected sample shape")
+        samples = samples[np.all(np.isfinite(samples), axis=1)]
+        if len(samples) < 2:
+            raise ValueError("fewer than two finite samples")
+        warnings.warn(
+            f"Estimating invalid moments for {getattr(distribution, 'name', type(distribution).__name__)} "
+            "from 2000 samples (seed=55).",
+            RuntimeWarning,
+        )
+        if not mean_valid:
+            mean = samples.mean(axis=0)
+        if not cov_valid:
+            cov = np.atleast_2d(np.cov(samples.T))
+        return mean, cov
+    except Exception as error:
+        name = getattr(distribution, "name", type(distribution).__name__)
+        raise ValueError(f"Could not estimate moments for distribution {name}.") from error
 
 
-def _calculate_ranges_analytical(distribution, largest_quantile, padding=0.05):
-    """
-    Calculate plotting ranges using analytical methods using mean and covariance.
+def _regularize_cov(cov):
+    cov = np.asarray(cov, dtype=float)
+    cov = np.where(np.isfinite(cov), cov, 0.0)
+    cov = (cov + cov.T) / 2
+    n = cov.shape[0]
+    eps = max(1e-9 * np.trace(cov) / n, 1e-12)
+    eigenvalues, eigenvectors = np.linalg.eigh(cov + eps * np.eye(n))
+    eigenvalues = np.maximum(eigenvalues, eps)
+    order = np.argsort(eigenvalues)[::-1]
+    return eigenvalues[order], eigenvectors[:, order]
 
-    Parameters
-    ----------
-    distribution : Distribution
-        Distribution to calculate ranges for.
-    largest_quantile : float
-        Largest quantile percentage to include.
-    padding : float, optional
-        Padding to add to each side of the range. Default is 0.05.
 
-    Returns
-    -------
-    list of tuple
-        List of (min, max) tuples for each dimension.
-    """
-    # Normalize quantile once
-    largest_quantile /= 100.0
+def _principal_axes(distribution):
+    mean, cov = _get_moments(distribution)
+    eigenvalues, eigenvectors = _regularize_cov(cov)
+    return mean, eigenvalues, eigenvectors
 
-    # Handle scalar mean edge case
-    mean = distribution.mean()
-    if np.isscalar(mean):
-        mean = np.array([mean])
 
-    n_dims = len(mean)
-    chi2_val = chi2.ppf(largest_quantile, df=n_dims)
+def _calculate_oriented_grid(distribution, largest_quantile, resolution, padding=0.05):
+    if distribution.name in ["Normal", "GMM", "multivariate_normal_frozen"]:
+        return _calculate_ranges_analytical(distribution, largest_quantile, resolution, padding)
+    return _calculate_ranges_numerical(distribution, largest_quantile, resolution=resolution, padding=padding)
 
-    # GMM case
+
+def _component_covariances(distribution):
+    model = distribution.model
+    means = np.asarray(model.means_, dtype=float)
+    covariances = np.asarray(model.covariances_, dtype=float)
+    cov_type = getattr(model, "covariance_type", "full")
+    dims = means.shape[1]
+    if covariances.ndim == 3:
+        return means, covariances
+    if cov_type == "tied":
+        covariances = np.repeat(covariances[None, :, :], len(means), axis=0)
+    elif cov_type == "diag":
+        covariances = np.array([np.diag(c) for c in covariances])
+    elif cov_type == "spherical":
+        covariances = covariances.reshape(-1)
+        covariances = np.array([np.eye(dims) * c for c in covariances])
+    return means, covariances
+
+
+def _calculate_ranges_analytical(distribution, largest_quantile, resolution=128, padding=0.05):
+    center, eigenvalues, axes = _principal_axes(distribution)
+    chi2_val = chi2.ppf(largest_quantile / 100.0, df=len(center))
     if distribution.name == "GMM":
-        component_ranges = []
-
-        for mean, cov in zip(
-            distribution.model.means_,
-            distribution.model.covariances_,
-        ):
-            component_ranges.append(
-                _ellipsoid_ranges(mean, cov, chi2_val, padding=0.0)
-            )
-
-        # Combine component-wise ranges
-        ranges = []
-        for dim in range(n_dims):
-            min_val = min(r[dim][0] for r in component_ranges)
-            max_val = max(r[dim][1] for r in component_ranges)
-
-            span = max_val - min_val
-            min_val -= padding * span
-            max_val += padding * span
-
-            ranges.append((min_val, max_val))
-
-        return ranges
-
-    # Single Gaussian case
-    return _ellipsoid_ranges(
-        mean,
-        distribution.cov(),
-        chi2_val,
-        padding,
-    )
+        means, covariances = _component_covariances(distribution)
+        projected_means = (means - center) @ axes
+        widths = np.array([
+            np.sqrt(chi2_val * np.maximum(np.einsum("i,kij,j->k", axes[:, i], covariances, axes[:, i]), 0))
+            for i in range(2)
+        ]).T
+        lower = np.min(projected_means - widths, axis=0)
+        upper = np.max(projected_means + widths, axis=0)
+        center = center + axes @ ((lower + upper) / 2)
+        half_extents = (upper - lower) * (0.5 + padding)
+    else:
+        half_extents = np.sqrt(chi2_val * eigenvalues) * (1 + 2 * padding)
+    return OrientedGrid(center, axes, np.maximum(half_extents, 1e-6), resolution)
 
 
 def _calculate_ranges_numerical(
@@ -565,7 +597,7 @@ def _calculate_ranges_numerical(
     padding=0.05,
 ):
     """
-    Calculate plotting ranges using numerical PDF evaluation.
+    Calculate an oriented plotting grid using numerical PDF evaluation.
 
     Parameters
     ----------
@@ -586,145 +618,63 @@ def _calculate_ranges_numerical(
 
     Returns
     -------
-    list of tuple
-        List of (min, max) tuples for each dimension.
+    OrientedGrid
+        Grid bounds aligned with the principal covariance axes.
     """
-    # Step 1: Coarse search
-    mean = distribution.mean()
-    if mean.shape == ():
-        mean = np.array([mean])
-    if len(mean.shape) == 0:
-        mean = np.array([mean])
+    mean, eigenvalues, axes = _principal_axes(distribution)
+    extents = np.minimum(2 * np.sqrt(eigenvalues), max_range)
 
-    n_dims = len(mean)
+    for axis in range(2):
+        while extents[axis] < max_range:
+            endpoints = mean + np.array([-1, 1])[:, None] * extents[axis] * axes[:, axis]
+            values = np.asarray(distribution.pdf(endpoints)).ravel()
+            if np.all(np.isfinite(values)) and np.all(values < threshold):
+                break
+            extents[axis] = min(extents[axis] * factor, max_range)
 
-    # Set initial radius based on covariance
-    cov = distribution.cov()
-    if len(cov.shape) == 1:
-        std_max = np.sqrt(np.max(cov))
-    else:
-        std_max = np.sqrt(np.max(np.diag(cov)))
-    r = 2.0 * std_max
+    coarse_extents = extents.copy()
 
-    # Expand radius until PDF at boundary points is below threshold
-    while r < max_range:
-        # Sample points at the boundaries
-        test_points = []
-        for dim in range(n_dims):
-            point_neg = mean.copy()
-            point_neg[dim] -= r
-            point_pos = mean.copy()
-            point_pos[dim] += r
-            test_points.extend([point_neg, point_pos])
+    def evaluate(current_extents):
+        grid = OrientedGrid(mean.copy(), axes, current_extents.copy(), resolution)
+        x, y = grid.coordinates()
+        values = np.asarray(distribution.pdf(np.stack((x, y), axis=-1).reshape(-1, 2)))
+        return grid, np.nan_to_num(values.reshape(x.shape), nan=0.0, posinf=0.0, neginf=0.0)
 
-        test_points = np.array(test_points)
-        pdf_vals = distribution.pdf(test_points)
-
-        if np.all(pdf_vals < threshold):
+    grid, pdf = evaluate(extents)
+    for _ in range(10):
+        if np.any(pdf > 0) and np.sum(pdf) > 0:
             break
+        extents[np.argmin(extents)] *= 0.5
+        grid, pdf = evaluate(extents)
 
-        r *= factor
+    if not np.any(pdf > 0) or np.sum(pdf) <= 0:
+        center_pdf = np.asarray(distribution.pdf(mean[None, :])).ravel()
+        if not np.any(center_pdf > 0):
+            warnings.warn(
+                f"Could not refine plotting grid for {getattr(distribution, 'name', type(distribution).__name__)}; "
+                "using the coarse grid.",
+                RuntimeWarning,
+            )
+            return OrientedGrid(mean, axes, np.maximum(coarse_extents, 1e-6), resolution)
 
-    # Initial coarse ranges
-    coarse_ranges = [(mean[dim] - r, mean[dim] + r) for dim in range(n_dims)]
+    cell_area = grid.cell_area()
+    ordered = np.sort(pdf.ravel())[::-1]
+    cumulative = np.cumsum(ordered) * cell_area
+    index = min(np.searchsorted(cumulative, largest_quantile / 100.0), len(ordered) - 1)
+    mask = (pdf >= ordered[index]) & (pdf > 0)
+    if not np.any(mask):
+        warnings.warn("Could not refine plotting grid; using the coarse grid.", RuntimeWarning)
+        return OrientedGrid(mean, axes, np.maximum(coarse_extents, 1e-6), resolution)
 
-    # Step 2: Fine search - refine to find tight bounding box
-    if n_dims == 2:
-        ranges = _refine_ranges_2d(
-            distribution,
-            largest_quantile,
-            coarse_ranges,
-            resolution,
-            padding
-        )
-    else:
-        # For higher dimensions, use the coarse ranges with padding
-        ranges = []
-        for dim_range in coarse_ranges:
-            min_val, max_val = dim_range
-            range_span = max_val - min_val
-            ranges.append((
-                min_val + padding * range_span,
-                max_val - padding * range_span
-            ))
-
-    return ranges
-
-
-def _refine_ranges_2d(
-    distribution,
-    largest_quantile,
-    coarse_ranges,
-    resolution=128,
-    padding=0.05,
-):
-    """
-    Refine ranges for 2D distributions by finding contour bounding box.
-
-    Parameters
-    ----------
-    distribution : Distribution
-        2D distribution to calculate ranges for.
-    largest_quantile : float
-        Largest quantile percentage to include.
-    coarse_ranges : list of tuple
-        Coarse ranges from initial search.
-    resolution : int, optional
-        Grid resolution. Default is 128.
-    padding : float, optional
-        Padding to add to each side of the range. Default is 0.05.
-
-    Returns
-    -------
-    list of tuple
-        Refined (min, max) tuples for each dimension.
-    """
-    # Create grid over coarse ranges
-    x = np.linspace(coarse_ranges[0][0], coarse_ranges[0][1], resolution)
-    y = np.linspace(coarse_ranges[1][0], coarse_ranges[1][1], resolution)
-    xv, yv = np.meshgrid(x, y)
-
-    # Evaluate PDF on grid
-    coords = np.stack((xv, yv), axis=-1).reshape(-1, 2)
-    pdf = distribution.pdf(coords).reshape(xv.shape)
-
-    # Normalize to create a proper PDF
-    dx = x[1] - x[0]
-    dy = y[1] - y[0]
-    pdf_sum = np.sum(pdf) * dx * dy
-    if pdf_sum > 0:
-        pdf /= pdf_sum
-
-    # Sort PDF values in descending order
-    sorted_pdf = np.sort(pdf.flatten())[::-1]
-
-    # Calculate cumulative probability
-    cumulative = np.cumsum(sorted_pdf) * dx * dy
-
-    # Find the density threshold for the desired quantile
-    idx = np.searchsorted(cumulative, largest_quantile / 100.0)
-    if idx >= len(sorted_pdf):
-        idx = len(sorted_pdf) - 1
-    iso_min = sorted_pdf[idx]
-
-    # Find all points above this threshold
-    mask = pdf >= iso_min
-    xs = xv[mask]
-    ys = yv[mask]
-
-    if len(xs) == 0:
-        # Fallback to coarse ranges if no points found
-        return coarse_ranges
-
-    # Calculate bounding box
-    x_min, x_max = xs.min(), xs.max()
-    y_min, y_max = ys.min(), ys.max()
-
-    # Add padding as percentage of range
-    x_range = x_max - x_min
-    y_range = y_max - y_min
-
-    return [
-        (x_min - padding * x_range, x_max + padding * x_range),
-        (y_min - padding * y_range, y_max + padding * y_range),
-    ]
+    u = np.linspace(-extents[0], extents[0], resolution)
+    v = np.linspace(-extents[1], extents[1], resolution)
+    rows, columns = np.where(mask)
+    lower = np.array([u[columns.min()], v[rows.min()]])
+    upper = np.array([u[columns.max()], v[rows.max()]])
+    span = upper - lower
+    padding_distance = np.maximum(span * padding, np.array([2 * extents[0] / (resolution - 1),
+                                                             2 * extents[1] / (resolution - 1)]))
+    center_offset = (lower + upper) / 2
+    refined_center = mean + axes @ center_offset
+    refined_extents = np.maximum((span / 2) + padding_distance, 1e-6)
+    return OrientedGrid(refined_center, axes, refined_extents, resolution)
