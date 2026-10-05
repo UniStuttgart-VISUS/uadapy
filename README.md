@@ -74,6 +74,8 @@ for i in range(len(unique_y)):
 plt.tight_layout()
 plt.show()
 ```
+![uadapy_digits](https://github.com/user-attachments/assets/d209b197-cf55-45da-abfe-d7ba0215515a)
+
 
 ## Citation
 If you use this software in your work, please cite it using the following metadata
