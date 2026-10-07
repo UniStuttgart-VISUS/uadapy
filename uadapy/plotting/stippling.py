@@ -566,8 +566,8 @@ def plot_stipples(distributions,
 
     if ranges is None:
         quantiles= [99]
-        ranges = plots_2d._calculate_plot_ranges(distributions, quantiles, resolution)
-
+        ranges, _ = plots_2d._calculate_plot_ranges(distributions, quantiles, resolution)
+    
     xmin, xmax = ranges[0]
     ymin, ymax = ranges[1]
 

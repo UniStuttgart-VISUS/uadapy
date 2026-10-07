@@ -71,7 +71,7 @@ class Distribution:
             Samples of the distribution.
         """
         if isinstance(self.model, np.ndarray):
-            return self.kde.resample(n, seed).T if self.n_dims > 1 else self.kde.resample(n, seed)
+            return self.kde.resample(n, seed).T
         if hasattr(self.model, 'sample') and callable(self.model.sample):
             return self.model.sample(n, seed=seed)
         if hasattr(self.model, 'rvs') and callable(self.model.rvs):

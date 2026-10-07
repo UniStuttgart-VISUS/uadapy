@@ -7,7 +7,7 @@ import glasbey as gb
 def plot_samples(distributions,
                  n_samples=100,
                  seed=55,
-                 point_size=1,
+                 point_size=None,
                  alpha=1,
                  fig=None,
                  axs=None,
@@ -28,9 +28,9 @@ def plot_samples(distributions,
     seed : int
         Seed for the random number generator for reproducibility. It defaults to 55 if not provided.
     point_size : float or None, optional
-        Marker size (area in points^2). If None, matplotlib's default is used. By default 1.
+        Marker size (area in points^2). If None, matplotlib's default is used.
     alpha : float, optional
-        opacity value if the samples in the scatter plots. By default 1 (fully opaque)
+        Opacity value if the samples in the scatter plots. By default 1 (fully opaque)
     fig : matplotlib.figure.Figure or None, optional
         Figure object to use for plotting. If None, a new figure will be created.
     axs : Array of matplotlib.axes.Axes or None, optional
