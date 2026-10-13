@@ -1,8 +1,11 @@
 #!/bin/sh
+# -------------------------------------------------------------------
+# Note: script intended to be executed in a fresh virtual environment
+# -------------------------------------------------------------------
 # build the library
 ./build_lib.sh
 # get latest version of 'twine'
-python3 -m pip install --upgrade twine
+pip install --upgrade twine
 if [ $# -eq 0 ]
 then
   echo "Publishing to test.pypi. If you want to publish for real, use the argument 'notest'"
