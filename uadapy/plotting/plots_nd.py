@@ -7,7 +7,7 @@ import glasbey as gb
 def plot_samples(distributions,
                  n_samples=100,
                  seed=55,
-                 point_size=None,
+                 point_size=1,
                  alpha=1,
                  fig=None,
                  axs=None,

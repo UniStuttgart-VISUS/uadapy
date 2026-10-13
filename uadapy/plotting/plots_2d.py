@@ -42,7 +42,7 @@ class OrientedGrid:
 def plot_samples(distributions,
                  n_samples,
                  seed=55,
-                 point_size=None,
+                 point_size=1,
                  alpha=1,
                  fig=None,
                  axs=None,
