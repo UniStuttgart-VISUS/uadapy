@@ -270,6 +270,7 @@ class Distribution:
             return Distribution(self.model[:, dims if len(dims) > 1 else dims[0]], n_dims=len(dims))
         elif isinstance(self.model, stats._multivariate.multivariate_normal_frozen):
             # in case scipy version too old, i.e. 'marginal' is missing, we do it ourselves
+            
             return Distribution(_multivariate_normal_marginal_(dims, self.model))
         # fallback to KDE if specified
         elif 'KDE?' == kde or 'kde?' == kde:
@@ -346,4 +347,4 @@ def _multivariate_normal_marginal_(dims, model):
     else:
         mean = model.mean[dims]
         cov = model.cov[:,dims][dims,:]
-        return stats.multivariate_normal(mean=mean, cov=cov)
+        return stats.multivariate_normal(mean=mean, cov=cov, allow_singular=model.allow_singular)
