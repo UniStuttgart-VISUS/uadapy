@@ -10,7 +10,7 @@ Changelog
     * Default quantiles in :code:`plot_contour` are now :code:`[25, 75, 95]`
     * :code:`plot_samples` and :code:`plot_contour` raise a :code:`ValueError` for distributions that are not 2-dimensional (previously, :code:`plot_samples` silently used the first two dimensions)
 
-* New datasets: :code:`load_wine`, :code:`load_breast_cancer`, :code:`load_student_grades`, synthetic shape generators; export :code:`sample_dataset`
+* New datasets: :code:`load_wine`, :code:`load_breast_cancer`, :code:`load_student_grades`, synthetic shape generators
 * Optional parameter :code:`normal` for :code:`load_iris()`
 * Distribution class:
 
