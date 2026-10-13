@@ -71,7 +71,7 @@ class Distribution:
             Samples of the distribution.
         """
         if isinstance(self.model, np.ndarray):
-            return self.kde.resample(n, seed).T if self.n_dims > 1 else self.kde.resample(n, seed)
+            return self.kde.resample(n, seed).T
         if hasattr(self.model, 'sample') and callable(self.model.sample):
             return self.model.sample(n, seed=seed)
         if hasattr(self.model, 'rvs') and callable(self.model.rvs):
@@ -270,6 +270,7 @@ class Distribution:
             return Distribution(self.model[:, dims if len(dims) > 1 else dims[0]], n_dims=len(dims))
         elif isinstance(self.model, stats._multivariate.multivariate_normal_frozen):
             # in case scipy version too old, i.e. 'marginal' is missing, we do it ourselves
+            
             return Distribution(_multivariate_normal_marginal_(dims, self.model))
         # fallback to KDE if specified
         elif 'KDE?' == kde or 'kde?' == kde:
@@ -346,4 +347,4 @@ def _multivariate_normal_marginal_(dims, model):
     else:
         mean = model.mean[dims]
         cov = model.cov[:,dims][dims,:]
-        return stats.multivariate_normal(mean=mean, cov=cov)
+        return stats.multivariate_normal(mean=mean, cov=cov, allow_singular=model.allow_singular)

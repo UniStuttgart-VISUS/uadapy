@@ -3,10 +3,11 @@
 
 ![Teaser image](https://raw.githubusercontent.com/UniStuttgart-VISUS/uadapy/main/image.png)
 
-UADAPy is a Python package to support an easy analysis of uncertain multivariate data.
+UADAPy is a Python package to support an easy analysis of uncertain data.
 
 The library provides:
 - a unified `Distribution` class that wraps around various other distribution types such as `scipy.stats.<class>`
+- a `TimeSeries` class that models uncertain time series and builds on the `Distribution` class
 - implementations of uncertainty-propagating visualization algorithms, e.g., UAPCA, UAMDS, UASTL
 - simple plotting API that already contains all the boilerplate code to visualize distributions
   - specializes in iso-contour plotting for distributions (determines probability densities that correspond to specific quantiles, automatic grid positioning, orientation, and sizing for density sampling)
@@ -24,6 +25,7 @@ pip install git+https://github.com/UniStuttgart-VISUS/uadapy@<ref>
 
 ## Documentation
 You can find the documentation here: https://unistuttgart-visus.github.io/uadapy/
+
 It also contains an overview of all supported methods.
 
 ## Usage Example
@@ -76,6 +78,8 @@ plt.show()
 ```
 ![uadapy_digits](https://github.com/user-attachments/assets/d209b197-cf55-45da-abfe-d7ba0215515a)
 
+More detailed examples covering the different visualizations and algorithms can be found here: https://unistuttgart-visus.github.io/uadapy/examples.html
+The examples refer to the most recent version of UADAPy. If you obtain errors, please make sure to install the most recent code version directly from GitHub.
 
 ## Citation
 If you use this software in your work, please cite it using the following metadata
