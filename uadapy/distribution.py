@@ -336,7 +336,7 @@ class Distribution:
             if len(key) == 1:
                 key = key[0]
             return self.marginal(key, kde=kde_flag, n_samples_kde=n_samples_kde, noise_level=noise_level, seed=seed)
-        return self.marginalize(key)
+        return self.marginal(key)
 
 
 def _multivariate_normal_marginal_(dims, model):
