@@ -1,6 +1,11 @@
 =========
 Changelog
 =========
+0.2.1
+----
+* fixes bug in bracket expression marginalization. For example :code:`distribution[:4]`. This was calling :code:`marginalize` instead :code:`marginal` inside of :code:`__get_item__`.
+
+
 0.2.0
 ---- 
 
