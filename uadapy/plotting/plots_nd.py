@@ -226,8 +226,9 @@ def plot_contour(distributions,
         Figure object to use for plotting. If None, a new figure will be created.
     axs : Array of matplotlib.axes.Axes or None, optional
         Axes objects to use for plotting. If None, new axes will be created.
-    distrib_colors : list or None, optional
+    list or list[list] or None, optional
         List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
+        In case of nested lists, the inner list contains the colors for the quantiles (descending order) of the corresponding distribution.
     colorblind_safe : bool, optional
         If True, the plot will use colors suitable for colorblind individuals.
         Default is False.
@@ -342,7 +343,11 @@ def plot_contour(distributions,
             xs = np.linspace(xmin, xmax, resolution)
             xs = np.sort(np.concatenate([x_global,xs]))
             ys = dists1d[k].pdf(xs)
-            axs[i,i].plot(xs, ys, color=distrib_colors[k])
+            color = distrib_colors[k]
+            # if color is a list or array use last color
+            if isinstance(color, (list, np.ndarray)):
+                color = color[-1]
+            axs[i,i].plot(xs, ys, color=color)
             axs[i,i].yaxis.set_visible(True)
         
 
