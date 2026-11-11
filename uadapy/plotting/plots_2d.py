@@ -164,8 +164,9 @@ def plot_contour(distributions,
         Figure object to use for plotting. If None, a new figure will be created.
     axs : matplotlib.axes.Axes or None, optional
         Axes object to use for plotting. If None, new axes will be created.
-    distrib_colors : list or None, optional
+    distrib_colors : list or list[list] or None, optional
         List of colors to use for each distribution. If None, Matplotlib Set2 and glasbey colors will be used.
+        In case of nested lists, the inner list contains the colors for the quantiles (descending order) of the corresponding distribution.
     colorblind_safe : bool, optional
         If True, the plot will use colors suitable for colorblind individuals.
         Default is False.
@@ -215,7 +216,10 @@ def plot_contour(distributions,
             fig = axs.figure
 
     # Generate colors
-    palette = _get_color_palette(len(distributions), distrib_colors, colorblind_safe)
+    if distrib_colors is None:
+        palette = _get_color_palette(len(distributions), distrib_colors, colorblind_safe)
+    else:
+        palette = distrib_colors
 
     # Plot contours for each distribution
     for i, d in enumerate(distributions):
@@ -226,11 +230,14 @@ def plot_contour(distributions,
         coordinates = coordinates.reshape((-1, 2))
         pdf = d.pdf(coordinates)
         pdf = pdf.reshape(xv.shape)
-        color = palette[i]
+        colors = palette[i]
+        # wrap colors in list if not already a list or array
+        if not isinstance(colors, (list, np.ndarray)):
+            colors = [colors]
 
         isovalues = _calculate_isovalues(pdf, grid.cell_area(), quantiles)
 
-        axs.contour(xv, yv, pdf, levels=isovalues, colors=[color])
+        axs.contour(xv, yv, pdf, levels=isovalues, colors=colors)
 
     if show_plot:
         fig.tight_layout()
